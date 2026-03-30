@@ -61,7 +61,15 @@
 
                 <div style="max-height: 300px; overflow-y: auto;">
                     @forelse(auth()->user()->unreadNotifications as $notification)
-                        <div class="notif-item unread">
+                        @php
+                            $link = '#';
+                            if(isset($notification->data['icon'])) {
+                                if($notification->data['icon'] == 'system') $link = route('tenant.admin.settings');
+                                elseif($notification->data['icon'] == 'user') $link = route('tenant.admin.users');
+                                elseif($notification->data['icon'] == 'upgrade') $link = route('tenant.admin.subscription');
+                            }
+                        @endphp
+                        <a href="{{ $link }}" class="notif-item unread" style="text-decoration: none;">
                             <div class="notif-icon events">
                                 @if(isset($notification->data['icon']) && $notification->data['icon'] == 'system')
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
@@ -72,11 +80,11 @@
                                 @endif
                             </div>
                             <div class="notif-content">
-                                <div class="notif-title">{{ $notification->data['title'] ?? 'New Notification' }}</div>
-                                <div class="notif-desc">{{ $notification->data['desc'] ?? '' }}</div>
-                                <div class="notif-time">{{ $notification->created_at->diffForHumans() }}</div>
+                                <div class="notif-title" style="color: #2d3748;">{{ $notification->data['title'] ?? 'New Notification' }}</div>
+                                <div class="notif-desc" style="color: #64748b;">{{ $notification->data['desc'] ?? '' }}</div>
+                                <div class="notif-time" style="color: #94a3b8;">{{ $notification->created_at->diffForHumans() }}</div>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">
                             No new notifications right now.

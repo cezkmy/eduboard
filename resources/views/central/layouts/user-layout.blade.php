@@ -521,7 +521,14 @@
                             
                             <div class="notifications-list">
                                 @forelse(auth()->user()->unreadNotifications as $notification)
-                                    <a href="#" class="notification-item unread">
+                                    @php
+                                        $link = '#';
+                                        if(isset($notification->data['icon'])) {
+                                            if($notification->data['icon'] == 'school') $link = route('central.user.domain');
+                                            elseif($notification->data['icon'] == 'upgrade') $link = route('central.user.subscription');
+                                        }
+                                    @endphp
+                                    <a href="{{ $link }}" class="notification-item unread">
                                         <div class="notification-icon bg-primary bg-opacity-10">
                                             @if(isset($notification->data['icon']) && $notification->data['icon'] == 'school')
                                                 <i class="bi bi-bank text-primary"></i>

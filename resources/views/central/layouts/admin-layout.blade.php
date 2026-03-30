@@ -422,7 +422,14 @@
                             
                             <div style="max-height: 300px; overflow-y: auto;">
                                 @forelse(auth()->user()->unreadNotifications as $notification)
-                                    <a href="#" class="dropdown-item d-flex align-items-start gap-3 p-3 border-bottom @if($notification->unread()) bg-light @endif" style="font-size: 0.85rem; white-space: normal;">
+                                    @php
+                                        $link = '#';
+                                        if(isset($notification->data['icon'])) {
+                                            if($notification->data['icon'] == 'school') $link = route('central.admin.tenants');
+                                            elseif($notification->data['icon'] == 'upgrade') $link = route('central.admin.tenants');
+                                        }
+                                    @endphp
+                                    <a href="{{ $link }}" class="dropdown-item d-flex align-items-start gap-3 p-3 border-bottom @if($notification->unread()) bg-light @endif" style="font-size: 0.85rem; white-space: normal;">
                                         <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
                                             @if(isset($notification->data['icon']) && $notification->data['icon'] == 'school')
                                                 <i class="bi bi-bank"></i>

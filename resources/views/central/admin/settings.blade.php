@@ -49,6 +49,11 @@
                                 <i class="bi bi-code-slash me-2"></i>API
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-primary fw-bold" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">
+                                <i class="bi bi-rocket-takeoff me-2"></i>Release Manager
+                            </button>
+                        </li>
                         <!-- Removed Billing Tab -->
                     </ul>
                 </div>
@@ -263,6 +268,39 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Release Manager Settings -->
+        <div class="tab-pane fade" id="system" role="tabpanel">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="fw-semibold mb-0"><i class="bi bi-rocket-takeoff me-2"></i>System Update Broadcast Manager</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-primary bg-primary bg-opacity-10 border-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Use this panel to officially broadcast a new software version to your Tenants. Doing so will instantly blast out a formatted "System Update Available" email to every active Tenant Admin, prompting them to log in and apply the patch.
+                    </div>
+                    
+                    <form method="POST" action="{{ route('central.admin.settings.release') }}" class="mt-4">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Version Name <span class="text-danger">*</span></label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text bg-light text-muted">Version</span>
+                                    <input type="text" class="form-control" name="version" placeholder="e.g. 2.0 or 3.1.4" required>
+                                </div>
+                                <div class="form-text text-muted mb-4">This name will appear exactly as typed in the subject line of your Tenant's emails.</div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary px-4 fw-bold" onclick="return confirm('WARNING: This will instantly send an email blast to every single active school in your database! Are you absolutely sure you want to broadcast this release?')">
+                            <i class="bi bi-send-fill me-2"></i> Broadcast Update to All Tenants
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

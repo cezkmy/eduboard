@@ -102,6 +102,13 @@ foreach (config('tenancy.central_domains') as $domain) {
                 })->name('settings');
 
                 Route::post('settings/general', [UserController::class, 'updateSettings'])->name('settings.general');
+                Route::post('settings/release', function(\Illuminate\Http\Request $request) {
+                    $request->validate(['version' => 'required|string']);
+                    \Illuminate\Support\Facades\Artisan::call('eduboard:release', [
+                        'version' => $request->version
+                    ]);
+                    return back()->with('success', 'Successfully broadcasted System Update ' . $request->version . ' to all active Tenants!');
+                })->name('settings.release');
             });
 
             // Central User Routes
