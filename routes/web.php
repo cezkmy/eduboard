@@ -37,6 +37,12 @@ foreach (config('tenancy.central_domains') as $domain) {
                 }
                 return redirect()->route('central.user.dashboard');
             })->name('dashboard');
+            
+            // Mark all notifications as read
+            Route::get('/notifications/read', function () {
+                auth()->user()->unreadNotifications->markAsRead();
+                return back();
+            })->name('central.notifications.read');
 
             // Central Admin Routes
             Route::prefix('admin')->name('central.admin.')->middleware(['auth'])->group(function () {
@@ -133,6 +139,15 @@ foreach (config('tenancy.central_domains') as $domain) {
                             $domain->tenant->update(['plan' => $request->plan]);
                         }
                     }
+                    
+                    // Notify Central Admin via Email & Database
+                    $centralAdmin = \App\Models\User::where('role', 'admin')->orWhere('is_admin', true)->first();
+                    if ($centralAdmin) {
+                        $centralAdmin->notify(new \App\Notifications\CentralPlanUpgradedNotification($user->school_name, $request->plan));
+                    }
+                        
+                    // Send Thank You Email to the upgrading School
+                    $user->notify(new \App\Notifications\TenantPlanUpgradedNotification($request->plan));
                     
                     return response()->json(['success' => true]);
                 })->name('subscription.upgrade');

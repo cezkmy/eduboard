@@ -83,6 +83,16 @@ class TenantController extends Controller
             $tenant = $tenant->fresh();
             \Log::info('Fresh Tenant ID: ' . ($tenant->id ?? 'EMPTY'));
             \Log::info('Actual DB Name used: ' . $tenant->getInternal('db_name'));
+            
+            // Notify Central Admin via Email & Database
+            try {
+                $centralAdmin = \App\Models\User::where('role', 'admin')->orWhere('is_admin', true)->first();
+                if ($centralAdmin) {
+                    $centralAdmin->notify(new \App\Notifications\CentralNewTenantNotification($tenant->school_name, $domainName));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send New Tenant Notification Email: ' . $e->getMessage());
+            }
 
             \Log::info('Step 2: Calling domains()->create');
             $tenant->domains()->create(['domain' => $domainName]); // Full domain for Domain identification

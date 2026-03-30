@@ -404,35 +404,85 @@
                     @endif
                 </h1>
                 
-                <!-- User Dropdown -->
-                <div class="user-dropdown">
-                    <button class="user-dropdown-btn" onclick="toggleDropdown()">
-                        <div class="user-info">
-                            <div class="user-name">{{ auth()->user()->name }}</div>
-                            <div class="user-role">{{ ucfirst(auth()->user()->role) }}</div>
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <!-- Notifications Dropdown -->
+                    <div class="notifications-dropdown">
+                        <button style="background:none; border:none; padding: 0.5rem; font-size:1.3rem; relative; cursor:pointer;" onclick="toggleNotifications()">
+                            <i class="bi bi-bell"></i>
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                                <span class="notification-badge" style="position: absolute; top:0; right:0; background:#dc3545; color:white; font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 20px;">{{ auth()->user()->unreadNotifications->count() }}</span>
+                            @endif
+                        </button>
+                        
+                        <div class="dropdown-menu" id="notificationsMenu" style="width: 350px;">
+                            <div class="p-3 border-bottom d-flex justify-content-between">
+                                <h6 class="mb-0">Notifications</h6>
+                                <span class="text-success">{{ auth()->user()->unreadNotifications->count() }} new</span>
+                            </div>
+                            
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                @forelse(auth()->user()->unreadNotifications as $notification)
+                                    <a href="#" class="dropdown-item d-flex align-items-start gap-3 p-3 border-bottom @if($notification->unread()) bg-light @endif" style="font-size: 0.85rem; white-space: normal;">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
+                                            @if(isset($notification->data['icon']) && $notification->data['icon'] == 'school')
+                                                <i class="bi bi-bank"></i>
+                                            @elseif(isset($notification->data['icon']) && $notification->data['icon'] == 'upgrade')
+                                                <i class="bi bi-arrow-up-circle"></i>
+                                            @else
+                                                <i class="bi bi-megaphone"></i>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <p class="mb-1 fw-bold text-dark">{{ $notification->data['title'] ?? 'New Notification' }}</p>
+                                            <p class="mb-1 text-muted">{{ $notification->data['desc'] ?? '' }}</p>
+                                            <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-3 text-center text-muted">
+                                        No new notifications.
+                                    </div>
+                                @endforelse
+                            </div>
+                            
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                            <div class="p-2 text-center border-top">
+                                <a href="{{ route('central.notifications.read') }}" class="text-primary text-decoration-none">Mark All As Read</a>
+                            </div>
+                            @endif
                         </div>
-                        <div class="user-avatar">
-                            {{ substr(auth()->user()->name, 0, 1) }}
+                    </div>
+
+                    <!-- User Dropdown -->
+                    <div class="user-dropdown">
+                        <button class="user-dropdown-btn" onclick="toggleDropdown()">
+                            <div class="user-info">
+                                <div class="user-name">{{ auth()->user()->name }}</div>
+                                <div class="user-role">{{ ucfirst(auth()->user()->role) }}</div>
+                            </div>
+                            <div class="user-avatar">
+                                {{ substr(auth()->user()->name, 0, 1) }}
+                            </div>
+                        </button>
+                        
+                        <div class="dropdown-menu" id="userDropdown">
+                            <a href="{{ route('central.admin.profile') }}" class="dropdown-item">
+                                <i class="bi bi-person"></i>
+                                My Profile
+                            </a>
+                            <a href="{{ route('central.admin.settings') }}" class="dropdown-item">
+                                <i class="bi bi-gear"></i>
+                                Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    Logout
+                                </button>
+                            </form>
                         </div>
-                    </button>
-                    
-                    <div class="dropdown-menu" id="userDropdown">
-                        <a href="{{ route('central.admin.profile') }}" class="dropdown-item">
-                            <i class="bi bi-person"></i>
-                            My Profile
-                        </a>
-                        <a href="{{ route('central.admin.settings') }}" class="dropdown-item">
-                            <i class="bi bi-gear"></i>
-                            Settings
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
-                            @csrf
-                            <button type="submit" class="dropdown-item">
-                                <i class="bi bi-box-arrow-right"></i>
-                                Logout
-                            </button>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -478,15 +528,22 @@
             document.getElementById('userDropdown').classList.toggle('show');
         }
 
+        function toggleNotifications() {
+            document.getElementById('notificationsMenu').classList.toggle('show');
+        }
+
         // Close dropdown when clicking outside
         window.onclick = function(event) {
-            if (!event.target.matches('.user-dropdown-btn') && !event.target.closest('.user-dropdown-btn')) {
-                var dropdowns = document.getElementsByClassName('dropdown-menu');
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
+            if (!event.target.closest('.user-dropdown-btn') && !event.target.closest('#userDropdown')) {
+                var userDropdown = document.getElementById('userDropdown');
+                if (userDropdown && userDropdown.classList.contains('show')) {
+                    userDropdown.classList.remove('show');
+                }
+            }
+            if (!event.target.closest('.notifications-dropdown')) {
+                var notifDropdown = document.getElementById('notificationsMenu');
+                if (notifDropdown && notifDropdown.classList.contains('show')) {
+                    notifDropdown.classList.remove('show');
                 }
             }
         }

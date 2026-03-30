@@ -508,50 +508,46 @@
                     <div class="notifications-dropdown">
                         <button class="notifications-btn" onclick="toggleNotifications()">
                             <i class="bi bi-bell"></i>
-                            <span class="notification-badge">3</span>
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                                <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+                            @endif
                         </button>
                         
                         <div class="notifications-menu" id="notificationsMenu">
                             <div class="notifications-header">
                                 <h6 class="mb-0">Notifications</h6>
-                                <span class="text-success">3 new</span>
+                                <span class="text-success">{{ auth()->user()->unreadNotifications->count() }} new</span>
                             </div>
                             
                             <div class="notifications-list">
-                                <a href="#" class="notification-item unread">
-                                    <div class="notification-icon bg-primary bg-opacity-10">
-                                        <i class="bi bi-megaphone text-primary"></i>
+                                @forelse(auth()->user()->unreadNotifications as $notification)
+                                    <a href="#" class="notification-item unread">
+                                        <div class="notification-icon bg-primary bg-opacity-10">
+                                            @if(isset($notification->data['icon']) && $notification->data['icon'] == 'school')
+                                                <i class="bi bi-bank text-primary"></i>
+                                            @elseif(isset($notification->data['icon']) && $notification->data['icon'] == 'upgrade')
+                                                <i class="bi bi-arrow-up-circle text-primary"></i>
+                                            @else
+                                                <i class="bi bi-megaphone text-primary"></i>
+                                            @endif
+                                        </div>
+                                        <div class="notification-content">
+                                            <p class="notification-text">{{ $notification->data['title'] ?? 'New Notification' }}<br/><small>{{ $notification->data['desc'] ?? '' }}</small></p>
+                                            <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-3 text-center text-muted border-bottom">
+                                        No new notifications.
                                     </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">Your domain is ready for configuration.</p>
-                                        <span class="notification-time">5 minutes ago</span>
-                                    </div>
-                                </a>
-                                
-                                <a href="#" class="notification-item unread">
-                                    <div class="notification-icon bg-success bg-opacity-10">
-                                        <i class="bi bi-credit-card text-success"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">Your subscription payment was successful.</p>
-                                        <span class="notification-time">2 hours ago</span>
-                                    </div>
-                                </a>
-                                
-                                <a href="#" class="notification-item">
-                                    <div class="notification-icon bg-warning bg-opacity-10">
-                                        <i class="bi bi-files text-warning"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <p class="notification-text">New templates are available in the marketplace.</p>
-                                        <span class="notification-time">1 day ago</span>
-                                    </div>
-                                </a>
+                                @endforelse
                             </div>
                             
+                            @if(auth()->user()->unreadNotifications->count() > 0)
                             <div class="notifications-footer">
-                                <a href="#">View All Notifications</a>
+                                <a href="{{ route('central.notifications.read') }}">Mark All As Read</a>
                             </div>
+                            @endif
                         </div>
                     </div>
 

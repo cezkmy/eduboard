@@ -87,6 +87,16 @@ class AuthController extends Controller
                 'status' => 'active',
             ]);
 
+            // Notify Tenant Admin via Email
+            try {
+                $tenantAdmin = User::where('role', 'admin')->orWhere('is_admin', true)->first();
+                if ($tenantAdmin) {
+                    $tenantAdmin->notify(new \App\Notifications\TenantNewUserNotification($user->name, $user->role, $user->email));
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to send Tenant New User Notification: ' . $e->getMessage());
+            }
+
             Auth::login($user);
 
             // Role-based redirection for tenant registration

@@ -49,31 +49,46 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
-                <span class="topbar-notif-dot"></span>
+                @if(auth()->user()->unreadNotifications->count() > 0)
+                    <span class="topbar-notif-dot"></span>
+                @endif
             </button>
             <div class="admin-dropdown-menu notif-menu" :class="{ 'show': open }">
                 <div class="dropdown-header notif-header">
                     <span class="name">Notifications</span>
-                    <span class="notif-count">3 new</span>
+                    <span class="notif-count">{{ auth()->user()->unreadNotifications->count() }} new</span>
                 </div>
 
-                <div class="notif-item unread">
-                    <div class="notif-icon events">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                        </svg>
-                    </div>
-                    <div class="notif-content">
-                        <div class="notif-title">New announcement posted</div>
-                        <div class="notif-desc">Academic committee updated the calendar.</div>
-                        <div class="notif-time">2 hours ago</div>
-                    </div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    @forelse(auth()->user()->unreadNotifications as $notification)
+                        <div class="notif-item unread">
+                            <div class="notif-icon events">
+                                @if(isset($notification->data['icon']) && $notification->data['icon'] == 'system')
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                                @elseif(isset($notification->data['icon']) && $notification->data['icon'] == 'upgrade')
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                                @else
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
+                                @endif
+                            </div>
+                            <div class="notif-content">
+                                <div class="notif-title">{{ $notification->data['title'] ?? 'New Notification' }}</div>
+                                <div class="notif-desc">{{ $notification->data['desc'] ?? '' }}</div>
+                                <div class="notif-time">{{ $notification->created_at->diffForHumans() }}</div>
+                            </div>
+                        </div>
+                    @empty
+                        <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">
+                            No new notifications right now.
+                        </div>
+                    @endforelse
                 </div>
 
+                @if(auth()->user()->unreadNotifications->count() > 0)
                 <div class="notif-footer" style="padding: 12px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9;">
-                    <a href="#" style="font-size: 0.75rem; color: var(--color-primary); font-weight: 600;">Mark all as read</a>
-                    <a href="#" style="font-size: 0.75rem; color: #64748b;">View all</a>
+                    <a href="{{ route('tenant.notifications.read') }}" style="font-size: 0.75rem; color: var(--color-primary); font-weight: 600;">Mark all as read</a>
                 </div>
+                @endif
             </div>
         </div>
 

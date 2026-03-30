@@ -173,16 +173,33 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             $request->validate(['plan' => 'required|string']);
             
             // Set the new plan in the tenant database
-            tenant()->update([
+            $tenant = tenant();
+            $tenant->update([
                 'plan' => $request->plan,
             ]);
             
+            // Notify Central Admin via Email & Database
+            tenancy()->central(function () use ($tenant, $request) {
+                $centralAdmin = \App\Models\User::where('role', 'admin')->orWhere('is_admin', true)->first();
+                if ($centralAdmin) {
+                    $centralAdmin->notify(new \App\Notifications\CentralPlanUpgradedNotification($tenant->school_name, $request->plan));
+                }
+            });
+                
+            // Send Thank You Email to the upgrading Tenant Admin
+            auth()->user()->notify(new \App\Notifications\TenantPlanUpgradedNotification($request->plan));
+                
             return response()->json(['success' => true]);
         })->name('admin.subscription.upgrade');
         Route::get('/templates', function () { 
             if (!tenant()->hasFeature('pre_built_templates')) abort(403, 'Upgrade your plan to access Templates.');
             return view('tenant_ui.admin.templates'); 
         })->name('admin.templates');
+        
+        Route::get('/notifications/read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return back();
+        })->name('notifications.read');
     });
 
     // Teacher Routes
