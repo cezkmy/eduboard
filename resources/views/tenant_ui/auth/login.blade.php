@@ -3,21 +3,17 @@
 @section('title', (tenant('school_name') ?? 'School') . ' - Login')
 
 @section('content')
-<div class="auth-wrapper">
-    <div class="auth-container">
-        <a href="/" class="auth-brand">
-            <div class="auth-brand-icon">
-                <svg fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                </svg>
-            </div>
-            <span class="auth-brand-name">EduBoard</span>
-        </a>
-
+<div class="auth-wrapper" style="display: block !important; padding: 4rem 1rem !important; height: auto !important; min-height: 100vh;">
+    <div class="auth-container" style="margin: 0 auto !important; max-width: 480px;">
         <div class="auth-card">
-            <div class="auth-header">
-                <h1>Welcome Back</h1>
-                <p>Enter your credentials to access your portal.</p>
+            <div class="auth-header" style="text-align: center; margin-bottom: 2.5rem;">
+                <a href="/" style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 20px; background: rgba(13, 148, 136, 0.1); color: var(--teal); margin-bottom: 1.25rem; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(13, 148, 136, 0.15)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(13, 148, 136, 0.1)';">
+                    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="width: 36px; height: 36px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                    </svg>
+                </a>
+                <h1 style="font-family: 'Sora', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: -0.5px;">{{ tenant('school_name') ?? 'EduPlatform' }}</h1>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.5rem;">Welcome back. Please sign in to your portal.</p>
             </div>
 
             @if(session('status'))

@@ -4,22 +4,18 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold mb-1">Template Management</h2>
-                <p class="text-secondary">Manage and preview templates available for schools.</p>
-            </div>
-            <button class="btn btn-success d-flex align-items-center gap-2">
-                <i class="bi bi-plus-lg"></i> Add New Template
-            </button>
-        </div>
+    <!-- Top Action actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <p class="text-secondary mb-0">Manage and preview templates available for schools.</p>
+        <button class="btn btn-success d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg"></i> Add New Template
+        </button>
     </div>
 
     <!-- Template Stats -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1">7</div>
                     <div class="text-secondary small">Total Templates</div>
@@ -27,7 +23,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1 text-success">4</div>
                     <div class="text-secondary small">Free Templates</div>
@@ -35,7 +31,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1 text-warning">3</div>
                     <div class="text-secondary small">Premium Templates</div>
@@ -60,7 +56,7 @@
 
         @foreach($templates as $template)
         <div class="col-md-4 col-lg-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card h-100">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="bg-primary bg-opacity-10 p-3 rounded">
@@ -87,7 +83,7 @@
                         <button class="btn btn-outline-secondary btn-sm flex-grow-1">
                             <i class="bi bi-eye me-1"></i> Preview
                         </button>
-                        <button class="btn btn-outline-primary btn-sm">
+                        <button class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-pencil"></i>
                         </button>
                     </div>

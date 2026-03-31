@@ -64,7 +64,7 @@
 
                     <div class="text-start">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-envelope text-secondary"></i>
                             </div>
                             <div>
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-calendar text-secondary"></i>
                             </div>
                             <div>
@@ -82,7 +82,7 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-shield text-secondary"></i>
                             </div>
                             <div>
@@ -98,7 +98,7 @@
         <!-- Edit Profile Form -->
         <div class="col-md-8 mb-4">
             <div class="card">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0">Edit Profile Information</h5>
                 </div>
                 <div class="card-body p-4">
@@ -139,7 +139,7 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">Current Password</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
+                                    <span class="input-group-text border-end-0">
                                         <i class="bi bi-lock"></i>
                                     </span>
                                     <input type="password" 
@@ -155,7 +155,7 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">New Password</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
+                                    <span class="input-group-text border-end-0">
                                         <i class="bi bi-key"></i>
                                     </span>
                                     <input type="password" 
@@ -171,7 +171,7 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">Confirm Password</label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
+                                    <span class="input-group-text border-end-0">
                                         <i class="bi bi-check-circle"></i>
                                     </span>
                                     <input type="password" 
@@ -196,7 +196,7 @@
 
             <!-- Danger Zone -->
             <div class="card mt-4 border-danger">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0 text-danger">Danger Zone</h5>
                 </div>
                 <div class="card-body">
@@ -235,7 +235,7 @@
                         <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
                     </div>
 
-                    <div class="bg-light p-3 rounded mb-3">
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded mb-3">
                         <small class="text-secondary d-block mb-2">Please type <strong class="text-danger">DELETE</strong> to confirm:</small>
                         <input type="text" class="form-control form-control-sm" id="confirmDelete" placeholder="DELETE">
                     </div>

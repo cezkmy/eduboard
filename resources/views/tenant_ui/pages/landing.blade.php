@@ -17,13 +17,13 @@
                 </svg>
             </div>
             
-            <h1 style="font-size: 36px; font-weight: 800; margin-bottom: 16px; font-family: 'Sora', sans-serif; letter-spacing: -1px;">Welcome to {{ tenant('school_name') ?? 'Buksu' }}</h1>
+            <h1 style="font-size: 36px; color: white; font-weight: 800; margin-bottom: 16px; font-family: 'Sora', sans-serif; letter-spacing: -1px;">Welcome to {{ tenant('school_name') ?? 'Buksu' }}</h1>
             
-            <p style="font-size: 16px; opacity: 0.85; line-height: 1.6; margin-bottom: 40px; font-family: 'DM Sans', sans-serif;">
+            <p style="font-size: 16px; color: white; opacity: 0.85; line-height: 1.6; margin-bottom: 40px; font-family: 'DM Sans', sans-serif;">
                 {{ tenant('site_description') ?? 'Official EduBoard platform for announcements, events, and academic updates for ' . (tenant('school_name') ?? 'Buksu') . '.' }}
             </p>
             
-            <div style="margin-top: auto; font-size: 13px; opacity: 0.6; font-weight: 500;">
+            <div style="margin-top: auto; color: white; font-size: 13px; opacity: 0.6; font-weight: 500;">
                 © {{ date('Y') }} {{ tenant('school_name') ?? 'Buksu' }} EduBoard
             </div>
         </div>

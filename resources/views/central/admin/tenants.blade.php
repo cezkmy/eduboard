@@ -17,7 +17,7 @@
     <!-- Stats Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1">{{ $tenants->count() }}</div>
                     <div class="text-secondary small">Total Schools</div>
@@ -25,7 +25,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1 text-success">{{ $activeCount }}</div>
                     <div class="text-secondary small">Active</div>
@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card">
                 <div class="card-body">
                     <div class="h3 fw-bold mb-1 text-danger">{{ $deactivatedCount }}</div>
                     <div class="text-secondary small">Deactivated</div>
@@ -43,13 +43,13 @@
     </div>
 
     <!-- Tenants Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 py-3">
+    <div class="card">
+        <div class="card-header py-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold mb-0">All Schools</h5>
                 <div class="col-md-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
+                        <span class="input-group-text border-end-0">
                             <i class="bi bi-search text-secondary"></i>
                         </span>
                         <input type="text" class="form-control border-start-0" placeholder="Search schools..." id="searchInput">

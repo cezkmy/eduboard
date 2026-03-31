@@ -37,7 +37,7 @@
         }
 
         html, body {
-            height: 100%;
+            min-height: 100%;
             margin: 0;
             padding: 0;
         }
@@ -46,10 +46,68 @@
             font-family: 'DM Sans', sans-serif;
             background: var(--bg);
             color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            padding: 3rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            margin: auto;
+        }
+        
+        .auth-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 2.5rem 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+        
+        .auth-brand { margin-bottom: 2.5rem; }
+        
+        .auth-header h1 { font-family: 'Sora', sans-serif; font-size: 1.8rem; letter-spacing: -0.5px; }
+        
+        .auth-form input[type="email"], .auth-form input[type="password"], .auth-form input[type="text"], .form-select {
+            background-color: var(--bg) !important;
+            border: 1.5px solid var(--border) !important;
+            border-radius: 14px !important;
+            padding: 0.85rem 1.25rem !important;
+            transition: all 0.2s ease !important;
+            color: var(--text-main) !important;
+        }
+        
+        .auth-form input:focus, .form-select:focus {
+            background-color: var(--surface) !important;
+            border-color: var(--teal) !important;
+            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15) !important;
+        }
+        
+        .btn-auth {
+            background: var(--teal) !important;
+            color: white !important;
+            padding: 0.85rem 2rem !important;
+            border-radius: 100px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2) !important;
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3) !important;
+            background: #0f766e !important;
         }
     </style>
     @stack('styles')

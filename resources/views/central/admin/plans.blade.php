@@ -18,8 +18,8 @@
     <div class="row g-4">
         @foreach($plans as $plan)
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-start">
+            <div class="card h-100">
+                <div class="card-header pt-4 px-4 d-flex justify-content-between align-items-start">
                     <div>
                         <h4 class="fw-bold mb-2">{{ $plan->name }}</h4>
                         <div class="d-flex align-items-baseline gap-1 mb-3">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
                 <div class="card-body px-4">
-                    <div class="bg-light rounded-3 px-3 py-2 mb-4">
+                    <div class="bg-secondary bg-opacity-10 rounded-3 px-3 py-2 mb-4">
                         <span class="text-secondary small">{{ \App\Models\Tenant::where('plan', $plan->name)->count() }} schools subscribed</span>
                     </div>
                     

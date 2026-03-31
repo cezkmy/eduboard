@@ -14,7 +14,7 @@
 <!-- Stats Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="text-secondary small fw-medium">Total Schools</span>
@@ -30,7 +30,7 @@
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="text-secondary small fw-medium">Active Users</span>
@@ -46,7 +46,7 @@
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="text-secondary small fw-medium">Revenue (Monthly)</span>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="text-secondary small fw-medium">Growth Rate</span>
@@ -81,8 +81,8 @@
 <!-- Recent Tenants Table -->
 <div class="row">
     <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
+        <div class="card">
+            <div class="card-header py-3">
                 <h5 class="fw-semibold mb-0">Recent Tenants</h5>
             </div>
             <div class="card-body">

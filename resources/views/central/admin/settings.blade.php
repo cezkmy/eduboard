@@ -66,7 +66,7 @@
         <!-- General Settings -->
         <div class="tab-pane fade show active" id="general" role="tabpanel">
             <div class="card">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0">General Settings</h5>
                 </div>
                 <div class="card-body p-4">
@@ -120,13 +120,13 @@
         <!-- Security Settings -->
         <div class="tab-pane fade" id="security" role="tabpanel">
             <div class="card">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0">Security Settings</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
                                 <div>
                                     <h6 class="fw-semibold mb-1">Two-Factor Authentication</h6>
                                     <p class="text-secondary small mb-0">Add an extra layer of security to your account</p>
@@ -137,7 +137,7 @@
                             </div>
                         </div>
                         <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
                                 <div>
                                     <h6 class="fw-semibold mb-1">Session Timeout</h6>
                                     <p class="text-secondary small mb-0">Automatically log out after inactivity</p>
@@ -151,7 +151,7 @@
                             </div>
                         </div>
                         <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
                                 <div>
                                     <h6 class="fw-semibold mb-1">Login Notifications</h6>
                                     <p class="text-secondary small mb-0">Get email alerts for new logins</p>
@@ -169,32 +169,32 @@
         <!-- Notifications Settings -->
         <div class="tab-pane fade" id="notifications" role="tabpanel">
             <div class="card">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0">Notification Preferences</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <div class="col-12">
                             <h6 class="fw-semibold mb-3">Email Notifications</h6>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                 <span>New tenant registration</span>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" checked>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                 <span>Payment received</span>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" checked>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                 <span>Subscription expiring</span>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" checked>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
                                 <span>System updates</span>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox">
@@ -209,7 +209,7 @@
         <!-- API Settings -->
         <div class="tab-pane fade" id="api" role="tabpanel">
             <div class="card">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h5 class="fw-semibold mb-0">API Settings</h5>
                     <button class="btn btn-sm btn-success">
                         <i class="bi bi-plus-lg me-1"></i>Generate New Key
@@ -290,7 +290,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Version Name <span class="text-danger">*</span></label>
                                 <div class="input-group mb-3">
-                                    <span class="input-group-text bg-light text-muted">Version</span>
+                                    <span class="input-group-text text-muted">Version</span>
                                     <input type="text" class="form-control" name="version" placeholder="e.g. 2.0 or 3.1.4" required>
                                 </div>
                                 <div class="form-text text-muted mb-4">This name will appear exactly as typed in the subject line of your Tenant's emails.</div>

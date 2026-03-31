@@ -86,7 +86,9 @@ class TenantController extends Controller
             
             // Notify Central Admin via Email & Database
             try {
-                $centralAdmin = \App\Models\User::where('role', 'admin')->orWhere('is_admin', true)->first();
+                // Fix: Ensure we ONLY notify the actual Central SaaS admin (is_admin = true)
+                // We cannot use role = 'admin' here because regular users/tenant owners in the Central DB also have role='admin'.
+                $centralAdmin = \App\Models\User::where('is_admin', true)->first();
                 if ($centralAdmin) {
                     $centralAdmin->notify(new \App\Notifications\CentralNewTenantNotification($tenant->school_name, $domainName));
                 }
