@@ -12,14 +12,29 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- Theme Setup Script -->
+    <script>
+        const getPreferredTheme = () => {
+            const storedTheme = localStorage.getItem('central-theme');
+            if (storedTheme) { return storedTheme; }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+        document.documentElement.setAttribute('data-bs-theme', getPreferredTheme());
+    </script>
+
     <style>
         :root {
-            --sidebar-width: 260px;  /* Gi-reduce ang width */
+            --sidebar-width: 260px;
             --primary: #2c7a6e;
             --primary-dark: #1e5a50;
             --sidebar-bg: #1a2634;
             --sidebar-hover: #2c3e50;
-            --border-color: #e9ecef;
+            --border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] {
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
         }
 
         * {
@@ -30,17 +45,17 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
+            background: var(--bs-body-bg);
+            color: var(--bs-body-color);
             overflow-x: hidden;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* Admin Wrapper */
         .admin-wrapper {
             display: flex;
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             width: var(--sidebar-width);
             background: var(--sidebar-bg);
@@ -50,39 +65,27 @@
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 2px 0 5px rgba(0,0,0,0.03);
+            transition: background-color 0.2s ease;
         }
 
         .sidebar-brand {
-            padding: 1.25rem 1.5rem;  /* Gi-reduce ang padding */
+            padding: 1.25rem 1.5rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
             gap: 0.75rem;
         }
 
-        .sidebar-brand i {
-            font-size: 1.75rem;  /* Gamay gamay */
-            color: var(--primary);
-        }
+        .sidebar-brand i { font-size: 1.75rem; color: var(--primary); }
+        .sidebar-brand span { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.3px; }
 
-        .sidebar-brand span {
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .sidebar-nav {
-            padding: 1.25rem 1rem;  /* Gi-reduce ang padding */
-        }
-
-        .sidebar-nav .nav-item {
-            margin-bottom: 0.25rem;  /* Gi-reduce ang gap */
-        }
+        .sidebar-nav { padding: 1.25rem 1rem; }
+        .sidebar-nav .nav-item { margin-bottom: 0.25rem; }
 
         .sidebar-nav .nav-link {
             color: #a0aec0;
-            padding: 0.7rem 1rem;  /* Gi-reduce ang padding */
-            border-radius: 6px;  /* Gamay nga radius */
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -91,51 +94,35 @@
             font-size: 0.95rem;
         }
 
-        .sidebar-nav .nav-link:hover {
-            background: var(--sidebar-hover);
-            color: white;
-        }
+        .sidebar-nav .nav-link:hover { background: var(--sidebar-hover); color: white; }
+        .sidebar-nav .nav-link.active { background: var(--primary); color: white; }
+        .sidebar-nav .nav-link i { font-size: 1.2rem; }
 
-        .sidebar-nav .nav-link.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .sidebar-nav .nav-link i {
-            font-size: 1.2rem;
-        }
-
-        /* Main Content */
         .main-content {
             flex: 1;
             margin-left: var(--sidebar-width);
             min-height: 100vh;
-            background: #f8f9fa;
+            background: var(--bs-body-bg);
         }
 
-        /* Top Bar - PARA SA DASHBOARD LANG */
         .top-bar {
-            background: white;
-            padding: 0.85rem 2rem;  /* Gi-reduce ang padding */
-            border-bottom: 1px solid var(--border-color);
+            background: var(--bs-body-bg);
+            padding: 0.85rem 2rem;
+            border-bottom: 1px solid var(--bs-border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 999;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
         .page-title {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--bs-heading-color);
             margin: 0;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: relative;
         }
 
         .user-dropdown-btn {
@@ -150,196 +137,79 @@
             transition: all 0.2s;
         }
 
-        .user-dropdown-btn:hover {
-            background: #f8f9fa;
-        }
-
-        .user-info {
-            text-align: right;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 0.9rem;
-        }
-
-        .user-role {
-            font-size: 0.75rem;
-            color: #718096;
-        }
-
+        .user-dropdown-btn:hover { background: var(--bs-secondary-bg); }
+        .user-info { text-align: right; }
+        .user-name { font-weight: 600; color: var(--bs-body-color); font-size: 0.9rem; }
+        .user-role { font-size: 0.75rem; color: var(--bs-secondary-color); }
+        
         .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 36px; height: 36px;
             background: var(--primary);
-            color: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
+            color: white; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 0.9rem;
         }
 
         .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            min-width: 200px;
-            display: none;
-            z-index: 1000;
-            margin-top: 0.5rem;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
+            position: absolute; right: 0; top: 100%;
+            background: var(--bs-body-bg); border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 200px;
+            display: none; z-index: 1000; margin-top: 0.5rem;
+            border: 1px solid var(--bs-border-color); overflow: hidden;
         }
 
-        .dropdown-menu.show {
-            display: block;
-        }
-
+        .dropdown-menu.show { display: block; }
         .dropdown-item {
-            padding: 0.7rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #2d3748;
-            text-decoration: none;
-            transition: all 0.2s;
-            width: 100%;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 0.9rem;
+            padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.75rem;
+            color: var(--bs-body-color); text-decoration: none; transition: all 0.2s;
+            width: 100%; border: none; background: none; cursor: pointer; font-size: 0.9rem;
         }
+        .dropdown-item:hover { background: var(--bs-secondary-bg); }
+        .dropdown-item i { font-size: 1rem; color: var(--bs-secondary-color); }
+        .dropdown-divider { height: 1px; background: var(--bs-border-color); margin: 0.25rem 0; }
 
-        .dropdown-item:hover {
-            background: #f8f9fa;
-        }
+        .content-area { padding: 1.5rem 2rem; }
 
-        .dropdown-item i {
-            font-size: 1rem;
-            color: #718096;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 0.25rem 0;
-        }
-
-        /* Content Area */
-        .content-area {
-            padding: 1.5rem 2rem;  /* Gi-reduce ang padding */
-        }
-
-        /* Cards and Tables */
         .card {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color); border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
-
         .card-header {
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
+            background: var(--bs-body-bg);
+            border-bottom: 1px solid var(--bs-border-color); padding: 1rem 1.5rem;
         }
+        .card-body { padding: 1.5rem; }
 
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        /* Table styles */
-        .table {
-            margin: 0;
-        }
-
+        .table { margin: 0; color: var(--bs-body-color); }
         .table thead th {
-            border-bottom: 1px solid var(--border-color);
-            color: #718096;
-            font-weight: 500;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--bs-border-color);
+            color: var(--bs-secondary-color); font-weight: 500; font-size: 0.85rem;
+            text-transform: uppercase; letter-spacing: 0.3px; padding: 0.75rem 1rem;
         }
-
         .table tbody td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            color: #2d3748;
-            font-size: 0.9rem;
-            vertical-align: middle;
+            padding: 1rem; border-bottom: 1px solid var(--bs-border-color);
+            font-size: 0.9rem; vertical-align: middle;
         }
+        .table tbody tr:last-child td { border-bottom: none; }
 
-        .table tbody tr:last-child td {
-            border-bottom: none;
-        }
+        .badge { padding: 0.4rem 0.75rem; font-weight: 500; font-size: 0.75rem; border-radius: 20px; }
+        .badge.bg-success { background: rgba(44, 122, 110, 0.1) !important; color: var(--primary) !important; }
+        .badge.bg-warning { background: rgba(244, 162, 97, 0.1) !important; color: #f4a261 !important; }
 
-        /* Badges */
-        .badge {
-            padding: 0.4rem 0.75rem;
-            font-weight: 500;
-            font-size: 0.75rem;
-            border-radius: 20px;
-        }
-
-        .badge.bg-success {
-            background: rgba(44, 122, 110, 0.1) !important;
-            color: var(--primary) !important;
-        }
-
-        .badge.bg-warning {
-            background: rgba(244, 162, 97, 0.1) !important;
-            color: #f4a261 !important;
-        }
-
-        /* Buttons */
-        .btn-success {
-            background: var(--primary);
-            border: none;
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            border-radius: 6px;
-        }
-
-        .btn-success:hover {
-            background: var(--primary-dark);
-        }
-
+        .btn-success { background: var(--primary); border: none; padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 6px; color: white;}
+        .btn-success:hover { background: var(--primary-dark); }
         .btn-outline-secondary {
-            border: 1px solid var(--border-color);
-            color: #718096;
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            border-radius: 6px;
+            border: 1px solid var(--bs-border-color); color: var(--bs-body-color);
+            padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 6px;
         }
+        .btn-outline-secondary:hover { background: var(--bs-secondary-bg); border-color: var(--primary); color: var(--primary); }
 
-        .btn-outline-secondary:hover {
-            background: #f8f9fa;
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 0;
-                left: -260px;
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .content-area {
-                padding: 1rem;
-            }
-            .top-bar {
-                padding: 0.85rem 1rem;
-            }
+            .sidebar { width: 0; left: -260px; }
+            .main-content { margin-left: 0; }
+            .content-area { padding: 1rem; }
+            .top-bar { padding: 0.85rem 1rem; }
         }
     </style>
 </head>
@@ -405,6 +275,12 @@
                 </h1>
                 
                 <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle-btn" id="centralThemeToggle" title="Toggle theme" style="background:none; border:none; padding: 0.5rem; font-size:1.3rem; cursor:pointer; color: var(--bs-body-color);">
+                        <i class="bi bi-moon-fill dark-icon" style="display: none;"></i>
+                        <i class="bi bi-sun-fill light-icon"></i>
+                    </button>
+
                     <!-- Notifications Dropdown -->
                     <div class="notifications-dropdown">
                         <button style="background:none; border:none; padding: 0.5rem; font-size:1.3rem; relative; cursor:pointer;" onclick="toggleNotifications()">
@@ -538,6 +414,33 @@
         function toggleNotifications() {
             document.getElementById('notificationsMenu').classList.toggle('show');
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('centralThemeToggle');
+            if (toggleBtn) {
+                const lightIcon = toggleBtn.querySelector('.light-icon');
+                const darkIcon = toggleBtn.querySelector('.dark-icon');
+
+                const refreshToggleState = () => {
+                    if (document.documentElement.getAttribute('data-bs-theme') === 'dark') {
+                        lightIcon.style.display = 'none';
+                        darkIcon.style.display = 'inline-block';
+                    } else {
+                        lightIcon.style.display = 'inline-block';
+                        darkIcon.style.display = 'none';
+                    }
+                };
+                refreshToggleState();
+
+                toggleBtn.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('central-theme', newTheme);
+                    refreshToggleState();
+                });
+            }
+        });
 
         // Close dropdown when clicking outside
         window.onclick = function(event) {
