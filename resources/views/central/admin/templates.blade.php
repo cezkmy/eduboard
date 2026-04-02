@@ -416,8 +416,18 @@
                     <!-- Action Buttons -->
                     <div class="d-flex gap-1 mt-auto">
                         <div class="dropdown w-100">
-                            <button class="btn btn-light btn-sm w-100 border-0 bg-secondary bg-opacity-10" type="button" id="dropdownMenuButton-{{ $template->id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-gear-fill"></i> Options
+                                <button
+                                    class="btn btn-light btn-sm w-100 border-0 bg-secondary bg-opacity-10"
+                                    type="button"
+                                    id="dropdownMenuButton-{{ $template->id }}"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    title="Edit {{ $template->name }}"
+                                >
+                                    <i class="bi bi-pencil"></i>
+                                    <span class="ms-1 text-truncate d-inline-block" style="max-width: 145px; vertical-align: bottom;">
+                                       Edit
+                                    </span>
                             </button>
                             <ul class="dropdown-menu shadow" aria-labelledby="dropdownMenuButton-{{ $template->id }}">
                                 <li><a class="dropdown-item d-flex align-items-center gap-2" href="#" data-bs-toggle="modal" data-bs-target="#editTemplateModal"><i class="bi bi-pencil"></i> Edit Details</a></li>
