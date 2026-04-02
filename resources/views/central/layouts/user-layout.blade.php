@@ -12,15 +12,84 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
+    <!-- Theme Setup Script -->
+    <script>
+        const getPreferredTheme = () => {
+            const storedTheme = localStorage.getItem('central-theme');
+            if (storedTheme) { return storedTheme; }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+        document.documentElement.setAttribute('data-bs-theme', getPreferredTheme());
+    </script>
+
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --sidebar-width: 260px;
-            --primary: #2c7a6e;
-            --primary-dark: #1e5a50;
-            --sidebar-bg: #1a2634;
-            --sidebar-hover: #2c3e50;
-            --border-color: #e9ecef;
+            --primary: #10b981; /* Premium Emerald - same as admin */
+            --primary-dark: #059669;
+            --sidebar-bg: #1e5a50; /* Green sidebar - same as admin */
+            --sidebar-hover: #16423b;
+            --sidebar-text: #e2e8f0;
+            --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+            --sidebar-brand: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --content-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
+
+        [data-bs-theme="dark"] {
+            --primary: #10b981;
+            --primary-dark: #34d399;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-active-bg: rgba(16, 185, 129, 0.1);
+            --sidebar-brand: #ffffff;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --content-bg: #0f172a;
+            --card-bg: #1e293b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --bs-body-color: #f1f5f9;
+            --bs-body-bg: #0f172a;
+            --bs-heading-color: #ffffff;
+            --bs-secondary-color: #94a3b8;
+        }
+
+        /* Dark mode utility overrides */
+        [data-bs-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #64748b !important; }
+        [data-bs-theme="dark"] .bg-white { background-color: var(--card-bg) !important; color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .btn-light { background-color: #334155 !important; border-color: #475569 !important; color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .btn-light:hover { background-color: #475569 !important; }
+        [data-bs-theme="dark"] .card { background-color: var(--card-bg); border-color: var(--border-color); }
+        [data-bs-theme="dark"] .modal-content { background-color: var(--card-bg); color: #f1f5f9; }
+        [data-bs-theme="dark"] .modal-header { border-bottom-color: var(--border-color); }
+        [data-bs-theme="dark"] .modal-footer { border-top-color: var(--border-color); }
+
+        /* Button & Input Overrides for Dark Mode */
+        [data-bs-theme="dark"] .btn-success { background-color: #10b981; border-color: #10b981; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-success:hover { background-color: #059669; border-color: #059669; }
+        [data-bs-theme="dark"] .btn-outline-success { color: #10b981; border-color: #10b981; }
+        [data-bs-theme="dark"] .btn-outline-success:hover { background-color: #10b981; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-dark { background-color: #334155; border-color: #475569; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-dark:hover { background-color: #475569; }
+        [data-bs-theme="dark"] .input-group-text { background-color: #334155; border-color: #475569; color: #cbd5e1; }
+        [data-bs-theme="dark"] .form-control { background-color: #1e293b; border-color: #475569; color: #f1f5f9; }
+        [data-bs-theme="dark"] .form-control:focus { background-color: #1e293b; color: #ffffff; border-color: #10b981; box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25); }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
+
+        /* Fix for elements inside success/green banners in dark mode */
+        [data-bs-theme="dark"] .bg-success .bg-white { background-color: #ffffff !important; color: #198754 !important; }
+        [data-bs-theme="dark"] .bg-success .btn-light { background-color: #ffffff !important; border-color: #ffffff !important; color: #198754 !important; }
+        [data-bs-theme="dark"] .bg-success .text-white { color: #ffffff !important; }
+        [data-bs-theme="dark"] .bg-success .badge.bg-white { background-color: #ffffff !important; color: #198754 !important; }
 
         * {
             margin: 0;
@@ -29,409 +98,142 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--content-bg);
+            color: var(--bs-body-color);
             overflow-x: hidden;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* User Wrapper */
-        .user-wrapper {
-            display: flex;
-            min-height: 100vh;
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
         }
 
-        /* Sidebar */
+        .user-wrapper { display: flex; min-height: 100vh; }
+
         .sidebar {
             width: var(--sidebar-width);
             background: var(--sidebar-bg);
-            color: white;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh; z-index: 1000;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            display: flex; flex-direction: column;
         }
 
         .sidebar-brand {
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            display: flex; align-items: center; gap: 0.75rem;
+            color: var(--sidebar-brand);
+            height: 70px;
+            border-bottom: 1px solid var(--border-color);
         }
-
-        .sidebar-brand i {
-            font-size: 1.75rem;
-            color: var(--primary);
-        }
-
-        .sidebar-brand span {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
+        .sidebar-brand i { font-size: 1.5rem; color: var(--primary); }
+        .sidebar-brand span { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
         .sidebar-brand small {
-            font-size: 0.7rem;
-            color: var(--primary);
-            margin-left: auto;
-            background: rgba(44, 122, 110, 0.2);
-            padding: 0.2rem 0.6rem;
-            border-radius: 20px;
+            font-size: 0.7rem; color: var(--primary); margin-left: auto;
+            background: rgba(16, 185, 129, 0.1); padding: 0.2rem 0.6rem; border-radius: 20px;
         }
 
-        .sidebar-nav {
-            padding: 1.25rem 1rem;
-            flex: 1;
-        }
-
-        .sidebar-nav .nav-item {
-            margin-bottom: 0.25rem;
-        }
+        .sidebar-nav { padding: 1rem 0.75rem; flex: 1; overflow-y: auto; }
+        .sidebar-nav .nav-item { margin-bottom: 0.2rem; }
 
         .sidebar-nav .nav-link {
-            color: #a0aec0;
-            padding: 0.7rem 1rem;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.2s;
-            text-decoration: none;
-            font-size: 0.9rem;
+            color: var(--sidebar-text); padding: 0.65rem 1rem; border-radius: 8px;
+            display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s;
+            text-decoration: none; font-size: 0.95rem; font-weight: 500;
         }
+        .sidebar-nav .nav-link:hover { background: var(--sidebar-hover); color: var(--sidebar-brand); }
+        .sidebar-nav .nav-link.active { background: var(--sidebar-active-bg); color: var(--primary); font-weight: 600; }
+        .sidebar-nav .nav-link.active i { color: var(--primary); }
+        .sidebar-nav .nav-link i { font-size: 1.1rem; opacity: 0.8; }
 
-        .sidebar-nav .nav-link:hover {
-            background: var(--sidebar-hover);
-            color: white;
-        }
-
-        .sidebar-nav .nav-link.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .sidebar-nav .nav-link i {
-            font-size: 1.2rem;
-        }
-
-        /* School Info - at the bottom */
+        /* School Info at sidebar bottom */
         .school-info {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin-top: auto;
+            padding: 1rem; border-top: 1px solid var(--border-color);
         }
-
         .school-name {
-            font-weight: 600;
-            color: white;
-            font-size: 0.9rem;
+            color: var(--sidebar-brand); font-weight: 600; font-size: 0.9rem;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
             margin-bottom: 0.25rem;
         }
-
         .school-plan {
-            font-size: 0.7rem;
-            color: var(--primary);
-            background: rgba(44, 122, 110, 0.2);
-            padding: 0.2rem 0.75rem;
-            border-radius: 20px;
-            display: inline-block;
+            font-size: 0.7rem; color: var(--primary); background: rgba(16, 185, 129, 0.1);
+            padding: 0.2rem 0.75rem; border-radius: 20px; display: inline-block;
         }
 
-        /* Main Content */
         .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-            background: #f8f9fa;
+            flex: 1; margin-left: var(--sidebar-width); min-height: 100vh;
+            background: var(--content-bg); transition: background-color 0.2s ease;
         }
 
-        /* Top Bar */
         .top-bar {
-            background: white;
-            padding: 0.85rem 2rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 999;
+            background: var(--card-bg); height: 70px; padding: 0 2rem;
+            border-bottom: 1px solid var(--border-color); display: flex;
+            justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 999;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
-        .page-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin: 0;
-        }
+        .page-title { font-size: 1.25rem; font-weight: 600; color: var(--bs-heading-color); margin: 0; letter-spacing: -0.01em; }
 
-        /* Top Bar Right Icons */
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
+        .theme-toggle-btn, .notification-btn {
+            background: none; border: none; padding: 0.5rem; width: 38px; height: 38px;
+            font-size: 1.1rem; cursor: pointer; color: var(--bs-body-color);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; transition: background 0.2s; position: relative;
         }
-
-        /* Notifications Dropdown */
-        .notifications-dropdown {
-            position: relative;
-        }
-
-        .notifications-btn {
-            background: none;
-            border: none;
-            color: #718096;
-            font-size: 1.3rem;
-            position: relative;
-            cursor: pointer;
-            padding: 0.5rem;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #dc3545;
-            color: white;
-            font-size: 0.7rem;
-            padding: 0.15rem 0.4rem;
-            border-radius: 20px;
-            min-width: 18px;
-            text-align: center;
-        }
-
-        .notifications-menu {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            width: 350px;
-            display: none;
-            z-index: 1000;
-            margin-top: 0.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .notifications-menu.show {
-            display: block;
-        }
-
-        .notifications-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notifications-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: start;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            text-decoration: none;
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s;
-        }
-
-        .notification-item:hover {
-            background: #f8f9fa;
-        }
-
-        .notification-item.unread {
-            background: #f0f9f7;
-        }
-
-        .notification-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-text {
-            color: #2d3748;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-            line-height: 1.4;
-        }
-
-        .notification-time {
-            color: #718096;
-            font-size: 0.75rem;
-        }
-
-        .notifications-footer {
-            padding: 1rem 1.5rem;
-            text-align: center;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .notifications-footer a {
-            color: var(--primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        /* User Dropdown */
-        .user-dropdown {
-            position: relative;
-        }
+        .theme-toggle-btn:hover, .notification-btn:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
 
         .user-dropdown-btn {
-            background: none;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.4rem 0.75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background: none; border: none; display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.4rem 0.5rem 0.4rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;
         }
-
-        .user-dropdown-btn:hover {
-            background: #f8f9fa;
-        }
-
-        .user-info {
-            text-align: right;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 0.85rem;
-        }
-
-        .user-role {
-            font-size: 0.7rem;
-            color: #718096;
-        }
-
+        .user-dropdown-btn:hover { background: rgba(16, 185, 129, 0.1); }
+        .user-info { text-align: right; }
+        .user-name { font-weight: 600; color: var(--bs-body-color); font-size: 0.85rem; }
+        .user-role { font-size: 0.75rem; color: var(--bs-secondary-color); }
+        
         .user-avatar {
-            width: 36px;
-            height: 36px;
-            background: var(--primary);
-            color: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
+            width: 32px; height: 32px; background: var(--primary); color: white;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 0.85rem;
         }
 
         .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            min-width: 200px;
-            display: none;
-            z-index: 1000;
-            margin-top: 0.5rem;
-            border: 1px solid var(--border-color);
+            position: absolute; right: 0; top: 100%; background: var(--card-bg);
+            border-radius: 12px; box-shadow: var(--shadow); min-width: 220px;
+            display: none; z-index: 1000; margin-top: 0.5rem;
+            border: 1px solid var(--border-color); overflow: hidden; padding: 0.5rem;
         }
-
-        .dropdown-menu.show {
-            display: block;
-        }
-
+        .dropdown-menu.show { display: block; }
         .dropdown-item {
-            padding: 0.7rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #2d3748;
-            text-decoration: none;
-            transition: all 0.2s;
-            width: 100%;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-size: 0.85rem;
+            padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.75rem;
+            color: var(--bs-body-color); text-decoration: none; transition: all 0.2s;
+            width: 100%; border: none; background: none; cursor: pointer; font-size: 0.85rem; border-radius: 8px;
         }
+        .dropdown-item:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .dropdown-item:hover i { color: var(--primary); }
+        .dropdown-item i { font-size: 1rem; color: var(--bs-secondary-color); transition: color 0.2s; }
+        .dropdown-divider { height: 1px; background: var(--border-color); margin: 0.5rem 0; }
 
-        .dropdown-item:hover {
-            background: #f8f9fa;
-        }
+        .content-area { padding: 2rem; }
 
-        .dropdown-item i {
-            font-size: 1rem;
-            color: #718096;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: var(--border-color);
-            margin: 0.5rem 0;
-        }
-
-        /* Content Area */
-        .content-area {
-            padding: 1.5rem 2rem;
-        }
-
-        /* Cards */
         .card {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: var(--shadow-sm);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
-
         .card-header {
-            background: white;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
+            background: transparent; border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem;
         }
+        .card-body { padding: 1.5rem; }
 
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        /* Badges */
-        .badge {
-            padding: 0.35rem 0.7rem;
-            font-weight: 500;
-            font-size: 0.7rem;
-            border-radius: 20px;
-        }
-
-        .badge.bg-success {
-            background: rgba(44, 122, 110, 0.1) !important;
-            color: var(--primary) !important;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 0;
-                left: -260px;
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .content-area {
-                padding: 1rem;
-            }
+            .sidebar { width: 0; left: -260px; }
+            .main-content { margin-left: 0; }
+            .content-area { padding: 1rem; }
+            .top-bar { padding: 0 1rem; }
         }
     </style>
 </head>
@@ -439,11 +241,11 @@
     <div class="user-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-brand">
+            <a href="{{ route('home') }}" class="sidebar-brand" style="text-decoration: none;">
                 <i class="bi bi-mortarboard"></i>
                 <span>EduBoard</span>
                 <small>School</small>
-            </div>
+            </a>
             
             <nav class="sidebar-nav">
                 <div class="nav-item">
@@ -453,15 +255,15 @@
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="{{ route('central.user.domain') }}" class="nav-link {{ request()->routeIs('central.user.domain') ? 'active' : '' }}">
-                        <i class="bi bi-globe2"></i>
-                        Domain Management
+                    <a href="{{ route('central.user.templates') }}" class="nav-link {{ request()->routeIs('central.user.templates*') ? 'active' : '' }}">
+                        <i class="bi bi-palette"></i>
+                        Templates
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="{{ route('central.user.templates') }}" class="nav-link {{ request()->routeIs('central.user.templates') ? 'active' : '' }}">
-                        <i class="bi bi-files"></i>
-                        Templates
+                    <a href="{{ route('central.user.domain') }}" class="nav-link {{ request()->routeIs('central.user.domain') ? 'active' : '' }}">
+                        <i class="bi bi-globe"></i>
+                        Domain
                     </a>
                 </div>
                 <div class="nav-item">
@@ -472,10 +274,9 @@
                 </div>
             </nav>
 
-            <!-- School Info -->
             <div class="school-info">
-                <div class="school-name">{{ auth()->user()->school_name ?? 'School Name' }}</div>
-                <div class="school-plan">{{ auth()->user()->plan ?? 'Basic Plan' }}</div>
+                <div class="school-name">{{ auth()->user()->school_name ?? 'Your School' }}</div>
+                <div class="school-plan">{{ auth()->user()->plan ?? 'Basic' }} Plan</div>
             </div>
         </aside>
 
@@ -487,39 +288,33 @@
                     @hasSection('page-title')
                         @yield('page-title')
                     @else
-                        @php
-                            $routeName = request()->route()->getName();
-                            $title = match(true) {
-                                str_contains($routeName, 'dashboard') => 'Dashboard',
-                                str_contains($routeName, 'domain') => 'Domain Management',
-                                str_contains($routeName, 'templates') => 'Templates',
-                                str_contains($routeName, 'subscription') => 'Subscription',
-                                str_contains($routeName, 'settings') => 'Settings',
-                                str_contains($routeName, 'profile') => 'Profile',
-                                default => 'Dashboard'
-                            };
-                        @endphp
-                        {{ $title }}
+                        {{ ucfirst(str_replace('central.user.', '', request()->route()->getName() ?? 'Dashboard')) }}
                     @endif
                 </h1>
                 
-                <div class="top-bar-right">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle-btn" id="centralThemeToggle" title="Toggle theme">
+                        <i class="bi bi-moon-fill dark-icon" style="display: none;"></i>
+                        <i class="bi bi-sun-fill light-icon" style="font-size: 1.1rem;"></i>
+                    </button>
+
                     <!-- Notifications Dropdown -->
                     <div class="notifications-dropdown">
-                        <button class="notifications-btn" onclick="toggleNotifications()">
+                        <button class="notification-btn" onclick="toggleNotifications()">
                             <i class="bi bi-bell"></i>
                             @if(auth()->user()->unreadNotifications->count() > 0)
-                                <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+                                <span class="notification-badge" style="position: absolute; top:-2px; right:-2px; background:#ef4444; color:white; font-size: 0.65rem; padding: 0.15rem 0.35rem; border-radius: 10px; border: 2px solid var(--bs-body-bg);">{{ auth()->user()->unreadNotifications->count() }}</span>
                             @endif
                         </button>
                         
-                        <div class="notifications-menu" id="notificationsMenu">
-                            <div class="notifications-header">
+                        <div class="dropdown-menu" id="notificationsMenu" style="width: 350px;">
+                            <div class="p-3 border-bottom d-flex justify-content-between">
                                 <h6 class="mb-0">Notifications</h6>
                                 <span class="text-success">{{ auth()->user()->unreadNotifications->count() }} new</span>
                             </div>
                             
-                            <div class="notifications-list">
+                            <div style="max-height: 300px; overflow-y: auto;">
                                 @forelse(auth()->user()->unreadNotifications as $notification)
                                     @php
                                         $link = '#';
@@ -528,31 +323,32 @@
                                             elseif($notification->data['icon'] == 'upgrade') $link = route('central.user.subscription');
                                         }
                                     @endphp
-                                    <a href="{{ $link }}" class="notification-item unread">
-                                        <div class="notification-icon bg-primary bg-opacity-10">
+                                    <a href="{{ $link }}" class="dropdown-item d-flex align-items-start gap-3 p-3 border-bottom @if($notification->unread()) bg-light @endif" style="font-size: 0.85rem; white-space: normal;">
+                                        <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
                                             @if(isset($notification->data['icon']) && $notification->data['icon'] == 'school')
-                                                <i class="bi bi-bank text-primary"></i>
+                                                <i class="bi bi-bank"></i>
                                             @elseif(isset($notification->data['icon']) && $notification->data['icon'] == 'upgrade')
-                                                <i class="bi bi-arrow-up-circle text-primary"></i>
+                                                <i class="bi bi-arrow-up-circle"></i>
                                             @else
-                                                <i class="bi bi-megaphone text-primary"></i>
+                                                <i class="bi bi-megaphone"></i>
                                             @endif
                                         </div>
-                                        <div class="notification-content">
-                                            <p class="notification-text">{{ $notification->data['title'] ?? 'New Notification' }}<br/><small>{{ $notification->data['desc'] ?? '' }}</small></p>
-                                            <span class="notification-time">{{ $notification->created_at->diffForHumans() }}</span>
+                                        <div>
+                                            <p class="mb-1 fw-bold text-dark">{{ $notification->data['title'] ?? 'New Notification' }}</p>
+                                            <p class="mb-1 text-muted">{{ $notification->data['desc'] ?? '' }}</p>
+                                            <span class="text-muted" style="font-size: 0.75rem;">{{ $notification->created_at->diffForHumans() }}</span>
                                         </div>
                                     </a>
                                 @empty
-                                    <div class="p-3 text-center text-muted border-bottom">
+                                    <div class="p-3 text-center text-muted">
                                         No new notifications.
                                     </div>
                                 @endforelse
                             </div>
                             
                             @if(auth()->user()->unreadNotifications->count() > 0)
-                            <div class="notifications-footer">
-                                <a href="{{ route('central.notifications.read') }}">Mark All As Read</a>
+                            <div class="p-2 text-center border-top">
+                                <a href="{{ route('central.notifications.read') }}" class="text-primary text-decoration-none">Mark All As Read</a>
                             </div>
                             @endif
                         </div>
@@ -562,15 +358,11 @@
                     <div class="user-dropdown">
                         <button class="user-dropdown-btn" onclick="toggleDropdown()">
                             <div class="user-info">
-                                <div class="user-name">{{ auth()->user()->name ?? 'User' }}</div>
-                                <div class="user-role">{{ auth()->user()->role ?? 'School' }}</div>
+                                <div class="user-name">{{ auth()->user()->name }}</div>
+                                <div class="user-role">School Admin</div>
                             </div>
-                            <div class="user-avatar overflow-hidden d-flex align-items-center justify-content-center">
-                                @if(auth()->user()->profile_photo)
-                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
-                                @else
-                                    {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
-                                @endif
+                            <div class="user-avatar">
+                                {{ substr(auth()->user()->name, 0, 1) }}
                             </div>
                         </button>
                         
@@ -584,7 +376,7 @@
                                 Settings
                             </a>
                             <div class="dropdown-divider"></div>
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                                 @csrf
                                 <button type="submit" class="dropdown-item">
                                     <i class="bi bi-box-arrow-right"></i>
@@ -597,7 +389,30 @@
             </div>
 
             <!-- Content Area -->
-            <div class="content-area">
+            <div class="content-area position-relative">
+                @if(session('success'))
+                <div class="position-absolute top-0 end-0 p-4" style="z-index: 1060; margin-top: -1rem;">
+                    <div class="toast align-items-center text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" id="successToast">
+                        <div class="d-flex">
+                            <div class="toast-body fs-6 py-3">
+                                <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i> 
+                                <span class="align-middle">{{ session('success') }}</span>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var toastEl = document.getElementById('successToast');
+                        if (toastEl) {
+                            var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                            toast.show();
+                        }
+                    });
+                </script>
+                @endif
+                
                 @yield('content')
             </div>
         </main>
@@ -606,7 +421,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Dropdown Script -->
+    <!-- Scripts -->
     <script>
         function toggleDropdown() {
             document.getElementById('userDropdown').classList.toggle('show');
@@ -616,21 +431,45 @@
             document.getElementById('notificationsMenu').classList.toggle('show');
         }
 
-        window.onclick = function(event) {
-            if (!event.target.matches('.user-dropdown-btn') && !event.target.closest('.user-dropdown-btn')) {
-                var dropdowns = document.getElementsByClassName('dropdown-menu');
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('centralThemeToggle');
+            if (toggleBtn) {
+                const lightIcon = toggleBtn.querySelector('.light-icon');
+                const darkIcon = toggleBtn.querySelector('.dark-icon');
+
+                const refreshToggleState = () => {
+                    if (document.documentElement.getAttribute('data-bs-theme') === 'dark') {
+                        lightIcon.style.display = 'none';
+                        darkIcon.style.display = 'inline-block';
+                    } else {
+                        lightIcon.style.display = 'inline-block';
+                        darkIcon.style.display = 'none';
                     }
+                };
+                refreshToggleState();
+
+                toggleBtn.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('central-theme', newTheme);
+                    refreshToggleState();
+                });
+            }
+        });
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.user-dropdown-btn') && !event.target.closest('#userDropdown')) {
+                var userDropdown = document.getElementById('userDropdown');
+                if (userDropdown && userDropdown.classList.contains('show')) {
+                    userDropdown.classList.remove('show');
                 }
             }
-            
-            if (!event.target.matches('.notifications-btn') && !event.target.closest('.notifications-btn')) {
-                var notifications = document.getElementById('notificationsMenu');
-                if (notifications && notifications.classList.contains('show')) {
-                    notifications.classList.remove('show');
+            if (!event.target.closest('.notifications-dropdown')) {
+                var notifDropdown = document.getElementById('notificationsMenu');
+                if (notifDropdown && notifDropdown.classList.contains('show')) {
+                    notifDropdown.classList.remove('show');
                 }
             }
         }

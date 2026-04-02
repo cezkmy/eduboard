@@ -61,8 +61,8 @@
         <!-- General Settings -->
         <div class="tab-pane fade show active" id="general">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="fw-semibold mb-0 text-dark">General Settings</h5>
+                <div class="card-header py-3">
+                    <h5 class="fw-semibold mb-0">General Settings</h5>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('central.user.settings.update') }}">
@@ -110,8 +110,8 @@
         <!-- Notifications Settings -->
         <div class="tab-pane fade" id="notifications">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="fw-semibold mb-0 text-dark">Notification Preferences</h5>
+                <div class="card-header py-3">
+                    <h5 class="fw-semibold mb-0">Notification Preferences</h5>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('central.user.settings.update') }}">
@@ -120,7 +120,7 @@
                         <div class="row g-4">
                             <div class="col-12">
                                 <h6 class="fw-semibold mb-3">Email Notifications</h6>
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                     <div>
                                         <span class="fw-medium">New announcement published</span>
                                         <p class="small text-secondary mb-0">Get notified when you publish announcements</p>
@@ -129,7 +129,7 @@
                                         <input class="form-check-input" type="checkbox" name="notify_announcement" checked>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                     <div>
                                         <span class="fw-medium">Media uploads</span>
                                         <p class="small text-secondary mb-0">Get notified when media files are uploaded</p>
@@ -138,7 +138,7 @@
                                         <input class="form-check-input" type="checkbox" name="notify_media" checked>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-2">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
                                     <div>
                                         <span class="fw-medium">Subscription updates</span>
                                         <p class="small text-secondary mb-0">Billing and plan change notifications</p>
@@ -162,8 +162,8 @@
         <!-- Security Settings -->
         <div class="tab-pane fade" id="security">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="fw-semibold mb-0 text-dark">Security Settings</h5>
+                <div class="card-header py-3">
+                    <h5 class="fw-semibold mb-0">Security Settings</h5>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('central.user.settings.update') }}">
@@ -171,14 +171,14 @@
                         <input type="hidden" name="active_tab" value="security">
                         <div class="row g-4">
                             <div class="col-12">
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-3">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-3">
                                     <div>
                                         <h6 class="fw-semibold mb-1">Two-Factor Authentication</h6>
                                         <p class="text-secondary small mb-0">Add an extra layer of security</p>
                                     </div>
                                     <button type="button" class="btn btn-outline-success btn-sm">Enable</button>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded mb-3">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-3">
                                     <div>
                                         <h6 class="fw-semibold mb-1">Login Alerts</h6>
                                         <p class="text-secondary small mb-0">Get email alerts for new logins</p>
@@ -202,8 +202,8 @@
         <!-- School Info Settings -->
         <div class="tab-pane fade" id="school">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="fw-semibold mb-0 text-dark">School Information</h5>
+                <div class="card-header py-3">
+                    <h5 class="fw-semibold mb-0">School Information</h5>
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('central.user.settings.update') }}">
@@ -252,8 +252,8 @@
                     const tab = new bootstrap.Tab(tabEl);
                     tab.show();
                     
-                    // Update tab styles (optional but helps match your UI)
-                    document.querySelectorAll('.nav-link').forEach(link => {
+                    // Update tab styles (only for settings tabs, not sidebar)
+                    document.querySelectorAll('#settingsTab .nav-link').forEach(link => {
                         link.classList.remove('bg-success', 'text-white');
                         link.classList.add('text-success');
                     });
@@ -263,9 +263,9 @@
             }
 
             // Sync tab styles on manual click
-            document.querySelectorAll('.nav-link').forEach(tabEl => {
+            document.querySelectorAll('#settingsTab .nav-link').forEach(tabEl => {
                 tabEl.addEventListener('shown.bs.tab', function (event) {
-                    document.querySelectorAll('.nav-link').forEach(link => {
+                    document.querySelectorAll('#settingsTab .nav-link').forEach(link => {
                         link.classList.remove('bg-success', 'text-white');
                         link.classList.add('text-success');
                     });

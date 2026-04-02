@@ -35,7 +35,24 @@ class UserController extends Controller
             $validated['profile_photo'] = $path;
         }
 
+        $oldEmail = $user->email;
         $user->update($validated);
+
+        // Sync to tenant if email or other details changed
+        $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+        if ($tenant) {
+            $tenant->run(function () use ($user, $oldEmail, $validated) {
+                $tenantUser = \App\Models\User::where('email', $oldEmail)->first();
+                if ($tenantUser) {
+                    $tenantUser->update([
+                        'email' => $user->email,
+                        'name' => $user->name,
+                        'phone' => $user->phone,
+                        'address' => $user->address,
+                    ]);
+                }
+            });
+        }
 
         return back()->with('success', 'Profile updated successfully!');
     }
@@ -50,9 +67,25 @@ class UserController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
-            'password' => Hash::make($validated['password']),
+        $newPasswordHash = Hash::make($validated['password']);
+        $user = $request->user();
+
+        $user->update([
+            'password' => $newPasswordHash,
         ]);
+
+        // Sync to tenant if exists
+        $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+        if ($tenant) {
+            $tenant->run(function () use ($user, $newPasswordHash) {
+                $tenantUser = \App\Models\User::where('email', $user->email)->first();
+                if ($tenantUser) {
+                    $tenantUser->update([
+                        'password' => $newPasswordHash,
+                    ]);
+                }
+            });
+        }
 
         return back()->with('success', 'Password updated successfully!');
     }

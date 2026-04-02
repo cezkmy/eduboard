@@ -5,7 +5,7 @@
     <div class="absolute top-0 left-0 w-full h-40 bg-gradient-to-br from-teal-900/40 via-teal-900/10 to-transparent pointer-events-none"></div>
 
     <div class="px-8 pt-10 pb-6 relative z-10 flex items-center justify-between">
-        <a href="{{ route('tenant.admin.dashboard') }}" class="group flex items-center gap-3">
+        <a href="{{ route('tenant.landing') }}" class="group flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center group-hover:bg-teal-500 group-hover:text-white transition-all shadow-[0_0_15px_rgba(20,184,166,0.3)]">
                 <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6 transform group-hover:rotate-12 transition-transform">
                     <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />

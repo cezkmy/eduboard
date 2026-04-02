@@ -30,19 +30,21 @@
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-secondary small fw-medium">Active Users</span>
-                    <i class="bi bi-people text-secondary"></i>
-                </div>
-                <div class="h3 fw-bold mb-1">{{ $activeUsers }}</div>
-                <div class="d-flex align-items-center gap-1 small text-success">
-                    <i class="bi bi-arrow-up-short"></i>
-                    <span>+8.2% from last month</span>
+        <a href="{{ route('central.admin.users') }}" class="text-decoration-none">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="text-secondary small fw-medium text-uppercase">Active Users</span>
+                        <i class="bi bi-people text-secondary"></i>
+                    </div>
+                    <div class="h3 fw-bold mb-1">{{ $activeUsers }}</div>
+                    <div class="d-flex align-items-center gap-1 small text-success">
+                        <i class="bi bi-arrow-up-short"></i>
+                        <span>+8.2% from last month</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 
     <div class="col-md-6 col-lg-3">

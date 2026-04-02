@@ -3,14 +3,9 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="fw-bold mb-1">Plans</h2>
-                <p class="text-secondary">Manage subscription plans for schools.</p>
-            </div>
-            <button class="btn btn-success d-flex align-items-center gap-2">
-                <i class="bi bi-plus-lg"></i> New Plan
-            </button>
+        <div class="col-12">
+            <h2 class="fw-bold mb-1">Plans</h2>
+            <p class="text-secondary">Manage subscription plans for schools.</p>
         </div>
     </div>
 

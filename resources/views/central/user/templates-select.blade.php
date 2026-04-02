@@ -66,7 +66,7 @@
             <p class="lead text-secondary">{{ $hasSchool ? 'Upgrade your plan to access these advanced school management templates.' : 'Choose ONE free template and set up your school domain' }}</p>
             
             @if(!$hasSchool)
-            <div class="alert alert-info">
+            <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info">
                 <i class="bi bi-info-circle me-2"></i>
                 After selecting a template, we will:
                 <ul class="text-start mt-2 mb-0">
@@ -107,17 +107,15 @@
                                    {{ auth()->user()->school_domain ? 'readonly' : '' }}>
                             @php
                                 $host = parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
-                                // If host is eduboard.localhost, we just want .localhost for the suffix
-                                // to avoid sasa_eduboard.eduboard.localhost
                                 if (str_starts_with($host, 'eduboard.')) {
-                                    $baseHost = substr($host, 9); // remove 'eduboard.'
+                                    $baseHost = substr($host, 9);
                                 } else {
                                     $baseHost = $host;
                                 }
                                 $port = parse_url(config('app.url'), PHP_URL_PORT);
                                 $suffix = '_eduboard.' . $baseHost . ($port ? ':' . $port : '');
                             @endphp
-                            <span class="input-group-text bg-light">{{ $suffix }}</span>
+                            <span class="input-group-text fw-bold text-primary bg-primary bg-opacity-10">{{ $suffix }}</span>
                         </div>
                         <div class="form-text text-secondary">
                             <i class="bi bi-info-circle me-1"></i>
@@ -142,7 +140,7 @@
                         <i class="bi bi-file-text fs-1 {{ $hasSchool ? 'text-primary' : 'text-success' }}"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">{{ $template['name'] }}</h5>
-                    <span class="badge bg-light text-secondary mb-3">{{ $template['category'] }}</span>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary mb-3">{{ $template['category'] }}</span>
                     <p class="small text-secondary mb-4">{{ $template['description'] }}</p>
                     
                     @if($hasSchool)
@@ -205,7 +203,7 @@
                     <strong>This action cannot be undone.</strong>
                 </div>
 
-                <div class="bg-light p-3 rounded">
+                <div class="bg-secondary bg-opacity-10 p-3 rounded">
                     <p class="fw-medium mb-2">After confirmation:</p>
                     <ul class="small mb-0">
                         <li>✓ Your school database will be created with name: <strong id="modalDbName"></strong></li>

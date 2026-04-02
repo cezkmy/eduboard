@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class TenantController extends Controller
 {
@@ -87,8 +89,7 @@ class TenantController extends Controller
             // Notify Central Admin via Email & Database
             try {
                 // Fix: Ensure we ONLY notify the actual Central SaaS admin (is_admin = true)
-                // We cannot use role = 'admin' here because regular users/tenant owners in the Central DB also have role='admin'.
-                $centralAdmin = \App\Models\User::where('is_admin', true)->first();
+                $centralAdmin = \App\Models\User::where('role', 'admin')->first();
                 if ($centralAdmin) {
                     $centralAdmin->notify(new \App\Notifications\CentralNewTenantNotification($tenant->school_name, $domainName));
                 }
@@ -103,14 +104,16 @@ class TenantController extends Controller
 
             \Log::info('Step 3: Creating Admin User for Tenant');
             
+            // Get the central user's password hash to sync it
+            $centralPasswordHash = $user->password;
+
             // We use the tenant context to create the admin user
-            $tenant->run(function () use ($user, $adminPassword) {
+            $tenant->run(function () use ($user, $centralPasswordHash) {
                 \App\Models\User::create([
                     'name' => 'School Admin',
                     'email' => $user->email,
-                    'password' => \Illuminate\Support\Facades\Hash::make($adminPassword),
+                    'password' => $centralPasswordHash, // Sync hashed password directly
                     'role' => 'admin',
-                    'is_admin' => true,
                     'school_name' => $user->school_name,
                     'status' => 'active',
                 ]);
@@ -147,6 +150,44 @@ class TenantController extends Controller
             
             return back()->withErrors(['custom_domain' => 'Fatal Error: ' . $e->getMessage() . '. Please check logs for details.'])->withInput();
         }
+    }
+
+    public function impersonate()
+    {
+        $user = Auth::user();
+        $tenant = Tenant::where('owner_id', $user->id)->first();
+
+        if (!$tenant) {
+            return back()->with('error', 'No school found for your account.');
+        }
+
+        $token = Str::random(60);
+        $expiresAt = now()->addMinutes(5);
+
+        // Switch to tenant context and save token
+        $tenant->run(function () use ($user, $token, $expiresAt) {
+            $tenantUser = \App\Models\User::where('email', $user->email)->first();
+            if ($tenantUser) {
+                $tenantUser->update([
+                    'autologin_token' => $token,
+                    'autologin_token_expires_at' => $expiresAt,
+                ]);
+            }
+        });
+
+        // Logout from Central
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        // Redirect to tenant's autologin route
+        $domain = $tenant->domains()->first()->domain;
+        
+        // For local development, we need the port if we're on one
+        $port = parse_url(config('app.url'), PHP_URL_PORT);
+        $redirectUrl = "http://" . $domain . ($port ? ":" . $port : "") . "/autologin?token=" . $token;
+
+        return redirect($redirectUrl);
     }
 
     public function deactivate($id)

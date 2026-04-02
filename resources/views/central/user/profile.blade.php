@@ -23,7 +23,7 @@
     <div class="row">
         <!-- Profile Card -->
         <div class="col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center p-4">
                     <div class="position-relative d-inline-block">
                         <div class="bg-success bg-opacity-10 rounded-circle mb-3 overflow-hidden d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;">
@@ -42,7 +42,7 @@
                         </label>
                     </div>
                     <h4 class="fw-bold mb-1">{{ auth()->user()->name }}</h4>
-                    <p class="text-secondary mb-3">{{ auth()->user()->role }}</p>
+                    <p class="text-secondary mb-3">{{ auth()->user()->is_admin ? 'Admin' : 'School Admin' }}</p>
                     
                     <div class="d-flex justify-content-center gap-2 mb-4">
                         <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
@@ -55,7 +55,7 @@
 
                     <div class="text-start">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-envelope text-secondary"></i>
                             </div>
                             <div>
@@ -64,7 +64,7 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center mb-3">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-calendar text-secondary"></i>
                             </div>
                             <div>
@@ -73,7 +73,7 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center">
-                            <div class="bg-light p-2 rounded me-3">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-clock text-secondary"></i>
                             </div>
                             <div>
@@ -89,7 +89,7 @@
         <!-- Edit Profile Form -->
         <div class="col-md-8 mb-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
+                <div class="card-header py-3">
                     <h5 class="fw-semibold mb-0">Edit Profile Information</h5>
                 </div>
                 <div class="card-body p-4">

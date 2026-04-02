@@ -4,13 +4,6 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="{{ route('central.admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-        </a>
-    </div>
-
     <div class="row">
         <div class="col-12">
             @if(session('success'))

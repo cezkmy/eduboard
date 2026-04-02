@@ -23,7 +23,7 @@
     </script>
 
     <!-- Google Fonts for Modern Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -55,7 +55,41 @@
             --card-bg: #1e293b; /* Distinct Card Bg */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --bs-body-color: #f1f5f9;
+            --bs-body-bg: #0f172a;
+            --bs-heading-color: #ffffff;
+            --bs-secondary-color: #94a3b8;
         }
+
+        /* Dark mode utility overrides */
+        [data-bs-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .text-secondary { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #64748b !important; }
+        [data-bs-theme="dark"] .bg-white { background-color: var(--card-bg) !important; color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .btn-light { background-color: #334155 !important; border-color: #475569 !important; color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .btn-light:hover { background-color: #475569 !important; }
+        [data-bs-theme="dark"] .card { background-color: var(--card-bg); border-color: var(--border-color); }
+        [data-bs-theme="dark"] .modal-content { background-color: var(--card-bg); color: #f1f5f9; }
+        [data-bs-theme="dark"] .modal-header { border-bottom-color: var(--border-color); }
+        [data-bs-theme="dark"] .modal-footer { border-top-color: var(--border-color); }
+
+        /* Button & Input Overrides for Dark Mode */
+        [data-bs-theme="dark"] .btn-success { background-color: #10b981; border-color: #10b981; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-success:hover { background-color: #059669; border-color: #059669; }
+        [data-bs-theme="dark"] .btn-outline-success { color: #10b981; border-color: #10b981; }
+        [data-bs-theme="dark"] .btn-outline-success:hover { background-color: #10b981; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-dark { background-color: #334155; border-color: #475569; color: #ffffff !important; }
+        [data-bs-theme="dark"] .btn-dark:hover { background-color: #475569; }
+        [data-bs-theme="dark"] .input-group-text { background-color: #334155; border-color: #475569; color: #cbd5e1; }
+        [data-bs-theme="dark"] .form-control { background-color: #1e293b; border-color: #475569; color: #f1f5f9; }
+        [data-bs-theme="dark"] .form-control:focus { background-color: #1e293b; color: #ffffff; border-color: #10b981; box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25); }
+        [data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
+
+        /* Fix for elements inside success/green banners in dark mode */
+        [data-bs-theme="dark"] .bg-success .bg-white { background-color: #ffffff !important; color: #198754 !important; }
+        [data-bs-theme="dark"] .bg-success .btn-light { background-color: #ffffff !important; border-color: #ffffff !important; color: #198754 !important; }
+        [data-bs-theme="dark"] .bg-success .text-white { color: #ffffff !important; }
+        [data-bs-theme="dark"] .bg-success .badge.bg-white { background-color: #ffffff !important; color: #198754 !important; }
 
         * {
             margin: 0;
@@ -69,6 +103,11 @@
             color: var(--bs-body-color);
             overflow-x: hidden;
             transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
         }
 
         .admin-wrapper { display: flex; min-height: 100vh; }
@@ -249,16 +288,22 @@
     <div class="admin-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-brand">
+            <a href="{{ route('home') }}" class="sidebar-brand" style="text-decoration: none;">
                 <i class="bi bi-mortarboard"></i>
                 <span>EduBoard</span>
-            </div>
+            </a>
             
             <nav class="sidebar-nav">
                 <div class="nav-item">
                     <a href="{{ route('central.admin.dashboard') }}" class="nav-link {{ request()->routeIs('central.admin.dashboard') ? 'active' : '' }}">
                         <i class="bi bi-speedometer2"></i>
                         Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="{{ route('central.admin.users') }}" class="nav-link {{ request()->routeIs('central.admin.users') ? 'active' : '' }}">
+                        <i class="bi bi-people"></i>
+                        Users
                     </a>
                 </div>
                 <div class="nav-item">
@@ -300,7 +345,7 @@
                     </div>
                     <div class="info">
                         <div class="name">{{ auth()->user()->name }}</div>
-                        <div class="role">{{ ucfirst(auth()->user()->role) }}</div>
+                        <div class="role">{{ auth()->user()->is_admin ? 'Admin' : 'User' }}</div>
                     </div>
                 </a>
             </div>

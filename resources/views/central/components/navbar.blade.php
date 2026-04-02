@@ -28,7 +28,7 @@
 
         <div class="d-flex align-items-center gap-2">
             @auth
-                @if(Auth::user()->is_admin)
+                @if(Auth::user()->role === 'admin')
                     <span class="badge bg-primary d-none d-sm-inline-block me-1">Admin</span>
                     <a href="{{ route('central.admin.dashboard') }}" class="btn btn-outline-primary btn-sm">Dashboard</a>
                 @else

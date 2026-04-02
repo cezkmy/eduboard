@@ -55,6 +55,14 @@ foreach (config('tenancy.central_domains') as $domain) {
                     $recentTenants = \App\Models\Tenant::latest()->take(5)->get();
                     return view('central.admin.dashboard', compact('totalSchools', 'activeUsers', 'recentTenants'));
                 })->name('dashboard');
+
+                Route::get('users', function () {
+                    if (!auth()->user()->is_admin) {
+                        return redirect()->route('central.user.dashboard');
+                    }
+                    $users = \App\Models\User::latest()->get();
+                    return view('central.admin.users', compact('users'));
+                })->name('users');
                 
                 Route::get('tenants', function () { 
                     if (!auth()->user()->is_admin) {
@@ -169,17 +177,11 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('templates/select', [TenantController::class, 'store'])->name('templates.select.store');
                 
                 Route::get('domain', function () { 
-                    $user = auth()->user();
-                    $tenant = null;
-                    if ($user->school_domain) {
-                        $host = explode(':', $user->school_domain)[0];
-                        $domain = \App\Models\Domain::where('domain', $host)->first();
-                        if ($domain) {
-                            $tenant = $domain->tenant;
-                        }
-                    }
+                    $tenant = \App\Models\Tenant::where('owner_id', auth()->id())->first();
                     return view('central.user.domain', compact('tenant')); 
                 })->name('domain');
+                
+                Route::get('impersonate', [\App\Http\Controllers\Central\TenantController::class, 'impersonate'])->name('impersonate');
                 
                 Route::post('session/clear', function () { 
                     session()->forget(['tenant_credentials', 'tenant_domain']);

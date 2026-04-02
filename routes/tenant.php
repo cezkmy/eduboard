@@ -290,6 +290,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     });
 
     // Tenant Login/Logout
+    Route::get('/autologin', [App\Http\Controllers\AuthController::class, 'autologin'])->name('tenant.autologin');
     Route::get('/login', [App\Http\Controllers\AuthController::class, 'showLogin'])->name('tenant.login');
     Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('tenant.login.post');
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('tenant.logout');

@@ -9,6 +9,44 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function autologin(Request $request)
+    {
+        $token = $request->query('token');
+
+        if (!$token) {
+            return redirect()->route('tenant.login')->with('error', 'Invalid login token.');
+        }
+
+        $user = User::where('autologin_token', $token)
+                    ->where('autologin_token_expires_at', '>', now())
+                    ->first();
+
+        if (!$user) {
+            return redirect()->route('tenant.login')->with('error', 'Login token expired or invalid.');
+        }
+
+        // Clear token
+        $user->update([
+            'autologin_token' => null,
+            'autologin_token_expires_at' => null,
+        ]);
+
+        // Login user
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        // Redirect based on role
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard');
+        } elseif ($user->role === 'teacher') {
+            return redirect('/teacher/dashboard');
+        } elseif ($user->role === 'student') {
+            return redirect('/student/dashboard');
+        }
+
+        return redirect('/dashboard');
+    }
+
     public function showLogin()
     {
         if (Auth::check()) {
@@ -130,7 +168,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'school_name' => $request->school_name,
                 'password' => Hash::make($request->password),
-                'role' => 'admin',
+                'role' => 'user',
                 'status' => 'trial',
                 'trial_ends_at' => now()->addDays(30),
                 'plan' => 'Basic',

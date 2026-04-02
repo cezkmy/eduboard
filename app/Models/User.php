@@ -10,20 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'role', 'profile_photo', 'phone', 'address', 'password', 'is_admin', 'school_name', 'status', 'trial_ends_at', 'plan', 'has_selected_template', 'school_domain'])]
+#[Fillable(['name', 'email', 'role', 'profile_photo', 'phone', 'address', 'password', 'school_name', 'status', 'trial_ends_at', 'plan', 'has_selected_template', 'school_domain', 'autologin_token', 'autologin_token_expires_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Determine if the user is a central admin.
-     */
-    public function getIsAdminAttribute(): bool
-    {
-        return (bool) ($this->attributes['is_admin'] ?? false);
-    }
 
     public function announcements()
     {
@@ -35,7 +28,6 @@ class User extends Authenticatable
      */
     public function getRoleAttribute(): string
     {
-        if ($this->is_admin) return 'admin';
         return strtolower($this->attributes['role'] ?? 'user');
     }
 

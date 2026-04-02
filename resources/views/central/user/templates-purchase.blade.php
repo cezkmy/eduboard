@@ -12,10 +12,10 @@
     </div>
 
     @if(!auth()->user()->has_selected_template)
-        <div class="alert alert-warning mb-4">
+        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 text-warning mb-4">
             <i class="bi bi-info-circle me-2"></i>
             You haven't selected your free trial template yet. 
-            <a href="{{ route('central.user.templates.select') }}" class="alert-link">Click here to select</a>
+            <a href="{{ route('central.user.templates.select') }}" class="alert-link text-warning fw-bold">Click here to select</a>
         </div>
     @endif
 
@@ -45,7 +45,7 @@
                     
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <span class="h5 fw-bold text-success mb-0">{{ $template['price'] }}</span>
-                        <button class="btn btn-sm btn-outline-success">
+                        <button class="btn btn-sm btn-success">
                             <i class="bi bi-bag me-1"></i>Buy
                         </button>
                     </div>

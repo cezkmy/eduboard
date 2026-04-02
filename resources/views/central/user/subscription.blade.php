@@ -19,7 +19,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <h4 class="fw-bold mb-2">Current Plan: 
-                                <span class="badge bg-white text-success">
+                                <span class="badge bg-white text-success border-0 shadow-none">
                                     {{ auth()->user()->plan ?? 'Basic' }} 
                                     @if(auth()->user()->status === 'trial')(Trial)@endif
                                 </span>
@@ -28,14 +28,14 @@
                                 @if(auth()->user()->status === 'trial' && auth()->user()->trial_ends_at)
                                     Free Trial • Ends {{ \Carbon\Carbon::parse(auth()->user()->trial_ends_at)->format('F d, Y') }}
                                 @elseif(auth()->user()->status === 'trial')
-                                    Free Trial • No end date set
+                                    Free for 1 month • Select 1 free template • Domain Management after template selection
                                 @else
                                     Active Subscription
                                 @endif
                             </p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <span class="badge bg-white text-success py-2 px-3">
+                            <span class="badge bg-white text-success border-0 shadow-none py-2 px-3">
                                 {{ auth()->user()->status === 'trial' ? 'Trial' : 'Active' }}
                             </span>
                         </div>
@@ -90,11 +90,11 @@
                     
                     <div class="mt-auto pt-3">
                         @if($isCurrent)
-                            <button class="btn border-success text-success bg-white w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">MANAGE PLAN</button>
+                            <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">MANAGE PLAN</button>
                         @elseif($plan->price === 'Free')
                             <button class="btn btn-light w-100 fw-bold text-muted disabled">CURRENT PLAN</button>
                         @else
-                            <button class="btn btn-dark w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">UPGRADE NOW</button>
+                            <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">UPGRADE NOW</button>
                         @endif
                     </div>
                 </div>
