@@ -281,8 +281,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: #f0fdf4;
-    color: #10b981;
+    background: rgba(var(--accent-rgb), 0.10);
+    color: var(--color-primary);
 }
 
 .notif-title {
@@ -315,7 +315,7 @@
 }
 
 .notif-footer a:first-child {
-    color: #10b981;
+    color: var(--color-primary);
     font-weight: 700;
     font-size: 0.875rem;
     text-decoration: none;
@@ -376,14 +376,14 @@
 .ann-filter-pill:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
-    background: #f0fdf4;
+    background: rgba(var(--accent-rgb), 0.10);
 }
 
 .ann-filter-pill.active {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: white;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.20);
 }
 
 
@@ -465,7 +465,7 @@
 
 .role-admin { background: #fef2f2; color: #ef4444; }
 .role-teacher { background: #eff6ff; color: #3b82f6; }
-.role-student { background: #f0fdf4; color: #10b981; }
+.role-student { background: rgba(var(--accent-rgb), 0.10); color: var(--color-primary); }
 
 .profile-card {
     background: white;
@@ -486,7 +486,7 @@
     width: 36px;
     height: 36px;
     color: var(--color-primary);
-    background: #f0fdf4;
+    background: rgba(var(--accent-rgb), 0.10);
     padding: 8px;
     border-radius: 10px;
 }
@@ -529,7 +529,7 @@
 .profile-form select:focus {
     background: white;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.10);
     outline: none;
 }
 
@@ -649,7 +649,7 @@
     height: 24px;
 }
 
-.stat-icon.teal { background: #f0fdf4; color: #10b981; }
+.stat-icon.teal { background: rgba(var(--accent-rgb), 0.10); color: var(--color-primary); }
 .stat-icon.blue { background: #eff6ff; color: #3b82f6; }
 .stat-icon.amber { background: #fffbeb; color: #f59e0b; }
 .stat-icon.red { background: #fef2f2; color: #ef4444; }
@@ -745,7 +745,7 @@
 }
 
 .ann-author-avatar.academic { background: #3b82f6; }
-.ann-author-avatar.events { background: #10b981; }
+.ann-author-avatar.events { background: var(--color-primary); }
 .ann-author-avatar.administrative { background: #f59e0b; }
 .ann-author-avatar.emergency { background: #ef4444; }
 
@@ -807,7 +807,7 @@
 .empty-state-icon {
     width: 64px;
     height: 64px;
-    background: #f0fdf4;
+    background: rgba(var(--accent-rgb), 0.10);
     color: var(--color-primary);
     border-radius: 16px;
     display: flex;
@@ -848,7 +848,7 @@
 .btn-primary:hover {
     background-color: var(--color-primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.20);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -872,4 +872,45 @@
 
 .modal-open {
     overflow: hidden;
+}
+
+/* Dark mode readability fixes for teacher pages */
+html[data-theme="dark"] .content-title,
+html[data-theme="dark"] .section-header h2,
+html[data-theme="dark"] .ann-card h3,
+html[data-theme="dark"] .ann-title,
+html[data-theme="dark"] .ann-author-name,
+html[data-theme="dark"] .stat-value,
+html[data-theme="dark"] .empty-state-title,
+html[data-theme="dark"] .profile-info h1,
+html[data-theme="dark"] .profile-card-header h2 {
+    color: var(--text-main) !important;
+}
+
+html[data-theme="dark"] .content-subtitle,
+html[data-theme="dark"] .ann-card p,
+html[data-theme="dark"] .ann-excerpt,
+html[data-theme="dark"] .ann-date,
+html[data-theme="dark"] .stat-label,
+html[data-theme="dark"] .empty-state-desc,
+html[data-theme="dark"] .profile-info p,
+html[data-theme="dark"] .profile-card-header p,
+html[data-theme="dark"] .profile-form label {
+    color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] .profile-form input,
+html[data-theme="dark"] .profile-form select {
+    background: #111827 !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .ann-card,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .profile-card,
+html[data-theme="dark"] .profile-header {
+    background: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
 }

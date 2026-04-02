@@ -84,7 +84,7 @@
                 <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">User Management</h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage teachers and students of {{ tenant('school_name') ?? 'your school' }}</p>
             </div>
-            <button class="px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all flex items-center gap-2 shadow-lg shadow-teal-500/20 active:scale-95" 
+            <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);"
                     @click="openAddModal()">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -99,25 +99,25 @@
                 {{-- Tabs --}}
                 <div class="flex items-center p-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl w-fit">
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'teachers' ? 'bg-white dark:bg-gray-800 text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'teachers' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                             @click="activeTab = 'teachers'">
-                        Teachers <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">5</span>
+                        Teachers <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">{{ $teachers->count() }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'students' ? 'bg-white dark:bg-gray-800 text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'students' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                             @click="activeTab = 'students'">
-                        Students <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">5</span>
+                        Students <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">{{ $students->count() }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'admins' ? 'bg-white dark:bg-gray-800 text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'admins' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                             @click="activeTab = 'admins'">
-                        Admins <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">1</span>
+                        Admins <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px]">{{ $admins->count() }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all relative"
-                            :class="activeTab === 'pending' ? 'bg-white dark:bg-gray-800 text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'pending' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
                             @click="activeTab = 'pending'">
                         Pending Approval
-                        <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 rounded text-[10px] font-black">2</span>
+                        <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 rounded text-[10px] font-black">{{ $pendingUsers->count() }}</span>
                     </button>
                 </div>
 
@@ -128,9 +128,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input type="text" x-model="searchQuery" placeholder="Search users..." 
-                               class="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500/20 transition-all">
+                               class="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                     </div>
-                    <select x-model="deptFilter" class="pl-4 pr-10 py-2 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none">
+                    <select x-model="deptFilter" class="pl-4 pr-10 py-2 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         <option value="all">All Departments</option>
                         <option value="COT">COT</option>
                         <option value="COB">COB</option>
@@ -142,205 +142,149 @@
         </div>
 
         {{-- Table Container --}}
-        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden" style="background: var(--bg-card); border-color: var(--border-color);">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700">
-                        <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.1em]">User Profile</th>
-                        <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.1em]">Department / Course</th>
-                        <th x-show="activeTab === 'students'" class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.1em]">Academic Info</th>
-                        <th class="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.1em]">Status</th>
-                        <th class="px-8 py-5"></th>
+                    <tr class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700" style="background: var(--bg-card); border-color: var(--border-color);">
+                        <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-[0.1em]">User Profile</th>
+                        <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-[0.1em]">School / Role</th>
+                        <th x-show="activeTab === 'students'" class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-[0.1em]">Academic Info</th>
+                        <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-[0.1em]">Status</th>
+                        <th class="px-6 py-4"></th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody" class="divide-y divide-gray-50 dark:divide-gray-700/50">
-
-                    {{-- ── Teachers ── --}}
-                    <tr x-show="activeTab === 'teachers'" data-role="teachers" data-dept="COT" data-course="BSIT" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all group">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-lg overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
-                                    <img src="{{ asset('images/download.jpg') }}" alt="Prof. Reyes" class="w-full h-full object-cover">
+                    @foreach($teachers as $user)
+                        <tr x-show="activeTab === 'teachers'" data-role="teachers" class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-all group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-[rgba(var(--accent-rgb),0.16)] flex items-center justify-center text-[var(--accent)] font-bold text-sm">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white">{{ $user->name }}</p>
+                                        <p class="text-xs text-gray-500 font-medium">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-black text-gray-900 dark:text-white">Prof. Reyes</p>
-                                    <p class="text-xs text-gray-500 font-medium">reyes@school.edu</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="space-y-1">
-                                <div class="inline-flex px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-tighter">COT</div>
-                                <p class="text-xs text-gray-500 font-bold">BS Information Technology</p>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <button @click="showSuccess('Account status toggled')" class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 border border-green-100 dark:border-green-900/30 uppercase tracking-widest hover:bg-green-100 transition-colors">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
-                                Active
-                            </button>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button @click="openEditModal({id:1, name:'Prof. Reyes', email:'reyes@school.edu', role:'teacher', department:'COT', course:'BSIT', status:'active'})" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-xl transition-all">
-                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-xs text-gray-500 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider {{ strtolower($user->status ?? 'active') === 'active' ? 'bg-[rgba(var(--accent-rgb),0.12)] text-[var(--accent)] border border-[rgba(var(--accent-rgb),0.28)]' : 'bg-gray-100 text-gray-600 border border-gray-200' }}">
+                                    {{ $user->status ?? 'active' }}
                                 </button>
-                                <button @click="deleteModal = true" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all">
-                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button @click='openEditModal({{ json_encode(["id" => $user->id, "name" => $user->name, "email" => $user->email, "role" => $user->role, "status" => $user->status ?? "active"]) }})' class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    @endforeach
 
-                    <tr x-show="activeTab === 'teachers'" data-role="teachers" data-dept="COT" data-course="BSCS" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all group">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-lg overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
-                                    <img src="{{ asset('images/download.jpg') }}" alt="Prof. Garcia" class="w-full h-full object-cover">
+                    @foreach($admins as $user)
+                        <tr x-show="activeTab === 'admins'" data-role="admins" class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-all group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-900/40 flex items-center justify-center text-white font-bold text-sm">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white">{{ $user->name }}</p>
+                                        <p class="text-xs text-gray-500 font-medium">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-black text-gray-900 dark:text-white">Prof. Garcia</p>
-                                    <p class="text-xs text-gray-500 font-medium">garcia@school.edu</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="space-y-1">
-                                <div class="inline-flex px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-tighter">COT</div>
-                                <p class="text-xs text-gray-500 font-bold">BS Computer Science</p>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <button @click="showSuccess('Account status toggled')" class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 border border-green-100 dark:border-green-900/30 uppercase tracking-widest hover:bg-green-100 transition-colors">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
-                                Active
-                            </button>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-xs text-gray-500 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider {{ strtolower($user->status ?? 'active') === 'active' ? 'bg-[rgba(var(--accent-rgb),0.12)] text-[var(--accent)] border border-[rgba(var(--accent-rgb),0.28)]' : 'bg-gray-100 text-gray-600 border border-gray-200' }}">
+                                    {{ $user->status ?? 'active' }}
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button @click='openEditModal({{ json_encode(["id" => $user->id, "name" => $user->name, "email" => $user->email, "role" => $user->role, "status" => $user->status ?? "active"]) }})' class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
 
-                    {{-- ── Admins ── --}}
-                    <tr x-show="activeTab === 'admins'" data-role="admins" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all group">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-blue-600 dark:bg-blue-900/30 flex items-center justify-center text-white font-black text-lg overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
-                                    SA
+                    @foreach($students as $user)
+                        <tr x-show="activeTab === 'students'" data-role="students" class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-all group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white">{{ $user->name }}</p>
+                                        <p class="text-xs text-gray-500 font-medium">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-black text-gray-900 dark:text-white">Second Admin</p>
-                                    <p class="text-xs text-gray-500 font-medium">admin2@school.edu</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-xs text-gray-500 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Member Since</span>
+                                    <span class="text-[10px] font-bold text-gray-500">{{ optional($user->created_at)->format('M Y') }}</span>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="space-y-1">
-                                <div class="inline-flex px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">System</div>
-                                <p class="text-xs text-gray-500 font-bold italic">Second Administrator</p>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <button @click="showSuccess('Account status toggled')" class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 border border-green-100 dark:border-green-900/30 uppercase tracking-widest hover:bg-green-100 transition-colors">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
-                                Active
-                            </button>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
-                            </div>
-                        </td>
-                    </tr>
+                            </td>
+                            <td class="px-6 py-4">
+                                <button class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider {{ strtolower($user->status ?? 'active') === 'active' ? 'bg-[rgba(var(--accent-rgb),0.12)] text-[var(--accent)] border border-[rgba(var(--accent-rgb),0.28)]' : 'bg-gray-100 text-gray-600 border border-gray-200' }}">
+                                    {{ $user->status ?? 'active' }}
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button @click='openEditModal({{ json_encode(["id" => $user->id, "name" => $user->name, "email" => $user->email, "role" => $user->role, "status" => $user->status ?? "active"]) }})' class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
 
-                    {{-- ── Students ── --}}
-                    <tr x-show="activeTab === 'students'" data-role="students" data-dept="COT" data-course="BSIT" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all group">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
-                                    <img src="{{ asset('images/download.jpg') }}" alt="Juan Dela Cruz" class="w-full h-full object-cover">
+                    @foreach($pendingUsers as $user)
+                        <tr x-show="activeTab === 'pending'" data-role="pending" class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-all group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300 flex items-center justify-center font-bold text-sm">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900 dark:text-white">{{ $user->name }}</p>
+                                        <p class="text-xs text-gray-500 font-medium">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-black text-gray-900 dark:text-white">Juan Dela Cruz</p>
-                                    <p class="text-xs text-gray-500 font-medium">juan@school.edu</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="space-y-1">
-                                <div class="inline-flex px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-tighter">COT</div>
-                                <p class="text-xs text-gray-500 font-bold">BS Information Technology</p>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Section A</span>
-                                <span class="text-[10px] font-bold text-gray-500">3rd Year</span>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <button @click="showSuccess('Account status toggled')" class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 border border-green-100 dark:border-green-900/30 uppercase tracking-widest hover:bg-green-100 transition-colors">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
-                                Active
-                            </button>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
-                                <button class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg></button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {{-- ── Pending Approvals ── --}}
-                    <tr x-show="activeTab === 'pending'" data-role="pending" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all group">
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-black text-lg overflow-hidden shadow-sm ring-2 ring-white dark:ring-gray-800">
-                                    KP
-                                </div>
-                                <div>
-                                    <p class="text-sm font-black text-gray-900 dark:text-white">Kevin Park</p>
-                                    <p class="text-xs text-gray-500 font-medium">kevin.park@example.com</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="space-y-1">
-                                <div class="inline-flex px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-900 text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-tighter">COT</div>
-                                <p class="text-xs text-gray-500 font-bold">BS Information Technology</p>
-                            </div>
-                        </td>
-                        <td class="px-8 py-6">
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-widest">
-                                Pending Review
-                            </span>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                                <button @click="showSuccess('User approved!')" class="px-4 py-2 bg-teal-500 text-white text-[10px] font-black rounded-xl hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">APPROVE</button>
-                                <button @click="deleteModal = true" class="px-4 py-2 bg-gray-100 text-gray-600 text-[10px] font-black rounded-xl hover:bg-gray-200 transition-all active:scale-95">REJECT</button>
-                            </div>
-                        </td>
-                    </tr>
-
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-xs text-gray-500 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40 uppercase tracking-wider">Pending Review</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button @click="showSuccess('User approved!')" class="px-3 py-1.5 bg-[var(--accent)] text-white text-[10px] font-black rounded-lg hover:bg-[var(--accent-dark)] transition-all">APPROVE</button>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
 
-            {{-- Empty State Logic --}}
-            <div x-show="false" class="flex flex-col items-center justify-center py-20 px-6 text-center">
-                <div class="w-16 h-16 bg-gray-50 dark:bg-gray-900/50 rounded-2xl flex items-center justify-center text-gray-300 mb-4">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" class="w-8 h-8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                    </svg>
+            @if($teachers->isEmpty() && $admins->isEmpty() && $students->isEmpty() && $pendingUsers->isEmpty())
+                <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
+                    <div class="w-14 h-14 bg-gray-50 dark:bg-gray-900/50 rounded-2xl flex items-center justify-center text-gray-300 mb-4">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" class="w-7 h-7">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">No users found</h3>
+                    <p class="text-xs text-gray-500 mt-1">Seed tenant users to populate this table.</p>
                 </div>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white">No users found</h3>
-                <p class="text-xs text-gray-500 mt-1">Try adjusting your filters or search terms.</p>
-            </div>
+            @endif
         </div>
 
         {{-- Add/Edit User Modal --}}
@@ -372,12 +316,14 @@
                     @csrf
                     <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800/50">
                         <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white text-xl font-black shadow-lg transition-all duration-300" 
-                             :class="currentUser.role === 'admin' ? 'bg-blue-600 shadow-blue-500/20' : 'bg-teal-500 shadow-teal-500/20'"
+                             :class="currentUser.role === 'admin' ? 'bg-blue-600 shadow-blue-500/20' : ''"
+                             :style="currentUser.role === 'admin' ? '' : 'background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.22);'"
                              x-text="currentUser.name ? currentUser.name.charAt(0) : 'U'"></div>
                         <div>
                             <p class="text-base font-black text-gray-900 dark:text-white tracking-tight" x-text="currentUser.name || 'New User'"></p>
                             <p class="text-[10px] font-black uppercase tracking-widest" 
-                               :class="currentUser.role === 'admin' ? 'text-blue-600' : 'text-teal-600'"
+                               :class="currentUser.role === 'admin' ? 'text-blue-600' : ''"
+                               :style="currentUser.role === 'admin' ? '' : 'color: var(--accent);'"
                                x-text="currentUser.role"></p>
                         </div>
                     </div>
@@ -385,18 +331,18 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                            <input type="text" x-model="currentUser.name" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all" placeholder="Juan Dela Cruz">
+                            <input type="text" x-model="currentUser.name" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="Juan Dela Cruz">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
-                            <input type="email" x-model="currentUser.email" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all" placeholder="juan@school.edu">
+                            <input type="email" x-model="currentUser.email" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="juan@school.edu">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Role</label>
-                            <select x-model="currentUser.role" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none">
+                            <select x-model="currentUser.role" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                 <option value="teacher">Teacher</option>
                                 <option value="student">Student</option>
                                 <option value="admin" :disabled="!currentUser.id && checkLimit('admin')">Administrator (Limit: {{ tenant()->getLimit('admins') }})</option>
@@ -404,7 +350,7 @@
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Status</label>
-                            <select x-model="currentUser.status" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none">
+                            <select x-model="currentUser.status" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
@@ -414,7 +360,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Department</label>
-                            <select x-model="currentUser.department" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none">
+                            <select x-model="currentUser.department" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                 <option value="">Select Dept</option>
                                 <option value="COT">COT</option>
                                 <option value="COB">COB</option>
@@ -424,18 +370,18 @@
                         </div>
                         <div x-show="currentUser.role === 'teacher'" class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Employee ID</label>
-                            <input type="text" x-model="currentUser.employee_id" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <input type="text" x-model="currentUser.employee_id" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         </div>
                         <div x-show="currentUser.role === 'student'" class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Course</label>
-                            <input type="text" x-model="currentUser.course" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <input type="text" x-model="currentUser.course" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         </div>
                     </div>
 
                     <div x-show="currentUser.role === 'student'" class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Year Level</label>
-                            <select x-model="currentUser.year_level" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all appearance-none">
+                            <select x-model="currentUser.year_level" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                 <option value="">Select Year</option>
                                 <option value="1st Year">1st Year</option>
                                 <option value="2nd Year">2nd Year</option>
@@ -445,17 +391,17 @@
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Section</label>
-                            <input type="text" x-model="currentUser.section" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                            <input type="text" x-model="currentUser.section" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         </div>
                     </div>
 
                     <div x-show="!currentUser.id" class="space-y-1.5">
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Password</label>
-                        <input type="password" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all" placeholder="••••••••">
+                        <input type="password" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="••••••••">
                     </div>
 
                     <div class="pt-2">
-                        <button type="submit" class="w-full py-3 bg-teal-500 text-white rounded-2xl text-sm font-black hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">SAVE USER</button>
+                        <button type="submit" class="w-full py-3 bg-[var(--accent)] text-white rounded-2xl text-sm font-black hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">SAVE USER</button>
                     </div>
                 </form>
             </div>
@@ -544,4 +490,10 @@
         </template>
     </div>
 
+    <style>
+    /* remove extra bottom divider under the last users row */
+    #usersTableBody > tr:last-of-type > td {
+        border-bottom: none !important;
+    }
+    </style>
 </x-app-layout>

@@ -13,17 +13,17 @@
         {{-- Tabs --}}
         <div class="tabs flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700" x-data="{ activeTab: 'general' }">
             <button class="tab px-4 py-2 font-bold transition-all" 
-                    :class="activeTab === 'general' ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+                    :class="activeTab === 'general' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
                     @click="activeTab = 'general'; $dispatch('filter-tab', 'general')">General</button>
             <button class="tab px-4 py-2 font-bold transition-all" 
-                    :class="activeTab === 'foryou' ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+                    :class="activeTab === 'foryou' ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
                     @click="activeTab = 'foryou'; $dispatch('filter-tab', 'foryou')">For You</button>
         </div>
 
         {{-- Category Pills --}}
         @if(tenant() && tenant()->hasFeature('categories'))
         <div class="categories flex flex-wrap gap-2 mb-8">
-            <button class="ann-filter-pill all active px-4 py-1.5 rounded-full bg-teal-500 text-white text-sm font-semibold" data-category="all">All</button>
+            <button class="ann-filter-pill all active px-4 py-1.5 rounded-full bg-[var(--accent)] text-white text-sm font-semibold" data-category="all">All</button>
             <button class="ann-filter-pill academic px-4 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold" data-category="academic">Academic</button>
             <button class="ann-filter-pill events px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-semibold" data-category="events">Events</button>
             <button class="ann-filter-pill administrative px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-sm font-semibold" data-category="administrative">Administrative</button>
@@ -44,7 +44,7 @@
                     <label for="dateTo" class="text-sm font-medium text-gray-600 dark:text-gray-400">To</label>
                     <input type="date" id="dateTo" class="date-input bg-gray-50 dark:bg-gray-700 border-none rounded-lg text-sm">
                 </div>
-                <button class="date-filter-btn px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-bold hover:bg-teal-600 transition-colors" id="applyDateFilter">Apply</button>
+                <button class="date-filter-btn px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-bold hover:bg-[var(--accent-dark)] transition-colors" id="applyDateFilter">Apply</button>
                 <button class="date-filter-clear px-4 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-sm font-medium" id="clearDateFilter">Clear</button>
             </div>
         </div>
@@ -111,16 +111,16 @@
                     @endif
 
                     <div class="flex items-center gap-3 mt-6 border-t border-gray-50 dark:border-gray-700 pt-4">
-                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('heart', $userReactions) ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all" data-type="heart" data-id="{{ $announcement->id }}">
+                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('heart', $userReactions) ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)]' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-all" data-type="heart" data-id="{{ $announcement->id }}">
                             <span>❤️</span> <span class="count">{{ $announcement->heart_count ?? 0 }}</span>
                         </button>
-                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('like', $userReactions) ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" data-type="like" data-id="{{ $announcement->id }}">
+                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('like', $userReactions) ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)]' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" data-type="like" data-id="{{ $announcement->id }}">
                             <span>👍</span> <span class="count">{{ $announcement->like_count ?? 0 }}</span>
                         </button>
-                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('fire', $userReactions) ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all" data-type="fire" data-id="{{ $announcement->id }}">
+                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('fire', $userReactions) ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)]' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all" data-type="fire" data-id="{{ $announcement->id }}">
                             <span>🔥</span> <span class="count">{{ $announcement->fire_count ?? 0 }}</span>
                         </button>
-                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('sad', $userReactions) ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" data-type="sad" data-id="{{ $announcement->id }}">
+                        <button class="reaction-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl {{ in_array('sad', $userReactions) ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)]' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300' }} text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all" data-type="sad" data-id="{{ $announcement->id }}">
                             <span>😮</span> <span class="count">{{ $announcement->sad_count ?? 0 }}</span>
                         </button>
                     </div>
@@ -138,7 +138,7 @@
                         <div class="comment-list space-y-4 mb-4" id="comments-{{ $announcement->id }}">
                             @foreach($announcement->comments->where('parent_id', null) as $comment)
                                 <div class="comment-item flex gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                    <div class="w-8 h-8 rounded-lg bg-[rgba(var(--accent-rgb),0.15)] text-[var(--accent)] flex items-center justify-center font-bold text-xs flex-shrink-0">
                                         {{ strtoupper(substr($comment->user->name, 0, 1)) }}
                                     </div>
                                     <div class="flex-1">
@@ -150,7 +150,7 @@
                                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $comment->content }}</p>
                                         </div>
                                         <div class="flex items-center gap-4 mt-2 ml-2">
-                                            <button class="text-[10px] font-bold text-gray-400 hover:text-teal-600 transition-colors reply-btn" data-comment-id="{{ $comment->id }}" data-user-name="{{ $comment->user->name }}">Reply</button>
+                                            <button class="text-[10px] font-bold text-gray-400 hover:text-[var(--accent)] transition-colors reply-btn" data-comment-id="{{ $comment->id }}" data-user-name="{{ $comment->user->name }}">Reply</button>
                                         </div>
 
                                         {{-- Replies --}}
@@ -181,7 +181,7 @@
 
                         {{-- Comment Input --}}
                         <div class="mt-4 flex gap-3 items-start">
-                            <div class="w-8 h-8 rounded-lg bg-teal-500 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-[var(--accent)] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                             <div class="flex-1 relative">
@@ -189,8 +189,8 @@
                                     <span>Replying to <span class="replying-to-name font-bold"></span></span>
                                     <button class="cancel-reply text-red-500">✕</button>
                                 </div>
-                                <textarea class="comment-textarea w-full bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm p-3 focus:ring-1 focus:ring-teal-500 custom-scrollbar" placeholder="Write a comment..." rows="1" data-announcement-id="{{ $announcement->id }}"></textarea>
-                                <button class="submit-comment absolute right-2 bottom-2 p-1.5 text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-all" data-announcement-id="{{ $announcement->id }}">
+                                <textarea class="comment-textarea w-full bg-gray-50 dark:bg-gray-700 border-none rounded-xl text-sm p-3 focus:ring-1 focus:ring-[var(--accent)] custom-scrollbar" placeholder="Write a comment..." rows="1" data-announcement-id="{{ $announcement->id }}"></textarea>
+                                <button class="submit-comment absolute right-2 bottom-2 p-1.5 text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all" data-announcement-id="{{ $announcement->id }}">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                                     </svg>
@@ -201,7 +201,7 @@
                 </div>
             @empty
                 <div class="empty-state bg-white dark:bg-gray-800 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm">
-                    <div class="w-20 h-20 bg-teal-50 dark:bg-teal-900/20 rounded-full flex items-center justify-center text-teal-500 mx-auto mb-6">
+                    <div class="w-20 h-20 bg-[rgba(var(--accent-rgb),0.12)] rounded-full flex items-center justify-center text-[var(--accent)] mx-auto mb-6">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                         </svg>

@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="title">Profile Settings</x-slot>
 
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
         {{-- Back Button & Header --}}
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-4">
                 @if(auth()->user()->role === 'student')
-                    <a href="{{ route('tenant.student.page') }}" class="w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 hover:text-teal-600 hover:border-teal-600 hover:shadow-lg hover:shadow-teal-500/10 transition-all group">
+                    <a href="{{ route('tenant.student.page') }}" class="w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all group" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.10);">
                         <svg class="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -91,7 +91,7 @@
                 saveBtn.textContent = 'SAVING...';
                 statusIndicator.textContent = 'UPLOADING...';
                 statusIndicator.classList.remove('hidden', 'text-green-500', 'text-red-500');
-                statusIndicator.classList.add('text-teal-500');
+                statusIndicator.style.color = 'var(--accent)';
 
                 try {
                     const response = await fetch('{{ route("tenant.profile.update") }}', {
@@ -112,7 +112,7 @@
                     
                     if (data.success) {
                         statusIndicator.textContent = 'SAVED SUCCESSFULLY';
-                        statusIndicator.classList.replace('text-teal-500', 'text-green-500');
+                        statusIndicator.style.color = '#22c55e';
                         photoActions.classList.add('hidden');
                         
                         // Update Topbar Photo
@@ -130,7 +130,7 @@
                     }
                 } catch (error) {
                     statusIndicator.textContent = 'UPLOAD FAILED';
-                    statusIndicator.classList.replace('text-teal-500', 'text-red-500');
+                    statusIndicator.style.color = '#ef4444';
                     console.error('Error:', error);
                 } finally {
                     saveBtn.disabled = false;

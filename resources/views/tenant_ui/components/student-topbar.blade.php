@@ -2,7 +2,7 @@
 
 <header class="admin-topbar">
     <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-white shadow-sm">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: var(--accent);">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
@@ -11,13 +11,13 @@
         </div>
         <div class="flex flex-col leading-[0.9]">
             <span class="text-xl font-bold text-gray-900 tracking-tight">Buksu</span>
-            <span class="text-[10px] font-bold text-teal-600 uppercase tracking-[0.2em]">Eduboard</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: var(--accent);">Eduboard</span>
         </div>
     </div>
     
     <div class="topbar-actions">
         {{-- Dark mode --}}
-        <button class="topbar-btn" title="Toggle theme">
+        <button class="topbar-btn" id="themeBtn" title="Toggle theme">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
             </svg>
@@ -41,7 +41,7 @@
                 </div>
 
                 <div class="notif-item unread">
-                    <div class="notif-icon" style="background: #f0fdf4; color: #10b981;">
+                    <div class="notif-icon" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.645c-1.73 0-2.813-1.874-1.948-3.374l7.418-12.748c.866-1.5 3.032-1.5 3.898 0l1.29 2.223" />
                         </svg>

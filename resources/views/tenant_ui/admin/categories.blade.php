@@ -23,7 +23,7 @@
                 <h1 class="content-title">Categories</h1>
                 <p class="content-subtitle text-gray-500 dark:text-gray-400 font-medium">Manage announcement categories for Buksu</p>
             </div>
-            <button class="px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all flex items-center gap-2 shadow-lg shadow-teal-500/20 active:scale-95" 
+            <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);"
                     @click="modalTitle = 'Add Category'; categoryName = ''; categoryModal = true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -99,7 +99,7 @@
                         <div class="space-y-2">
                             <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Category Name</label>
                             <input type="text" x-model="categoryName" placeholder="e.g. Academic, Events..." 
-                                   class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-teal-500/20 transition-all">
+                                   class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         </div>
                         <div class="space-y-2">
                             <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Color Style</label>
@@ -108,7 +108,8 @@
                                     <button type="button" 
                                             class="w-full aspect-square rounded-xl border-2 transition-all flex items-center justify-center
                                                    bg-{{ $color }}-500 shadow-lg shadow-{{ $color }}-500/20"
-                                            :class="selectedColor === '{{ $color }}' ? 'border-teal-500 scale-110 ring-4 ring-teal-500/10' : 'border-transparent opacity-70 hover:opacity-100'"
+                                            :class="selectedColor === '{{ $color }}' ? 'border-[var(--accent)] scale-110 ring-4' : 'border-transparent opacity-70 hover:opacity-100'"
+                                            :style="selectedColor === '{{ $color }}' ? '--tw-ring-color: rgba(var(--accent-rgb), 0.10);' : ''"
                                             @click="selectedColor = '{{ $color }}'">
                                         <template x-if="selectedColor === '{{ $color }}'">
                                             <svg fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="3" class="w-5 h-5">
@@ -120,7 +121,7 @@
                             </div>
                         </div>
                         <div class="pt-4">
-                            <button type="submit" class="w-full py-4 bg-teal-500 text-white rounded-[1.25rem] text-sm font-black hover:bg-teal-600 transition-all shadow-xl shadow-teal-500/20 active:scale-95">SAVE CATEGORY</button>
+                            <button type="submit" class="w-full py-4 bg-[var(--accent)] text-white rounded-[1.25rem] text-sm font-black hover:bg-[var(--accent-dark)] transition-all shadow-xl active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">SAVE CATEGORY</button>
                         </div>
                     </form>
                 </div>

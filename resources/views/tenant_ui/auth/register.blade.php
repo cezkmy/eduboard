@@ -9,7 +9,7 @@
             <div class="auth-card">
                 <div class="auth-header" style="text-align: center; margin-bottom: 2.5rem;">
                     <a href="/"
-                        style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 20px; background: rgba(13, 148, 136, 0.1); color: var(--teal); margin-bottom: 1.25rem; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(13, 148, 136, 0.15)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(13, 148, 136, 0.1)';">
+                        style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 20px; background: rgba(var(--accent-rgb), 0.10); color: var(--accent); margin-bottom: 1.25rem; text-decoration: none; transition: transform 0.2s ease, background 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(var(--accent-rgb), 0.15)';" onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(var(--accent-rgb), 0.10)';">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
                             style="width: 36px; height: 36px;">
                             <path stroke-linecap="round" stroke-linejoin="round"

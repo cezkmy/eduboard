@@ -66,10 +66,27 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             ]);
         })->name('admin.dashboard');
 
-        Route::get('/users', function () { 
-            $adminCount = \App\Models\User::where('role', 'admin')->count();
-            $teacherCount = \App\Models\User::where('role', 'teacher')->count();
-            return view('tenant_ui.admin.users', compact('adminCount', 'teacherCount')); 
+        Route::get('/users', function () {
+            $allUsers = \App\Models\User::query()
+                ->latest()
+                ->get();
+
+            $admins = $allUsers->where('role', 'admin')->where('status', '!=', 'pending')->values();
+            $teachers = $allUsers->where('role', 'teacher')->where('status', '!=', 'pending')->values();
+            $students = $allUsers->where('role', 'student')->where('status', '!=', 'pending')->values();
+            $pendingUsers = $allUsers->where('status', 'pending')->values();
+
+            $adminCount = $admins->count();
+            $teacherCount = $teachers->count();
+
+            return view('tenant_ui.admin.users', compact(
+                'adminCount',
+                'teacherCount',
+                'admins',
+                'teachers',
+                'students',
+                'pendingUsers'
+            ));
         })->name('admin.users');
         Route::get('/announcements', function () { return view('tenant_ui.admin.announcements'); })->name('admin.announcements');
         Route::get('/my-announcements', function () { return view('tenant_ui.admin.my-announcements'); })->name('admin.my-announcements');
@@ -129,6 +146,36 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 'day' => $day,
             ]);
         })->name('admin.reports');
+        
+        Route::get('/reports/export', function (\Illuminate\Http\Request $request) {
+            if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
+
+            $year = $request->get('year');
+            $month = $request->get('month');
+            $day = $request->get('day');
+
+            $query = \App\Models\Announcement::with('postedBy');
+            if ($year) $query->whereYear('created_at', $year);
+            if ($month) $query->whereMonth('created_at', $month);
+            if ($day) $query->whereDay('created_at', $day);
+            $announcements = $query->latest()->get();
+
+            $userQuery = \App\Models\User::query();
+            if ($year) $userQuery->whereYear('created_at', $year);
+            if ($month) $userQuery->whereMonth('created_at', $month);
+            if ($day) $userQuery->whereDay('created_at', $day);
+            $users = $userQuery->latest()->get();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tenant_ui.admin.reports-pdf', [
+                'announcements' => $announcements,
+                'users' => $users,
+                'year' => $year,
+                'month' => $month,
+                'day' => $day
+            ]);
+
+            return $pdf->download('system-report-' . date('Y-m-d') . '.pdf');
+        })->name('admin.reports.export');
         Route::get('/settings', function () { return view('tenant_ui.admin.settings'); })->name('admin.settings');
         
         Route::post('/settings', function (\Illuminate\Http\Request $request) {
@@ -146,6 +193,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             }
             if ($request->has('school_name')) {
                 $tenant->update(['school_name' => $request->school_name]);
+            }
+            if ($request->has('theme_color')) {
+                $tenant->update(['theme_color' => $request->theme_color]);
             }
             
             $tenant->update(['has_updated_settings' => true]);
@@ -192,8 +242,10 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             return response()->json(['success' => true]);
         })->name('admin.subscription.upgrade');
         Route::get('/templates', function () { 
-            if (!tenant()->hasFeature('pre_built_templates')) abort(403, 'Upgrade your plan to access Templates.');
-            return view('tenant_ui.admin.templates'); 
+            $templates = tenancy()->central(function () {
+                return \App\Models\Template::all();
+            });
+            return view('tenant_ui.admin.templates', compact('templates')); 
         })->name('admin.templates');
         
         Route::get('/notifications/read', function () {

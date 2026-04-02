@@ -20,6 +20,7 @@
             } else {
                 if (section === 'general') document.getElementById('general-form').submit();
                 else if (section === 'branding') document.getElementById('branding-form').submit();
+                else if (section === 'appearance') document.getElementById('appearance-form').submit();
                 else this.showSuccess();
             }
         },
@@ -27,6 +28,7 @@
             this.basicWarningModal = false;
             if (this.pendingAction === 'general') document.getElementById('general-form').submit();
             else if (this.pendingAction === 'branding') document.getElementById('branding-form').submit();
+            else if (this.pendingAction === 'appearance') document.getElementById('appearance-form').submit();
         }
     }">
         @if(session('error'))
@@ -48,7 +50,7 @@
             {{-- Navigation Sidebar --}}
             <div class="lg:col-span-3 space-y-2">
                 <button @if((tenant('plan') ?? 'Basic') !== 'Basic') @click="activeSection = 'appearance'" @endif
-                        :class="activeSection === 'appearance' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400 @if((tenant('plan') ?? 'Basic') !== 'Basic') hover:bg-gray-50 dark:hover:bg-gray-800 @endif'"
+                        :class="activeSection === 'appearance' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 @if((tenant('plan') ?? 'Basic') !== 'Basic') hover:bg-gray-50 dark:hover:bg-gray-800 @endif'"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all @if((tenant('plan') ?? 'Basic') === 'Basic') opacity-50 cursor-not-allowed @endif">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
                     Appearance
@@ -57,25 +59,25 @@
                     @endif
                 </button>
                 <button @click="activeSection = 'branding'" 
-                        :class="activeSection === 'branding' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        :class="activeSection === 'branding' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     Branding
                 </button>
                 <button @click="activeSection = 'general'" 
-                        :class="activeSection === 'general' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        :class="activeSection === 'general' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924-1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     General
                 </button>
                 <button @click="activeSection = 'system_info'" 
-                        :class="activeSection === 'system_info' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        :class="activeSection === 'system_info' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     System Info
                 </button>
                 <button @click="activeSection = 'system_updates'" 
-                        :class="activeSection === 'system_updates' ? 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        :class="activeSection === 'system_updates' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
                         class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v2m0 0l-2-2m2 2l2-2" /></svg>
                     System Software
@@ -106,15 +108,17 @@
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">Appearance</h2>
                             <p class="text-sm text-gray-500 mt-1">Customize the visual experience of your dashboard.</p>
                         </div>
-                        <button @click="showSuccess()" class="px-5 py-2 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">
+                        <button @click="handleSave('appearance')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save Appearance
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <form id="appearance-form" method="POST" action="{{ route('tenant.admin.settings.update') }}">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="theme" value="light" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-teal-500 peer-checked:bg-teal-50/30 transition-all">
+                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
                                 <div class="aspect-video rounded-lg bg-gray-50 border border-gray-100 mb-3 overflow-hidden flex">
                                     <div class="w-1/4 bg-white border-r border-gray-100"></div>
                                     <div class="flex-1 p-2 space-y-2">
@@ -127,7 +131,7 @@
                         </label>
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="theme" value="dark" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-teal-500 peer-checked:bg-teal-50/30 transition-all">
+                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
                                 <div class="aspect-video rounded-lg bg-gray-900 border border-gray-800 mb-3 overflow-hidden flex">
                                     <div class="w-1/4 bg-gray-800 border-r border-gray-700"></div>
                                     <div class="flex-1 p-2 space-y-2">
@@ -140,7 +144,7 @@
                         </label>
                         <label class="relative cursor-pointer group">
                             <input type="radio" name="theme" value="system" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-teal-500 peer-checked:bg-teal-50/30 transition-all">
+                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
                                 <div class="aspect-video rounded-lg bg-gray-100 border border-gray-200 mb-3 overflow-hidden flex relative">
                                     <div class="absolute inset-0 bg-gray-900 translate-x-1/2"></div>
                                     <div class="w-1/4 bg-white border-r border-gray-100 z-10"></div>
@@ -151,45 +155,50 @@
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">System Default</span>
                             </div>
                         </label>
-                    </div>
-
-                    <div class="pt-8 border-t border-gray-100 dark:border-gray-700">
-                        <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider mb-6">Custom Brand Colors</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <label class="block">
-                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Primary Brand Color</span>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <input type="color" value="#0d9488" class="w-12 h-12 rounded-xl border-none p-0 cursor-pointer overflow-hidden shadow-sm">
-                                        <input type="text" value="#0d9488" class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-mono uppercase">
+                        </div>
+                    
+                        <div class="pt-8 mt-8 border-t border-gray-100 dark:border-gray-700">
+                            <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider mb-6">Domain Layout / Theme Preset</h3>
+                            @php $currentTheme = tenant('theme_color') ?? 'blue'; @endphp
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="theme_color" value="blue" class="peer sr-only" {{ $currentTheme === 'blue' ? 'checked' : '' }}>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 mx-auto mb-2 flex items-center justify-center font-black">Bb</div>
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Blue</span>
                                     </div>
                                 </label>
-                                <label class="block">
-                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Sidebar Background</span>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <input type="color" value="#111827" class="w-12 h-12 rounded-xl border-none p-0 cursor-pointer overflow-hidden shadow-sm">
-                                        <input type="text" value="#111827" class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-mono uppercase">
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="theme_color" value="green" class="peer sr-only" {{ $currentTheme === 'green' ? 'checked' : '' }}>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 mx-auto mb-2 flex items-center justify-center font-black">Gg</div>
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Green</span>
                                     </div>
                                 </label>
-                            </div>
-                            <div class="space-y-4">
-                                <label class="block">
-                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Topbar Color</span>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <input type="color" value="#ffffff" class="w-12 h-12 rounded-xl border-none p-0 cursor-pointer overflow-hidden shadow-sm">
-                                        <input type="text" value="#ffffff" class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-mono uppercase">
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="theme_color" value="pink" class="peer sr-only" {{ $currentTheme === 'pink' ? 'checked' : '' }}>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-fuchsia-500 peer-checked:bg-fuchsia-50 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-fuchsia-100 text-fuchsia-600 mx-auto mb-2 flex items-center justify-center font-black">Pp</div>
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Pink</span>
                                     </div>
                                 </label>
-                                <label class="block">
-                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Active Item Accent</span>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <input type="color" value="#0d9488" class="w-12 h-12 rounded-xl border-none p-0 cursor-pointer overflow-hidden shadow-sm">
-                                        <input type="text" value="#0d9488" class="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-mono uppercase">
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="theme_color" value="yellow" class="peer sr-only" {{ $currentTheme === 'yellow' ? 'checked' : '' }}>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 mx-auto mb-2 flex items-center justify-center font-black">Yy</div>
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Yellow</span>
+                                    </div>
+                                </label>
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="theme_color" value="orange" class="peer sr-only" {{ $currentTheme === 'orange' ? 'checked' : '' }}>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 mx-auto mb-2 flex items-center justify-center font-black">Oo</div>
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Orange</span>
                                     </div>
                                 </label>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 {{-- Branding Section --}}
@@ -199,7 +208,7 @@
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">Branding</h2>
                             <p class="text-sm text-gray-500 mt-1">Manage your school's identity and logos.</p>
                         </div>
-                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('branding')" class="px-5 py-2 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">
+                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('branding')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save Branding
                         </button>
                         <span x-cloak x-show="plan === 'Basic' && hasUpdatedSettings" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2">
@@ -213,18 +222,18 @@
                         <div class="w-full md:w-64 aspect-square bg-gray-50 dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center p-8 text-center group relative overflow-hidden">
                             <img src="{{ asset('images/Logo.jpg') }}" class="w-full h-full object-contain opacity-50 group-hover:opacity-20 transition-opacity">
                             <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
-                                <svg class="w-10 h-10 text-teal-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /></svg>
+                                <svg class="w-10 h-10 text-[var(--accent)] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /></svg>
                                 <span class="text-xs font-bold text-gray-900 dark:text-white">Upload New Logo</span>
                             </div>
                             <input type="file" class="absolute inset-0 opacity-0 cursor-pointer">
                         </div>
                         <div class="flex-1 space-y-6">
-                            <div class="p-6 bg-teal-50/50 dark:bg-teal-900/10 rounded-2xl border border-teal-100 dark:border-teal-900/30">
-                                <h4 class="text-sm font-bold text-teal-700 dark:text-teal-400 flex items-center gap-2">
+                            <div class="p-6 rounded-2xl border" style="background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.22);">
+                                <h4 class="text-sm font-bold text-[var(--accent)] flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
                                     Logo Requirements
                                 </h4>
-                                <ul class="mt-2 space-y-1 text-xs text-teal-600 dark:text-teal-500 font-medium">
+                                <ul class="mt-2 space-y-1 text-xs text-[var(--accent)] font-medium opacity-90">
                                     <li>• Recommended size: 512x512 pixels</li>
                                     <li>• Format: Transparent PNG preferred</li>
                                     <li>• Max file size: 2MB</li>
@@ -251,7 +260,7 @@
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">General Settings</h2>
                             <p class="text-sm text-gray-500 mt-1">Basic system configurations and behavior.</p>
                         </div>
-                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('general')" class="px-5 py-2 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">
+                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('general')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save General Settings
                         </button>
                         <span x-cloak x-show="plan === 'Basic' && hasUpdatedSettings" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2">
@@ -309,14 +318,14 @@
                         </div>
                     </div>
                     @else
-                    <div class="p-6 bg-teal-50 dark:bg-teal-900/10 rounded-2xl border border-teal-100 dark:border-teal-900/30">
+                    <div class="p-6 rounded-2xl border" style="background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.22);">
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.16);">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-lg font-black text-teal-900 dark:text-teal-400">System Up to Date</h3>
-                                <p class="text-sm text-teal-700 dark:text-teal-500 mt-2 font-medium">You are running the latest stable release (Version 2.0). If you prefer the classic layout, you can safely rollback at any time.</p>
+                                <h3 class="text-lg font-black text-[var(--accent)]">System Up to Date</h3>
+                                <p class="text-sm text-[var(--accent)] mt-2 font-medium opacity-90">You are running the latest stable release (Version 2.0). If you prefer the classic layout, you can safely rollback at any time.</p>
                                 
                                 <form method="POST" action="{{ route('tenant.admin.settings.system_version') }}" class="mt-6">
                                     @csrf
@@ -342,15 +351,15 @@
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-bold text-gray-500">Laravel Version</span>
-                                    <span class="text-xs font-black text-teal-600">v11.x</span>
+                                    <span class="text-xs font-black text-[var(--accent)]">v11.x</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-bold text-gray-500">PHP Version</span>
-                                    <span class="text-xs font-black text-teal-600">v8.2.x</span>
+                                    <span class="text-xs font-black text-[var(--accent)]">v8.2.x</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-bold text-gray-500">Database</span>
-                                    <span class="text-xs font-black text-teal-600">MySQL 8.0</span>
+                                    <span class="text-xs font-black text-[var(--accent)]">MySQL 8.0</span>
                                 </div>
                             </div>
                         </div>
@@ -361,10 +370,10 @@
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-[10px] font-black uppercase tracking-tighter">
                                         <span class="text-gray-500">Disk Space</span>
-                                        <span class="text-teal-600">1.2 GB / 5 GB</span>
+                                        <span class="text-[var(--accent)]">1.2 GB / 5 GB</span>
                                     </div>
                                     <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-full bg-teal-500" style="width: 24%"></div>
+                                        <div class="h-full" style="width: 24%; background: var(--accent);"></div>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
@@ -444,14 +453,14 @@
                 <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="successModal = false"></div>
                 <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center space-y-6 transform transition-all"
                      x-show="successModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                    <div class="w-20 h-20 bg-teal-50 dark:bg-teal-900/30 text-teal-500 rounded-2xl flex items-center justify-center mx-auto">
+                    <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.12);">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <div>
                         <h3 class="text-xl font-black text-gray-900 dark:text-white">Settings Updated!</h3>
                         <p class="text-sm text-gray-500 mt-2">All changes have been successfully applied to your instance.</p>
                     </div>
-                    <button @click="successModal = false" class="w-full py-3 bg-teal-500 text-white rounded-2xl font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20">Great!</button>
+                    <button @click="successModal = false" class="w-full py-3 bg-[var(--accent)] text-white rounded-2xl font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">Great!</button>
                 </div>
             </div>
         </template>

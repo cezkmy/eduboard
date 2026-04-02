@@ -33,17 +33,61 @@
         $hasSchool = auth()->user()->school_domain;
         
         $freeTemplates = [
-            ['id' => 1, 'name' => 'School Event Template', 'category' => 'Events', 'description' => 'Perfect for announcing school events, programs, and activities'],
-            ['id' => 2, 'name' => 'Academic Announcement', 'category' => 'Academic', 'description' => 'For exam schedules, enrollment updates, and academic notices'],
-            ['id' => 3, 'name' => 'Holiday Notice', 'category' => 'Holidays', 'description' => 'Beautiful templates for holiday greetings and announcements'],
-            ['id' => 4, 'name' => 'Modern Admin Portal', 'category' => 'Management', 'description' => 'A clean and professional administrative portal for your school'],
+            [
+                'id' => 1,
+                'name' => 'Blue Landing Layout',
+                'category' => 'Blue',
+                'description' => 'Default modern theme with blue accents.',
+                'circle_color' => '#0d6efd',
+                'circle_bg' => 'rgba(13,110,253,0.10)',
+                'icon' => 'bi bi-globe2'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Green Landing Layout',
+                'category' => 'Green',
+                'description' => 'Eco-friendly theme with green accents.',
+                'circle_color' => '#198754',
+                'circle_bg' => 'rgba(25,135,84,0.10)',
+                'icon' => 'bi bi-tree-fill'
+            ],
+            [
+                'id' => 3,
+                'name' => 'Purple Landing Layout',
+                'category' => 'Purple',
+                'description' => 'Royal/purple themed landing layout.',
+                'circle_color' => '#6b21a8',
+                'circle_bg' => 'rgba(107,33,168,0.10)',
+                'icon' => 'bi bi-heart-fill'
+            ],
+            [
+                'id' => 5,
+                'name' => 'Yellow Landing Layout',
+                'category' => 'Yellow',
+                'description' => 'Bright yellow landing layout.',
+                'circle_color' => '#facc15',
+                'circle_bg' => 'rgba(250,204,21,0.14)',
+                'icon' => 'bi bi-sun-fill'
+            ],
+            [
+                'id' => 6,
+                'name' => 'Orange Landing Layout',
+                'category' => 'Orange',
+                'description' => 'Warm orange landing layout.',
+                'circle_color' => '#f97316',
+                'circle_bg' => 'rgba(249,115,22,0.12)',
+                'icon' => 'bi bi-fire'
+            ],
         ];
 
-        $premiumTemplates = [
-            ['id' => 5, 'name' => 'Academic Calendar', 'category' => 'Premium', 'description' => 'Detailed interactive academic calendars for students'],
-            ['id' => 6, 'name' => 'Student Portal', 'category' => 'Premium', 'description' => 'Integrated student management and resource portal'],
-            ['id' => 7, 'name' => 'Staff Directory', 'category' => 'Premium', 'description' => 'Professional staff directory with contact integration'],
-        ];
+        // Domain layout templates only (theme colors for tenant UI)
+    @endphp
+
+    @php
+        $isProPlus = in_array(auth()->user()->plan ?? 'Basic', ['Pro', 'Ultimate'], true);
+        $alreadySelected = (bool) (auth()->user()->has_selected_template ?? false);
+        $tenant = \App\Models\Tenant::where('owner_id', auth()->id())->first();
+        $selectedLayoutId = $tenant->template_id ?? null;
     @endphp
 
     @if($hasSchool)
@@ -53,7 +97,10 @@
                 <i class="bi bi-info-circle-fill fs-1 me-4"></i>
                 <div>
                     <h5 class="fw-bold mb-1">School Already Created!</h5>
-                    <p class="mb-0">You have already set up your school domain: <strong>{{ auth()->user()->school_domain }}</strong>. You can view your current school details in <a href="{{ route('central.user.domain') }}" class="fw-bold text-decoration-none">Domain Management</a>. Below you can see our Premium Templates available for upgrade.</p>
+                    <p class="mb-0">
+                        Your school domain is: <strong>{{ auth()->user()->school_domain }}</strong>.
+                        Manage it in <a href="{{ route('central.user.domain') }}" class="fw-bold text-decoration-none">Domain Management</a>.
+                    </p>
                 </div>
             </div>
         </div>
@@ -62,8 +109,19 @@
 
     <div class="row justify-content-center">
         <div class="col-md-8 text-center mb-5">
-            <h2 class="fw-bold mb-3">{{ $hasSchool ? 'Premium Templates' : 'Welcome to Your Trial! 🎉' }}</h2>
-            <p class="lead text-secondary">{{ $hasSchool ? 'Upgrade your plan to access these advanced school management templates.' : 'Choose ONE free template and set up your school domain' }}</p>
+            <h2 class="fw-bold mb-3">Domain Layout Templates</h2>
+            <p class="lead text-secondary">
+                Choose your tenant system UI theme.
+                @if(!$alreadySelected)
+                    You can select <strong>ONE</strong> layout on Basic.
+                @else
+                    @if($isProPlus)
+                        You can change your layout anytime (Pro / Ultimate).
+                    @else
+                        You have already selected your layout.
+                    @endif
+                @endif
+            </p>
             
             @if(!$hasSchool)
             <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 text-info">
@@ -75,7 +133,7 @@
                         $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
                         // If it's localhost or 127.0.0.1, use a "customized" domain like eduboard.com
                         if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
-                            $baseHost = 'eduboard.com';
+                            $baseHost = 'localhost';
                         } elseif (str_starts_with($host, 'eduboard.')) {
                             $baseHost = substr($host, 9);
                         } else {
@@ -112,7 +170,7 @@
                                 $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
                                 // If it's localhost or 127.0.0.1, use a "customized" domain like eduboard.com
                                 if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
-                                    $baseHost = 'eduboard.com';
+                                    $baseHost = 'localhost';
                                 } elseif (str_starts_with($host, 'eduboard.')) {
                                     $baseHost = substr($host, 9);
                                 } else {
@@ -138,49 +196,61 @@
     @endif
 
     <div class="row g-4">
-        @foreach($hasSchool ? $premiumTemplates : $freeTemplates as $template)
+        @foreach($freeTemplates as $template)
+        @php
+            $isSelected = $selectedLayoutId && (int) $selectedLayoutId === (int) $template['id'];
+            $isDisabled = $alreadySelected && !$isProPlus;
+        @endphp
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 {{ $hasSchool ? 'premium-locked' : '' }}">
-                <div class="card-body p-4 text-center">
-                    <div class="{{ $hasSchool ? 'bg-primary' : 'bg-success' }} bg-opacity-10 p-4 rounded-circle d-inline-block mb-3">
-                        <i class="bi bi-file-text fs-1 {{ $hasSchool ? 'text-primary' : 'text-success' }}"></i>
+            <div class="card border-0 shadow-sm h-100 {{ $isSelected ? 'border border-2 border-success' : '' }} {{ $isDisabled ? 'opacity-75' : '' }}">
+                <div class="card-body p-4 text-center position-relative">
+                    <div
+                        class="p-4 rounded-circle d-inline-block mb-3"
+                        style="background-color: {{ $template['circle_bg'] ?? 'rgba(16,185,129,0.10)' }};
+                               color: {{ $template['circle_color'] ?? '#10b981' }};
+                               line-height: 1;">
+                        <i class="bi {{ $template['icon'] ?? 'bi bi-file-text' }} fs-1"
+                           style="color: {{ $template['circle_color'] ?? '#10b981' }};"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">{{ $template['name'] }}</h5>
                     <span class="badge bg-secondary bg-opacity-10 text-secondary mb-3">{{ $template['category'] }}</span>
                     <p class="small text-secondary mb-4">{{ $template['description'] }}</p>
-                    
-                    @if($hasSchool)
-                        <a href="{{ route('central.user.subscription') }}" class="btn btn-primary w-100">
-                            <i class="bi bi-unlock me-2"></i>Upgrade to Unlock
-                        </a>
-                    @else
-                        <button type="button" 
-                                class="btn btn-success w-100 select-template-btn"
-                                data-bs-toggle="modal" 
+
+                    @if($isSelected)
+                        <span class="badge bg-success bg-opacity-10 text-success mb-2">SELECTED</span>
+                    @endif
+
+                    @if(!$hasSchool)
+                        <button type="button"
+                                class="btn btn-success w-100 select-template-btn {{ $isDisabled ? 'disabled' : '' }}"
+                                {{ $isDisabled ? 'disabled' : '' }}
+                                data-bs-toggle="modal"
                                 data-bs-target="#confirmModal"
                                 data-template-id="{{ $template['id'] }}"
                                 data-template-name="{{ $template['name'] }}">
-                            <i class="bi bi-check-circle me-2"></i>Select This Template
+                            <i class="bi bi-check-circle me-2"></i>{{ $isDisabled ? 'Already Selected' : 'Select This Layout' }}
                         </button>
+                    @else
+                        @if($isProPlus)
+                            <form method="POST" action="{{ route('central.user.templates.layout.update') }}">
+                                @csrf
+                                <input type="hidden" name="template_id" value="{{ $template['id'] }}">
+                                <input type="hidden" name="template_name" value="{{ $template['name'] }}">
+                                <button type="submit" class="btn btn-success w-100" {{ $isSelected ? 'disabled' : '' }}>
+                                    <i class="bi bi-palette me-2"></i>{{ $isSelected ? 'Current Layout' : 'Choose Template' }}
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('central.user.subscription') }}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-arrow-up-circle me-2"></i>Upgrade Plan
+                            </a>
+                        @endif
                     @endif
                 </div>
             </div>
         </div>
         @endforeach
     </div>
-
-    @if($hasSchool)
-    <style>
-        .premium-locked {
-            opacity: 0.85;
-            transition: all 0.3s ease;
-        }
-        .premium-locked:hover {
-            opacity: 1;
-            transform: translateY(-5px);
-        }
-    </style>
-    @endif
 </div>
 
 <!-- Confirmation Modal -->
@@ -311,6 +381,16 @@ document.addEventListener('DOMContentLoaded', function() {
             modalDbName.textContent = dbName;
         });
     });
+
+    @if(!$hasSchool)
+    // If user came from templates-purchase, preselect the template
+    const params = new URLSearchParams(window.location.search);
+    const prefillTemplateId = params.get('template_id');
+    if (prefillTemplateId) {
+        const btn = Array.from(selectButtons).find(b => String(b.dataset.templateId) === String(prefillTemplateId));
+        if (btn) btn.click();
+    }
+    @endif
 });
 </script>
 @endsection

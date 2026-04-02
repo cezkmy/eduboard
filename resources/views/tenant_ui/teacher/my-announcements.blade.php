@@ -162,7 +162,7 @@
                         </button>
                     </div>
                     <div class="p-6 text-center">
-                        <div class="w-16 h-16 bg-teal-50 dark:bg-teal-900/20 rounded-full flex items-center justify-center text-teal-500 mx-auto mb-4">
+                        <div class="w-16 h-16 bg-[rgba(var(--accent-rgb),0.12)] rounded-full flex items-center justify-center text-[var(--accent)] mx-auto mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-8 w-8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                             </svg>
@@ -172,7 +172,7 @@
                         </p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex justify-center">
-                        <button @click="showingDraftSuccess = false" class="px-8 py-2 bg-[var(--teal)] text-white rounded-lg text-sm font-bold hover:opacity-90 transition-all">
+                        <button @click="showingDraftSuccess = false" class="px-8 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-bold hover:bg-[var(--accent-dark)] transition-all">
                             Done
                         </button>
                     </div>
@@ -197,7 +197,7 @@
                         <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed" x-text="successMessage"></p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex justify-end">
-                        <button @click="showingSuccess = false" class="px-4 py-2 bg-[var(--teal)] text-white rounded-lg text-sm font-bold hover:opacity-90 transition-all">
+                        <button @click="showingSuccess = false" class="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-bold hover:bg-[var(--accent-dark)] transition-all">
                             Done
                         </button>
                     </div>

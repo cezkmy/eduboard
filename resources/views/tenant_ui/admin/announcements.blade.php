@@ -19,7 +19,7 @@
                 <h1 class="content-title">Announcements</h1>
                 <p class="content-subtitle">Manage and monitor all school announcements</p>
             </div>
-            <a href="#" class="px-4 py-2 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all flex items-center gap-2 shadow-md shadow-teal-500/20">
+            <a href="#" class="px-4 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-md" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 18px; height: 18px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>

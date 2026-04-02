@@ -19,15 +19,10 @@
                 <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">System Reports</h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Generate and analyze activity reports for {{ tenant('school_name') ?? 'Buksu' }}</p>
             </div>
-            <button @click="exportData()" :disabled="exporting" class="px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95 disabled:opacity-50 flex items-center gap-2">
-                <template x-if="!exporting">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                </template>
-                <template x-if="exporting">
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                </template>
-                <span x-text="exporting ? 'Exporting...' : 'Export PDF'"></span>
-            </button>
+            <a href="{{ route('tenant.admin.reports.export', request()->all()) }}" target="_blank" class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95 flex items-center gap-2" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span>Export PDF</span>
+            </a>
         </div>
 
         {{-- Filters Card --}}
@@ -74,20 +69,20 @@
             <div class="space-y-4">
                 <div class="flex items-center justify-between px-2">
                     <h2 class="text-lg font-black text-gray-900 dark:text-white">Announcements</h2>
-                    <span class="px-2 py-0.5 bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 text-[10px] font-black rounded-lg border border-teal-100 dark:border-teal-900/30">{{ $announcements->count() }} TOTAL</span>
+                    <span class="px-2 py-0.5 bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] text-[10px] font-black rounded-lg border" style="border-color: rgba(var(--accent-rgb), 0.22);">{{ $announcements->count() }} TOTAL</span>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden" style="background: var(--bg-card); border-color: var(--border-color);">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50/50 dark:bg-gray-900/20">
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Details</th>
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Category</th>
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Engagement</th>
+                            <tr class="bg-gray-50/50 dark:bg-gray-900/20" style="background: var(--bg-card);">
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-500 dark:text-white uppercase tracking-wider">Details</th>
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-500 dark:text-white uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-500 dark:text-white uppercase tracking-wider">Engagement</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
                             @forelse($announcements as $announcement)
-                                <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-700/20 transition-colors">
+                                <tr class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-colors">
                                     <td class="px-6 py-4">
                                         <div class="space-y-0.5">
                                             <p class="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{{ $announcement->title }}</p>
@@ -97,10 +92,10 @@
                                     <td class="px-6 py-4">
                                         @php
                                             $catColor = match(strtolower($announcement->category)) {
-                                                'emergency' => 'bg-red-50 text-red-600 border-red-100',
-                                                'events' => 'bg-teal-50 text-teal-600 border-teal-100',
-                                                'academic' => 'bg-blue-50 text-blue-600 border-blue-100',
-                                                default => 'bg-gray-50 text-gray-600 border-gray-100'
+                                                'emergency' => 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border-red-100 dark:border-red-900/40',
+                                                'events' => 'bg-[rgba(var(--accent-rgb),0.10)] dark:bg-[rgba(var(--accent-rgb),0.18)] text-[var(--accent)] border-[rgba(var(--accent-rgb),0.22)] dark:border-[rgba(var(--accent-rgb),0.35)]',
+                                                'academic' => 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 border-blue-100 dark:border-blue-900/40',
+                                                default => 'bg-gray-50 dark:bg-gray-700/40 text-gray-600 dark:text-gray-300 border-gray-100 dark:border-gray-600'
                                             };
                                         @endphp
                                         <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase border {{ $catColor }}">
@@ -135,18 +130,18 @@
                     <h2 class="text-lg font-black text-gray-900 dark:text-white">New Registrations</h2>
                     <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-lg border border-blue-100 dark:border-blue-900/30">{{ $users->count() }} TOTAL</span>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden" style="background: var(--bg-card); border-color: var(--border-color);">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50/50 dark:bg-gray-900/20">
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-wider">Joined</th>
+                            <tr class="bg-gray-50/50 dark:bg-gray-900/20" style="background: var(--bg-card);">
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-wider">User</th>
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-4 text-[11px] font-black text-gray-400 dark:text-white uppercase tracking-wider">Joined</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
                             @forelse($users as $user)
-                                <tr class="hover:bg-gray-50/30 dark:hover:bg-gray-700/20 transition-colors">
+                                <tr class="hover:bg-[rgba(var(--accent-rgb),0.06)] dark:hover:bg-[rgba(var(--accent-rgb),0.14)] transition-colors">
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-900 flex items-center justify-center text-[10px] font-black text-gray-500">
@@ -187,7 +182,7 @@
         <template x-teleport="body">
             <div x-show="showExportSuccess" x-transition:enter="translate-y-10 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="translate-y-10 opacity-0" class="fixed bottom-8 right-8 z-[200]" x-cloak>
                 <div class="bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
-                    <div class="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center text-white">
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white" style="background: var(--accent);">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <span class="text-sm font-bold">Report exported successfully!</span>

@@ -63,11 +63,28 @@
                                     </p>
                                     <div class="d-flex flex-column align-items-start gap-3 mt-3">
                                         <h4 class="mb-0 fw-bold text-success text-break w-100" style="word-break: break-all;">
-                                            {{ auth()->user()->school_domain }}
+                                            @php
+                                                $displayDomain = auth()->user()->school_domain;
+                                                if ($displayDomain && str_contains($displayDomain, '.localhost') && str_contains($displayDomain, '_')) {
+                                                    $displayDomain = str_replace('_', '-', $displayDomain);
+                                                }
+                                            @endphp
+                                            {{ $displayDomain }}
                                         </h4>
-                                        <a href="{{ route('central.user.impersonate') }}" class="btn btn-success px-4 mt-auto">
-                                            <i class="bi bi-box-arrow-up-right me-2"></i>Visit
-                                        </a>
+                                        <div class="d-flex gap-2 flex-wrap mt-auto">
+                                            <a href="{{ route('central.user.impersonate') }}" class="btn btn-success px-4">
+                                                <i class="bi bi-box-arrow-up-right me-2"></i>Visit
+                                            </a>
+                                            @if(in_array(auth()->user()->plan ?? 'Basic', ['Pro', 'Ultimate'], true))
+                                                <a href="{{ route('central.user.templates.select') }}" class="btn btn-outline-success px-4">
+                                                    <i class="bi bi-palette me-2"></i>Choose Template
+                                                </a>
+                                            @else
+                                                <a href="{{ route('central.user.subscription') }}" class="btn btn-outline-success px-4">
+                                                    <i class="bi bi-arrow-up-circle me-2"></i>Upgrade Plan
+                                                </a>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="mt-4 p-2 bg-secondary bg-opacity-10 rounded-2 small text-secondary">
                                         <i class="bi bi-info-circle me-1"></i>

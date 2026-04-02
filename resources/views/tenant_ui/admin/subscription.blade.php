@@ -102,7 +102,7 @@
                 <button class="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all active:scale-95">
                     Billing History
                 </button>
-                <button @click="upgradeModal = true" class="px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 active:scale-95">
+                <button @click="upgradeModal = true" class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                     Upgrade Plan
                 </button>
             </div>
@@ -124,11 +124,11 @@
         {{-- Main Plan Card --}}
         <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 md:p-12">
             {{-- Background Decoration --}}
-            <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl"></div>
+            <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-96 h-96 rounded-full blur-3xl" style="background: rgba(var(--accent-rgb), 0.05);"></div>
             
             <div class="relative flex flex-col md:flex-row gap-12 items-center">
                 <div class="flex-1 space-y-6">
-                    <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 text-xs font-black uppercase tracking-widest border border-teal-100 dark:border-teal-900/50">
+                    <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] text-xs font-black uppercase tracking-widest" style="border: 1px solid rgba(var(--accent-rgb), 0.25);">
                         Current Active Plan
                     </div>
                     <div class="space-y-2">
@@ -136,13 +136,13 @@
                         @if(tenant()->expires_at)
                             <p class="text-gray-500 font-medium">Your subscription renews on <span class="text-gray-900 dark:text-gray-100 font-bold">{{ \Carbon\Carbon::parse(tenant()->expires_at)->format('F d, Y') }}</span></p>
                         @else
-                            <p class="text-gray-500 font-medium">Your subscription is <span class="text-teal-600 font-bold">Active</span> indefinitely.</p>
+                            <p class="text-gray-500 font-medium">Your subscription is <span class="text-[var(--accent)] font-bold">Active</span> indefinitely.</p>
                         @endif
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                         <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                            <div class="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 text-teal-600 rounded-xl flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.16);">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                             </div>
                             <div>
@@ -181,23 +181,24 @@
             <h3 class="text-lg font-black text-gray-900 dark:text-white mb-6">Explore Other Plans</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach($plans as $plan)
-                <div class="p-6 {{ $plan->name === tenant()->plan ? 'bg-teal-500 rounded-3xl border-4 border-teal-500 shadow-xl shadow-teal-500/20 transform -translate-y-2' : 'bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 hover:border-teal-500/30 transition-all group' }}">
+                <div class="p-6 {{ $plan->name === tenant()->plan ? 'rounded-3xl border-4 shadow-xl transform -translate-y-2' : 'bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 transition-all group' }}"
+                     style="{{ $plan->name === tenant()->plan ? 'background: var(--accent); border-color: var(--accent); box-shadow: 0 20px 45px rgba(var(--accent-rgb), 0.25);' : '' }}">
                     <div class="flex justify-between items-start">
-                        <h4 class="text-sm font-black {{ $plan->name === tenant()->plan ? 'text-teal-100' : 'text-gray-400' }} uppercase tracking-widest">{{ $plan->name }}</h4>
+                        <h4 class="text-sm font-black {{ $plan->name === tenant()->plan ? 'text-white/80' : 'text-gray-400' }} uppercase tracking-widest">{{ $plan->name }}</h4>
                         @if($plan->name === tenant()->plan)
-                            <span class="px-2 py-0.5 bg-white text-teal-500 text-[10px] font-black rounded-full">ACTIVE</span>
+                            <span class="px-2 py-0.5 bg-white text-[var(--accent)] text-[10px] font-black rounded-full">ACTIVE</span>
                         @endif
                     </div>
                     <div class="mt-2 flex items-baseline gap-1">
                         <span class="text-2xl font-black {{ $plan->name === tenant()->plan ? 'text-white' : 'text-gray-900 dark:text-white' }}">{{ $plan->price }}</span>
                         @if($plan->period)
-                            <span class="text-xs font-bold {{ $plan->name === tenant()->plan ? 'text-teal-100' : 'text-gray-500' }}">{{ $plan->period }}</span>
+                            <span class="text-xs font-bold {{ $plan->name === tenant()->plan ? 'text-white/80' : 'text-gray-500' }}">{{ $plan->period }}</span>
                         @endif
                     </div>
-                    <ul class="mt-6 space-y-3 text-sm {{ $plan->name === tenant()->plan ? 'text-teal-50' : 'text-gray-500' }} font-medium">
+                    <ul class="mt-6 space-y-3 text-sm {{ $plan->name === tenant()->plan ? 'text-white/90' : 'text-gray-500' }} font-medium">
                         @foreach($plan->features as $feature)
                         <li class="flex items-center gap-2">
-                            <svg class="w-4 h-4 {{ $plan->name === tenant()->plan ? 'text-teal-200' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                            <svg class="w-4 h-4 {{ $plan->name === tenant()->plan ? 'text-white/90' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
                             {{ $feature }}
                         </li>
                         @endforeach
@@ -207,7 +208,7 @@
                         $planRank = $hierarchy[$plan->name] ?? 0;
                     @endphp
                     @if($plan->name === tenant()->plan)
-                        <button class="mt-8 w-full py-3 bg-white text-teal-500 rounded-xl text-xs font-black">CURRENT PLAN</button>
+                        <button class="mt-8 w-full py-3 bg-white text-[var(--accent)] rounded-xl text-xs font-black">CURRENT PLAN</button>
                     @elseif($planRank < $currentRank)
                         <button class="mt-8 w-full py-3 bg-gray-50 dark:bg-gray-900 text-gray-400 rounded-xl text-xs font-black cursor-not-allowed">UNAVAILABLE</button>
                     @else
@@ -241,27 +242,27 @@
                     <div class="space-y-4">
                         <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Select Plan</p>
                         <div class="space-y-2">
-                            <button @click="selectedPlan = 'Pro'" :class="{'border-teal-500 bg-teal-50/50 dark:bg-teal-900/20': selectedPlan === 'Pro', 'border-gray-100 dark:border-gray-700 hover:border-teal-500/50': selectedPlan !== 'Pro'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left">
+                            <button @click="selectedPlan = 'Pro'" :class="{'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.10)]': selectedPlan === 'Pro', 'border-gray-100 dark:border-gray-700': selectedPlan !== 'Pro'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left" :style="selectedPlan !== 'Pro' ? 'cursor:pointer;' : ''">
                                 <div>
                                     <p class="font-black text-gray-900 dark:text-white">Pro Plan</p>
                                     <p class="text-xs text-gray-500">Perfect for medium schools</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-black" :class="{'text-teal-600': selectedPlan === 'Pro', 'text-gray-900 dark:text-white': selectedPlan !== 'Pro'}">₱2,499</p>
+                                    <p class="font-black" :class="{'text-[var(--accent)]': selectedPlan === 'Pro', 'text-gray-900 dark:text-white': selectedPlan !== 'Pro'}">₱2,499</p>
                                 </div>
                             </button>
-                            <button @click="selectedPlan = 'Ultimate'" :class="{'border-teal-500 bg-teal-50/50 dark:bg-teal-900/20': selectedPlan === 'Ultimate', 'border-gray-100 dark:border-gray-700 hover:border-teal-500/50': selectedPlan !== 'Ultimate'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left">
+                            <button @click="selectedPlan = 'Ultimate'" :class="{'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.10)]': selectedPlan === 'Ultimate', 'border-gray-100 dark:border-gray-700': selectedPlan !== 'Ultimate'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left" :style="selectedPlan !== 'Ultimate' ? 'cursor:pointer;' : ''">
                                 <div>
                                     <p class="font-black text-gray-900 dark:text-white">Ultimate Plan</p>
                                     <p class="text-xs text-gray-500">For large universities</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-black" :class="{'text-teal-600': selectedPlan === 'Ultimate', 'text-gray-900 dark:text-white': selectedPlan !== 'Ultimate'}">₱4,999</p>
+                                    <p class="font-black" :class="{'text-[var(--accent)]': selectedPlan === 'Ultimate', 'text-gray-900 dark:text-white': selectedPlan !== 'Ultimate'}">₱4,999</p>
                                 </div>
                             </button>
                         </div>
                     </div>
-                    <button @click="processUpgrade()" class="w-full py-4 bg-teal-500 text-white rounded-2xl font-black shadow-xl shadow-teal-500/20 active:scale-95 transition-all">PROCEED TO CHECKOUT</button>
+                    <button @click="processUpgrade()" class="w-full py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">PROCEED TO CHECKOUT</button>
                 </div>
 
                 {{-- Step 2: Confirm --}}
@@ -271,25 +272,25 @@
                     
                     <div class="flex gap-4 mt-8">
                         <button @click="step = 'select'" class="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">Cancel</button>
-                        <button @click="confirmPayment()" class="flex-1 py-4 bg-teal-500 text-white rounded-2xl font-black shadow-xl shadow-teal-500/20 active:scale-95 transition-all w-full">Pay & Upgrade</button>
+                        <button @click="confirmPayment()" class="flex-1 py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all w-full hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">Pay & Upgrade</button>
                     </div>
                 </div>
 
                 {{-- Step 3: Processing --}}
                 <div x-show="step === 'processing'" class="space-y-6 text-center py-12" style="display: none;">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-teal-500 border-t-transparent"></div>
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: var(--accent); border-top-color: transparent;"></div>
                     <h3 class="text-xl font-black text-gray-900 dark:text-white">Processing Payment...</h3>
                     <p class="text-gray-500 text-sm">Please securely wait and do not close this window.</p>
                 </div>
 
                 {{-- Step 4: Success --}}
                 <div x-show="step === 'success'" class="space-y-6 text-center py-6" style="display: none;">
-                    <div class="w-20 h-20 bg-teal-100 text-teal-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.16);">
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <h3 class="text-2xl font-black text-gray-900 dark:text-white">Payment Successful!</h3>
                     <p class="text-gray-500">Thank you for subscribing to the <span class="font-bold text-gray-900 dark:text-white" x-text="selectedPlan + ' Plan'"></span>. Your new features are unlocked!</p>
-                    <button @click="finishUpgrade()" class="w-full mt-8 py-4 bg-teal-500 text-white rounded-2xl font-black shadow-xl shadow-teal-500/20 active:scale-95 transition-all">RETURN TO DASHBOARD</button>
+                    <button @click="finishUpgrade()" class="w-full mt-8 py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">RETURN TO DASHBOARD</button>
                 </div>
             </div>
         </div>

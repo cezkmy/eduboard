@@ -6,7 +6,7 @@
 <div class="auth-wrapper">
     <div class="auth-card" style="max-width: 800px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; padding: 0; overflow: hidden; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); border: none; margin: auto;">
         <!-- Left Side: Branding -->
-        <div style="background: #2D7A6E; padding: 60px 48px; color: white; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; position: relative; overflow: hidden;">
+        <div style="background: var(--accent); padding: 60px 48px; color: white; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; position: relative; overflow: hidden;">
             {{-- Decorative pattern --}}
             <div style="position: absolute; top: -10%; right: -10%; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
             
@@ -36,7 +36,7 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 280px;">
-                <a href="{{ route('tenant.login') }}" class="btn-auth" style="background: #2D7A6E; color: white; padding: 14px 28px; border-radius: 100px; text-decoration: none; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(45, 122, 110, 0.2);">
+                <a href="{{ route('tenant.login') }}" class="btn-auth" style="background: var(--accent); color: white; padding: 14px 28px; border-radius: 100px; text-decoration: none; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2);">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 18px; height: 18px;">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
@@ -53,7 +53,7 @@
 
             <div style="margin-top: 60px;">
                 <p style="font-size: 13px; color: #94a3b8; font-weight: 500;">
-                    Need help? Contact us at <a href="mailto:{{ tenant('primary_email') ?? 'admin@school.edu' }}" style="color: #2D7A6E; text-decoration: underline; font-weight: 700;">{{ tenant('primary_email') ?? 'admin@school.edu' }}</a>
+                    Need help? Contact us at <a href="mailto:{{ tenant('primary_email') ?? 'admin@school.edu' }}" style="color: var(--accent); text-decoration: underline; font-weight: 700;">{{ tenant('primary_email') ?? 'admin@school.edu' }}</a>
                 </p>
             </div>
         </div>

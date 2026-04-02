@@ -21,7 +21,7 @@
                 <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">My Announcements</h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage and track the announcements you've posted</p>
             </div>
-            <button class="px-5 py-2.5 bg-teal-500 text-white rounded-xl text-sm font-bold hover:bg-teal-600 transition-all flex items-center gap-2 shadow-lg shadow-teal-500/20 active:scale-95" @click="modalTitle = 'New Announcement'; announcementModal = true">
+            <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);" @click="modalTitle = 'New Announcement'; announcementModal = true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
@@ -31,14 +31,14 @@
 
         {{-- Empty State --}}
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm mb-8">
-            <div class="w-20 h-20 bg-teal-50 dark:bg-teal-900/20 rounded-full flex items-center justify-center text-teal-500 mx-auto mb-6">
+            <div class="w-20 h-20 bg-[rgba(var(--accent-rgb),0.12)] rounded-full flex items-center justify-center text-[var(--accent)] mx-auto mb-6">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                 </svg>
             </div>
             <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">You haven't posted any announcements yet</h2>
             <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8">Share news, updates, or events with the school community to keep everyone informed and engaged.</p>
-            <button class="px-8 py-3 bg-teal-500 text-white rounded-2xl text-sm font-bold hover:bg-teal-600 transition-all shadow-md shadow-teal-500/20" @click="modalTitle = 'New Announcement'; announcementModal = true">
+            <button class="px-8 py-3 bg-[var(--accent)] text-white rounded-2xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-md" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);" @click="modalTitle = 'New Announcement'; announcementModal = true">
                 Post Your First Announcement
             </button>
         </div>

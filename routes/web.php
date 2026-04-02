@@ -288,6 +288,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 
                 Route::get('templates/select', [TenantController::class, 'showTemplateSelect'])->name('templates.select');
                 Route::post('templates/select', [TenantController::class, 'store'])->name('templates.select.store');
+                Route::post('templates/layout', [TenantController::class, 'updateLayout'])->name('templates.layout.update');
                 
                 Route::get('domain', function () { 
                     $tenant = \App\Models\Tenant::where('owner_id', auth()->id())->first();

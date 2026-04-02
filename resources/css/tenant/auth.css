@@ -91,7 +91,7 @@
 .auth-form select:focus {
     background-color: white;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.10);
 }
 
 .form-select {

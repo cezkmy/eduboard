@@ -70,7 +70,7 @@
                             }
                         @endphp
                         <a href="{{ $link }}" class="notif-item unread" style="text-decoration: none;">
-                            <div class="notif-icon events">
+                            <div class="notif-icon" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">
                                 @if(isset($notification->data['icon']) && $notification->data['icon'] == 'system')
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
                                 @elseif(isset($notification->data['icon']) && $notification->data['icon'] == 'upgrade')
@@ -80,20 +80,20 @@
                                 @endif
                             </div>
                             <div class="notif-content">
-                                <div class="notif-title" style="color: #2d3748;">{{ $notification->data['title'] ?? 'New Notification' }}</div>
-                                <div class="notif-desc" style="color: #64748b;">{{ $notification->data['desc'] ?? '' }}</div>
-                                <div class="notif-time" style="color: #94a3b8;">{{ $notification->created_at->diffForHumans() }}</div>
+                                <div class="notif-title">{{ $notification->data['title'] ?? 'New Notification' }}</div>
+                                <div class="notif-desc">{{ $notification->data['desc'] ?? '' }}</div>
+                                <div class="notif-time">{{ $notification->created_at->diffForHumans() }}</div>
                             </div>
                         </a>
                     @empty
-                        <div style="padding: 16px; text-align: center; color: #64748b; font-size: 0.85rem;">
+                        <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
                             No new notifications right now.
                         </div>
                     @endforelse
                 </div>
 
                 @if(auth()->user()->unreadNotifications->count() > 0)
-                <div class="notif-footer" style="padding: 12px; display: flex; justify-content: space-between; border-top: 1px solid #f1f5f9;">
+                <div class="notif-footer" style="padding: 12px; display: flex; justify-content: space-between; border-top: 1px solid var(--border-color);">
                     <a href="{{ route('tenant.notifications.read') }}" style="font-size: 0.75rem; color: var(--color-primary); font-weight: 600;">Mark all as read</a>
                 </div>
                 @endif
@@ -103,7 +103,7 @@
         {{-- Account --}}
         <div class="admin-dropdown" x-data="{ open: false }" @click.away="open = false">
             <button class="topbar-btn user overflow-hidden" @click="open = !open" title="Account" style="padding: 0;">
-                <div class="w-full h-full flex items-center justify-center bg-[var(--color-primary)] text-white font-bold">
+                <div class="w-full h-full flex items-center justify-center text-white font-bold" style="background: var(--accent);">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
             </button>

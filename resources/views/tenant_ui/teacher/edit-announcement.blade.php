@@ -33,7 +33,7 @@
                         name="title"
                         value="Midterm Examination Schedule"
                         required
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--teal)]"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     />
                 </div>
 
@@ -43,7 +43,7 @@
                         id="editAnnCategory"
                         name="category"
                         required
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--teal)]"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                     >
                         @foreach($categories as $cat)
                             <option value="{{ $cat }}" {{ $cat === 'Academic' ? 'selected' : '' }}>{{ $cat }}</option>
@@ -58,7 +58,7 @@
                         name="content"
                         rows="4"
                         required
-                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--teal)] resize-none"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                     >The midterm exams will start next week. Please check your portals for the specific schedule and room assignments.</textarea>
                 </div>
 
@@ -74,9 +74,9 @@
                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             onchange="previewNewMedia(this)"
                         />
-                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center group-hover:border-[var(--teal)] group-hover:bg-[var(--teal-bg)] dark:group-hover:bg-teal-900/10 transition-all duration-200">
-                            <div class="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-6 w-6 text-[var(--teal)] dark:text-teal-400">
+                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center group-hover:border-[var(--accent)] group-hover:bg-[rgba(var(--accent-rgb),0.10)] transition-all duration-200">
+                            <div class="w-12 h-12 bg-[rgba(var(--accent-rgb),0.12)] rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-6 w-6 text-[var(--accent)]">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                             </div>
@@ -88,7 +88,7 @@
                 </div>
 
                 <div class="flex items-center gap-2 py-2">
-                    <input type="checkbox" name="is_pinned" id="is_pinned" value="1" class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-[var(--teal)] focus:ring-[var(--teal)] bg-white dark:bg-gray-900">
+                    <input type="checkbox" name="is_pinned" id="is_pinned" value="1" class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-[var(--accent)] focus:ring-[var(--accent)] bg-white dark:bg-gray-900">
                     <label for="is_pinned" class="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">Pin this announcement to top</label>
                 </div>
 
@@ -96,7 +96,7 @@
                     <a href="{{ route('tenant.teacher.my-announcements') }}" class="flex-1 sm:flex-none px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600 text-center transition-all">
                         Cancel
                     </a>
-                    <button type="submit" class="flex-1 sm:flex-none px-8 py-2.5 bg-[var(--teal)] text-white rounded-lg text-sm font-bold hover:opacity-90 transition-all shadow-md">
+                    <button type="submit" class="flex-1 sm:flex-none px-8 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-md">
                         Save Changes
                     </button>
                 </div>

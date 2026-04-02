@@ -277,8 +277,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: #f0fdf4;
-    color: #10b981;
+    background: rgba(var(--accent-rgb), 0.10);
+    color: var(--color-primary);
 }
 
 .notif-icon svg {
@@ -316,7 +316,7 @@
 }
 
 .notif-footer a:first-child {
-    color: #10b981;
+    color: var(--color-primary);
     font-weight: 700;
     font-size: 0.75rem;
     text-decoration: none;
@@ -364,7 +364,7 @@
     background: white;
     border-color: var(--color-primary);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.10);
 }
 
 .comment-item {
@@ -509,3 +509,9 @@
 }
 
 [x-cloak] { display: none !important; }
+
+/* Keep date picker calendar icon visible in dark mode */
+html[data-theme="dark"] .date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.2);
+    opacity: 0.95;
+}

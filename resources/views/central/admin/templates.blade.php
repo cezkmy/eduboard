@@ -361,6 +361,80 @@
         </div>
     </div>
 
+    <!-- Domain Layout Templates -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-2">Domain Layout Templates</h3>
+            <p class="text-secondary mb-0">Colors / theme presets for the tenant system UI.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(13,110,253,0.12); color: #0d6efd; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-globe2"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Blue Landing Layout</h6>
+                    <div class="text-secondary small">Default modern theme</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(25,135,84,0.12); color: #198754; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-leaf-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Green Landing Layout</h6>
+                    <div class="text-secondary small">Eco-friendly theme</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(107,33,168,0.12); color: #6b21a8; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-heart-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Pink Landing Layout</h6>
+                    <div class="text-secondary small">Royal/pink theme</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(250,204,21,0.20); color: #facc15; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-sun-fill"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Yellow Landing Layout</h6>
+                    <div class="text-secondary small">Bright theme</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(249,115,22,0.18); color: #f97316; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1">Orange Landing Layout</h6>
+                    <div class="text-secondary small">Warm theme</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Border Templates -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h3 class="fw-bold mb-1">Border Templates</h3>
+            <p class="text-secondary mb-0">Announcement border designs (with preview images).</p>
+        </div>
+    </div>
+
     <!-- Templates List -->
     <div class="row g-4">
         @foreach($templates as $template)

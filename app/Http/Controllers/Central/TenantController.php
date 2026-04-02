@@ -16,6 +16,32 @@ class TenantController extends Controller
         return view('central.user.templates-select');
     }
 
+    public function updateLayout(Request $request)
+    {
+        $request->validate([
+            'template_id' => 'required|integer',
+            'template_name' => 'nullable|string|max:255',
+        ]);
+
+        $user = auth()->user();
+
+        if (!in_array($user->plan ?? 'Basic', ['Pro', 'Ultimate'], true)) {
+            return back()->withErrors(['template_id' => 'Upgrade to Pro to change your domain layout template.']);
+        }
+
+        $tenant = Tenant::where('owner_id', $user->id)->first();
+        if (!$tenant) {
+            return back()->withErrors(['template_id' => 'No school found for your account.']);
+        }
+
+        $tenant->update([
+            'template_id' => (int) $request->template_id,
+            'template_name' => $request->template_name ?? ('Template ' . (int) $request->template_id),
+        ]);
+
+        return back()->with('success', 'Domain layout updated successfully.');
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -24,6 +50,10 @@ class TenantController extends Controller
         ]);
 
         $user = auth()->user();
+
+        if ($user->has_selected_template) {
+            return back()->withErrors(['template_id' => 'You have already selected a layout template. Please upgrade your plan if you want to unlock more templates.']);
+        }
         
         // Use underscores for DB names and subdomains as requested
         $subdomain = Str::slug($request->custom_domain, '_');
@@ -35,15 +65,21 @@ class TenantController extends Controller
         
         // Use the current host to determine the domain suffix
         $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
-        if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
-            $baseHost = 'eduboard.com';
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            // Local dev should use *.localhost so tenancy can resolve fast.
+            $baseHost = 'localhost';
         } elseif (str_starts_with($host, 'eduboard.')) {
             $baseHost = substr($host, 9);
         } else {
             $baseHost = $host;
         }
         
-        $domainName = $subdomain . '.' . $baseHost;
+        // Canonical tenant hostname for local dev should not contain underscores.
+        $safeSubdomain = $baseHost === 'localhost'
+            ? str_replace('_', '-', $subdomain)
+            : $subdomain;
+
+        $domainName = $safeSubdomain . '.' . $baseHost;
         
         // If we're on a specific port, add it to the domain name if needed for identification
         // However, Stancl/Tenancy usually handles the port separately or expects the domain without port
@@ -108,6 +144,13 @@ class TenantController extends Controller
             \Log::info('Step 2: Calling domains()->create');
             $tenant->domains()->create(['domain' => $domainName]); // Full domain for Domain identification
             $tenant->domains()->create(['domain' => $subdomain]);  // Subdomain for Subdomain identification
+            $tenant->domains()->firstOrCreate(['domain' => $safeSubdomain]); // Safe subdomain for local dev
+
+            // If local dev, also register a safe *.localhost host (underscores are problematic in hostnames).
+            if ($baseHost === 'localhost') {
+                $tenant->domains()->firstOrCreate(['domain' => $subdomain . '.localhost']);
+                $tenant->domains()->firstOrCreate(['domain' => $safeSubdomain . '.localhost']);
+            }
             \Log::info('Step 2 Success.');
 
             \Log::info('Step 3: Creating Admin User for Tenant');
@@ -144,7 +187,8 @@ class TenantController extends Controller
             // Update the user model directly and ensure it's saved to central DB
             $user->has_selected_template = true;
             
-            // For local development, we want to include the port in the school_domain link
+            // For local development, we want to include the port in the school_domain link.
+            // Use the canonical safe hostname so the user can copy/paste and it always works.
             $port = parse_url(config('app.url'), PHP_URL_PORT);
             $user->school_domain = $domainName . ($port ? ':' . $port : '');
             
@@ -201,11 +245,47 @@ class TenantController extends Controller
         request()->session()->regenerateToken();
 
         // Redirect to tenant's autologin route
-        $domain = $tenant->domains()->first()->domain;
-        
-        // For local development, we need the port if we're on one
-        $port = parse_url(config('app.url'), PHP_URL_PORT);
-        $redirectUrl = "http://" . $domain . ($port ? ":" . $port : "") . "/autologin?token=" . $token;
+        $scheme = request()->getScheme();
+        $currentHost = request()->getHost();
+        $port = request()->getPort();
+
+        // On localhost, always use a fast + valid hostname and ensure it's registered in tenancy domains.
+        if (in_array($currentHost, ['localhost', '127.0.0.1', '::1'], true)) {
+            $rawSub = (string) $tenant->id;
+            $safeSub = str_replace('_', '-', $rawSub); // underscores are slow/problematic in hostnames
+
+            // IMPORTANT: tenancy subdomain resolver looks up domains.domain = {subdomain}
+            // for hosts like {subdomain}.localhost, so we must register BOTH:
+            // - {subdomain} (safeSub)
+            // - {subdomain}.localhost (fqdn)
+            //
+            // Also register the raw underscore variant so direct visits like buksu_eduboard.localhost work.
+            $tenant->domains()->firstOrCreate(['domain' => $rawSub]);
+            $tenant->domains()->firstOrCreate(['domain' => $rawSub . '.localhost']);
+            $tenant->domains()->firstOrCreate(['domain' => $safeSub]);
+            $tenant->domains()->firstOrCreate(['domain' => $safeSub . '.localhost']);
+
+            $domain = $safeSub . '.localhost';
+        } else {
+            // Determine the base host for tenant domains.
+            if (str_starts_with($currentHost, 'eduboard.')) {
+                $baseHost = substr($currentHost, 9);
+            } else {
+                $baseHost = $currentHost;
+            }
+
+            $domains = $tenant->domains()->pluck('domain')->all();
+            $domain = collect($domains)->first(fn ($d) => str_ends_with($d, '.' . $baseHost))
+                ?: collect($domains)->first(fn ($d) => str_contains($d, '.'))
+                ?: ($tenant->id . '.' . $baseHost);
+
+            if (!str_contains($domain, '.')) {
+                $domain = $domain . '.' . $baseHost;
+            }
+        }
+
+        $portPart = in_array((int) $port, [80, 443], true) ? '' : (':' . $port);
+        $redirectUrl = $scheme . "://" . $domain . $portPart . "/autologin?token=" . $token;
 
         return redirect($redirectUrl);
     }

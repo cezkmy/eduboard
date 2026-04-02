@@ -17,10 +17,27 @@
     <!-- Vite Styles -->
     @vite(['resources/css/tenant/app.css', 'resources/css/tenant/auth.css'])
     
+    @php
+        $templateId = (int) (tenant('template_id') ?? 1);
+        $theme = match ($templateId) {
+            1 => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],     // Blue
+            2 => ['accent' => '#198754', 'accent_dark' => '#157347', 'rgb' => '25, 135, 84'],      // Green
+            3 => ['accent' => '#6b21a8', 'accent_dark' => '#581c87', 'rgb' => '107, 33, 168'],     // Violet/Pink
+            5 => ['accent' => '#facc15', 'accent_dark' => '#eab308', 'rgb' => '250, 204, 21'],     // Yellow
+            6 => ['accent' => '#f97316', 'accent_dark' => '#ea580c', 'rgb' => '249, 115, 22'],     // Orange
+            default => ['accent' => '#0D9488', 'accent_dark' => '#0f766e', 'rgb' => '13, 148, 136'],
+        };
+    @endphp
+
     <style>
         :root {
-            --teal: #0D9488;
-            --teal-bg: #e6f7f6;
+            --accent: {{ $theme['accent'] }};
+            --accent-dark: {{ $theme['accent_dark'] }};
+            --accent-rgb: {{ $theme['rgb'] }};
+            --accent-bg: rgba(var(--accent-rgb), 0.10);
+            /* Align with tenant CSS tokens used by auth.css */
+            --color-primary: var(--accent);
+            --color-primary-dark: var(--accent-dark);
             --bg: #F0F4F3;
             --surface: #ffffff;
             --text-main: #1a1a1a;
@@ -88,12 +105,12 @@
         
         .auth-form input:focus, .form-select:focus {
             background-color: var(--surface) !important;
-            border-color: var(--teal) !important;
-            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15) !important;
         }
         
         .btn-auth {
-            background: var(--teal) !important;
+            background: var(--accent) !important;
             color: white !important;
             padding: 0.85rem 2rem !important;
             border-radius: 100px !important;
@@ -101,13 +118,13 @@
             transition: all 0.2s ease !important;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2) !important;
+            box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.2) !important;
         }
         
         .btn-auth:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.3) !important;
-            background: #0f766e !important;
+            box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.3) !important;
+            background: var(--accent-dark) !important;
         }
     </style>
     @stack('styles')
