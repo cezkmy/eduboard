@@ -85,19 +85,26 @@
         </div>
     </div>
 
-    <!-- Analytics Charts Placeholder -->
+    <!-- Analytics Charts -->
     <div class="row g-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-0">
-                    <h5 class="fw-bold mb-0">Monthly Performance</h5>
+                    <h5 class="fw-bold mb-0">Revenue Trend (Last 6 months)</h5>
                 </div>
-                <div class="card-body py-5 text-center">
-                    <div class="opacity-25 mb-3">
-                        <i class="bi bi-graph-up-arrow display-1"></i>
-                    </div>
-                    <h5 class="text-secondary">Performance charts are being generated...</h5>
-                    <p class="text-muted small">Charts will display revenue and growth trends once more data is collected.</p>
+                <div class="card-body">
+                    <canvas id="revenueTrendChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">New Tenants (Last 6 months)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="tenantTrendChart" height="120"></canvas>
                 </div>
             </div>
         </div>
@@ -107,8 +114,68 @@
 @push('scripts')
 <script>
     function downloadReport(category) {
-        alert('Preparing ' + category + ' report for download... This will generate a comprehensive CSV/PDF including detailed metrics for ' + (category === 'revenue' ? 'all payments and plan distribution' : 'school growth and usage statistics') + '.');
+        const url = "{{ route('central.admin.reports.download', ['category' => '__category__']) }}".replace('__category__', category);
+        window.location.href = url;
     }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const months = @json($months ?? []);
+        const revenueTrend = @json($revenueTrend ?? []);
+        const tenantTrend = @json($tenantTrend ?? []);
+
+        if (document.getElementById('revenueTrendChart')) {
+            const revenueCtx = document.getElementById('revenueTrendChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Revenue (Paid)',
+                        data: revenueTrend,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        if (document.getElementById('tenantTrendChart')) {
+            const tenantCtx = document.getElementById('tenantTrendChart').getContext('2d');
+            new Chart(tenantCtx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'New Tenants',
+                        data: tenantTrend,
+                        backgroundColor: 'rgba(16, 185, 129, 0.35)',
+                        borderColor: '#10b981',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    });
 </script>
 @endpush
 @endsection

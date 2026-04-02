@@ -346,7 +346,7 @@
     <!-- Filters -->
     <div class="d-flex justify-content-end mb-3">
         <div class="dropdown">
-            <button class="btn btn-dark dropdown-toggle d-flex align-items-center gap-2" type="button" id="categoryFilter" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" type="button" id="categoryFilter" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-funnel-fill"></i> Filter by Category
             </button>
             <ul class="dropdown-menu shadow" aria-labelledby="categoryFilter">

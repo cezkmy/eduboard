@@ -176,12 +176,13 @@
     const reportInfoModal = new bootstrap.Modal(document.getElementById('reportInfoModal'));
 
     function generateReport(type) {
-        const message = 'Generating ' + type + ' payment report... This will export a detailed ' + (type === 'monthly' ? 'PDF' : 'CSV') + ' file of all successful transactions.';
+        const message = 'Generating ' + type + ' payment report... This will export a detailed PDF file of all successful transactions.';
         document.getElementById('reportModalMessage').textContent = message;
         reportInfoModal.show();
         
-        // In a real app, this would redirect to a route that streams a PDF/CSV
-        // setTimeout(() => { window.location.href = `/admin/payments/report/${type}`; }, 1500);
+        // Immediately redirect to the backend PDF download route.
+        const url = "{{ route('central.admin.payments.download', ['type' => '__type__']) }}".replace('__type__', type);
+        setTimeout(() => { window.location.href = url; }, 300);
     }
 
     function sortTable(n) {

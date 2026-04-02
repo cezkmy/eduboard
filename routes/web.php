@@ -53,7 +53,41 @@ foreach (config('tenancy.central_domains') as $domain) {
                     $totalSchools = \App\Models\Tenant::count();
                     $activeUsers = \App\Models\User::count();
                     $recentTenants = \App\Models\Tenant::latest()->take(5)->get();
-                    return view('central.admin.dashboard', compact('totalSchools', 'activeUsers', 'recentTenants'));
+
+                    $monthlyRevenueCurrent = \App\Models\BillingHistory::where('payment_status', 'paid')
+                        ->whereMonth('paid_at', now()->month)
+                        ->whereYear('paid_at', now()->year)
+                        ->sum('amount');
+
+                    $prev = now()->subMonth();
+                    $monthlyRevenuePrev = \App\Models\BillingHistory::where('payment_status', 'paid')
+                        ->whereMonth('paid_at', $prev->month)
+                        ->whereYear('paid_at', $prev->year)
+                        ->sum('amount');
+
+                    $revenueGrowthPercent = $monthlyRevenuePrev > 0
+                        ? (($monthlyRevenueCurrent - $monthlyRevenuePrev) / $monthlyRevenuePrev) * 100
+                        : 0;
+
+                    $newTenantsCurrent = \App\Models\Tenant::whereMonth('created_at', now()->month)
+                        ->whereYear('created_at', now()->year)
+                        ->count();
+                    $newTenantsPrev = \App\Models\Tenant::whereMonth('created_at', $prev->month)
+                        ->whereYear('created_at', $prev->year)
+                        ->count();
+
+                    $tenantGrowthPercent = $newTenantsPrev > 0
+                        ? (($newTenantsCurrent - $newTenantsPrev) / $newTenantsPrev) * 100
+                        : 0;
+
+                    return view('central.admin.dashboard', compact(
+                        'totalSchools',
+                        'activeUsers',
+                        'recentTenants',
+                        'monthlyRevenueCurrent',
+                        'revenueGrowthPercent',
+                        'tenantGrowthPercent'
+                    ));
                 })->name('dashboard');
 
                 Route::get('users', function () {
@@ -100,9 +134,40 @@ foreach (config('tenancy.central_domains') as $domain) {
                     
                     $totalTenants = \App\Models\Tenant::count();
                     $activeTenants = \App\Models\Tenant::where('status', 'Active')->count();
+
+                    $months = [];
+                    $revenueTrend = [];
+                    $tenantTrend = [];
+
+                    for ($i = 5; $i >= 0; $i--) {
+                        $start = now()->subMonths($i)->startOfMonth();
+                        $end = $start->copy()->endOfMonth();
+
+                        $months[] = $start->format('M Y');
+
+                        $revenueTrend[] = \App\Models\BillingHistory::where('payment_status', 'paid')
+                            ->whereBetween('paid_at', [$start, $end])
+                            ->sum('amount');
+
+                        $tenantTrend[] = \App\Models\Tenant::whereBetween('created_at', [$start, $end])->count();
+                    }
                     
-                    return view('central.admin.reports', compact('totalRevenue', 'monthlyRevenue', 'totalTenants', 'activeTenants')); 
+                    return view('central.admin.reports', compact(
+                        'totalRevenue',
+                        'monthlyRevenue',
+                        'totalTenants',
+                        'activeTenants',
+                        'months',
+                        'revenueTrend',
+                        'tenantTrend'
+                    )); 
                 })->name('reports');
+
+                Route::get('reports/download/{category}', [\App\Http\Controllers\Central\ReportController::class, 'downloadReport'])
+                    ->name('reports.download');
+
+                Route::get('payments/download/{type}', [\App\Http\Controllers\Central\ReportController::class, 'downloadPaymentsReport'])
+                    ->name('payments.download');
 
                 Route::get('templates', [\App\Http\Controllers\Central\TemplateController::class, 'index'])->name('templates');
                 Route::post('templates', [\App\Http\Controllers\Central\TemplateController::class, 'store'])->name('templates.store');

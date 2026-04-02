@@ -54,10 +54,18 @@
                     <span class="text-secondary small fw-medium">Revenue (Monthly)</span>
                     <i class="bi bi-credit-card text-secondary"></i>
                 </div>
-                <div class="h3 fw-bold mb-1">₱38,450</div>
-                <div class="d-flex align-items-center gap-1 small text-success">
-                    <i class="bi bi-arrow-up-short"></i>
-                    <span>+15% from last month</span>
+                <div class="h3 fw-bold mb-1">₱{{ number_format($monthlyRevenueCurrent ?? 0, 2) }}</div>
+                @php
+                    $revGrowth = (float) ($revenueGrowthPercent ?? 0);
+                @endphp
+                <div class="d-flex align-items-center gap-1 small {{ $revGrowth >= 0 ? 'text-success' : 'text-danger' }}">
+                    @if($revGrowth >= 0)
+                        <i class="bi bi-arrow-up-short"></i>
+                        <span>+{{ number_format($revGrowth, 1) }}% from last month</span>
+                    @else
+                        <i class="bi bi-arrow-down-short"></i>
+                        <span>-{{ number_format(abs($revGrowth), 1) }}% from last month</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -70,10 +78,19 @@
                     <span class="text-secondary small fw-medium">Growth Rate</span>
                     <i class="bi bi-graph-up text-secondary"></i>
                 </div>
-                <div class="h3 fw-bold mb-1">23%</div>
-                <div class="d-flex align-items-center gap-1 small text-danger">
-                    <i class="bi bi-arrow-down-short"></i>
-                    <span>-2% from last month</span>
+                @php
+                    $tenantGrowth = (float) ($tenantGrowthPercent ?? 0);
+                    $tenantGrowthAbs = abs($tenantGrowth);
+                @endphp
+                <div class="h3 fw-bold mb-1">{{ number_format($tenantGrowthAbs, 1) }}%</div>
+                <div class="d-flex align-items-center gap-1 small {{ $tenantGrowth >= 0 ? 'text-success' : 'text-danger' }}">
+                    @if($tenantGrowth >= 0)
+                        <i class="bi bi-arrow-up-short"></i>
+                        <span>+{{ number_format($tenantGrowthAbs, 1) }}% new tenants</span>
+                    @else
+                        <i class="bi bi-arrow-down-short"></i>
+                        <span>-{{ number_format($tenantGrowthAbs, 1) }}% new tenants</span>
+                    @endif
                 </div>
             </div>
         </div>
