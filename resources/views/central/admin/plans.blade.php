@@ -16,7 +16,12 @@
             <div class="card h-100">
                 <div class="card-header pt-4 px-4 d-flex justify-content-between align-items-start">
                     <div>
-                        <h4 class="fw-bold mb-2">{{ $plan->name }}</h4>
+                        <h4 class="fw-bold mb-2">
+                            {{ $plan->name }}
+                            @if(strtolower($plan->name) === 'basic')
+                                <span class="badge bg-success bg-opacity-10 text-success ms-2 align-middle" style="font-size: 0.55em; letter-spacing: 0;">Free Trial for New Users</span>
+                            @endif
+                        </h4>
                         <div class="d-flex align-items-baseline gap-1 mb-3">
                             <span class="h2 fw-bold mb-0">{{ $plan->price }}</span>
                             @if($plan->period)

@@ -72,8 +72,11 @@
                 <ul class="text-start mt-2 mb-0">
                     <li>Create your school's database</li>
                     @php
-                        $host = parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
-                        if (str_starts_with($host, 'eduboard.')) {
+                        $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
+                        // If it's localhost or 127.0.0.1, use a "customized" domain like eduboard.com
+                        if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
+                            $baseHost = 'eduboard.com';
+                        } elseif (str_starts_with($host, 'eduboard.')) {
                             $baseHost = substr($host, 9);
                         } else {
                             $baseHost = $host;
@@ -106,8 +109,11 @@
                                    value="{{ auth()->user()->school_domain ? explode('_eduboard.', auth()->user()->school_domain)[0] : Str::slug(auth()->user()->school_name) }}"
                                    {{ auth()->user()->school_domain ? 'readonly' : '' }}>
                             @php
-                                $host = parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost';
-                                if (str_starts_with($host, 'eduboard.')) {
+                                $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
+                                // If it's localhost or 127.0.0.1, use a "customized" domain like eduboard.com
+                                if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
+                                    $baseHost = 'eduboard.com';
+                                } elseif (str_starts_with($host, 'eduboard.')) {
                                     $baseHost = substr($host, 9);
                                 } else {
                                     $baseHost = $host;
@@ -252,7 +258,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Use the central domain from PHP
-    const appDomain = '{{ parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost' }}';
+    let appDomain = '{{ parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost() }}';
+    if (['localhost', '127.0.0.1', '::1'].includes(appDomain)) {
+        appDomain = 'eduboard.com';
+    }
     const appPort = '{{ parse_url(config('app.url'), PHP_URL_PORT) ?? '' }}';
     
     // Logic to determine the base host for suffix

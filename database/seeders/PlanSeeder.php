@@ -15,8 +15,8 @@ class PlanSeeder extends Seeder
         $plans = [
             [
                 'name' => 'Basic',
-                'price' => 'Free',
-                'period' => '(30 Days Trial)',
+                'price' => '₱999',
+                'period' => '/mo',
                 'is_popular' => false,
                 'features' => [
                     '1 Admin, 5 Teachers',
@@ -25,6 +25,7 @@ class PlanSeeder extends Seeder
                     'Light & Dark mode',
                     'Pin announcements',
                     'Timeline view',
+                    '30 Days Free Trial'
                 ]
             ],
             [

@@ -47,11 +47,23 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'school_name',
             'status',
             'plan',
+            'storage_limit_gb',
+            'storage_used_gb',
             'expires_at',
             'custom_disabled_message',
             'created_at',
             'updated_at',
         ];
+    }
+
+    public function billingHistories()
+    {
+        return $this->hasMany(BillingHistory::class);
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function hasFeature($feature): bool

@@ -90,9 +90,13 @@
                     
                     <div class="mt-auto pt-3">
                         @if($isCurrent)
-                            <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">MANAGE PLAN</button>
-                        @elseif($plan->price === 'Free')
-                            <button class="btn btn-light w-100 fw-bold text-muted disabled">CURRENT PLAN</button>
+                            @if(auth()->user()->status === 'trial')
+                                <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">
+                                    <i class="bi bi-credit-card me-2"></i>ACTIVATE PLAN (₱999)
+                                </button>
+                            @else
+                                <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">MANAGE PLAN</button>
+                            @endif
                         @else
                             <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">UPGRADE NOW</button>
                         @endif

@@ -73,6 +73,25 @@
         [data-bs-theme="dark"] .modal-header { border-bottom-color: var(--border-color); }
         [data-bs-theme="dark"] .modal-footer { border-top-color: var(--border-color); }
 
+        /* Notification Dropdown Dark Mode Fix */
+        [data-bs-theme="dark"] #notificationsMenu {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .dropdown-item:hover {
+            background-color: rgba(16, 185, 129, 0.1) !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .border-bottom {
+            border-bottom-color: var(--border-color) !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .text-dark {
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .bg-light {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
         /* Button & Input Overrides for Dark Mode */
         [data-bs-theme="dark"] .btn-success { background-color: #10b981; border-color: #10b981; color: #ffffff !important; }
         [data-bs-theme="dark"] .btn-success:hover { background-color: #059669; border-color: #059669; }
@@ -84,6 +103,15 @@
         [data-bs-theme="dark"] .form-control { background-color: #1e293b; border-color: #475569; color: #f1f5f9; }
         [data-bs-theme="dark"] .form-control:focus { background-color: #1e293b; color: #ffffff; border-color: #10b981; box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25); }
         [data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
+
+        /* Custom Select Dark Styling */
+        [data-bs-theme="dark"] select.form-select option {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] .custom-select-dark {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+        }
 
         /* Fix for elements inside success/green banners in dark mode */
         [data-bs-theme="dark"] .bg-success .bg-white { background-color: #ffffff !important; color: #198754 !important; }
@@ -283,6 +311,7 @@
             .top-bar { padding: 0 1rem; }
         }
     </style>
+    @stack('styles')
 </head>
 <body>
     <div class="admin-wrapper">

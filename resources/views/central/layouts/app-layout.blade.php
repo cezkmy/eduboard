@@ -267,6 +267,21 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap; /* Keep badge text in one line */
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .popular-badge--free-trial{
+            font-size: 0.65rem;
+            padding: 0.25rem 0.75rem;
+            letter-spacing: 0.3px;
+        }
+
+        .pricing-card:hover .popular-badge{
+            transform: translateX(-50%) translateY(-2px) scale(1.06);
+            box-shadow: 0 12px 28px rgba(44, 122, 110, 0.25);
         }
 
         .price {

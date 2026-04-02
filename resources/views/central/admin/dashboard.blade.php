@@ -101,22 +101,23 @@
                         <tbody>
                             @foreach($recentTenants as $tenant)
                             <tr>
-                                <td class="fw-medium">{{ $tenant->data['school_name'] ?? $tenant->id }}</td>
+                                <td class="fw-medium">{{ $tenant->school_name ?? $tenant->id }}</td>
                                 <td>
                                     @php
-                                        $plan = $tenant->data['plan'] ?? 'Basic';
+                                        $plan = $tenant->plan ?? 'Basic';
                                         $planClass = match($plan) {
                                             'Ultimate' => 'bg-warning bg-opacity-10 text-warning',
-                                            'Pro' => 'bg-success bg-opacity-10 text-success',
+                                            'Pro' => 'bg-primary bg-opacity-10 text-primary',
+                                            'Basic' => 'bg-success bg-opacity-10 text-success',
                                             default => 'bg-secondary bg-opacity-10 text-secondary',
                                         };
                                     @endphp
                                     <span class="badge {{ $planClass }} px-3 py-2 rounded-pill">{{ $plan }}</span>
                                 </td>
-                                <td class="text-secondary">{{ $tenant->data['user_count'] ?? 0 }}</td>
+                                <td class="text-secondary">{{ 0 }}</td>
                                 <td>
                                     @php
-                                        $status = $tenant->data['status'] ?? 'Active';
+                                        $status = $tenant->status ?? 'Active';
                                         $statusClass = $status === 'Active' ? 'bg-success bg-opacity-10 text-success' : 'bg-warning bg-opacity-10 text-warning';
                                     @endphp
                                     <span class="badge {{ $statusClass }} px-3 py-2 rounded-pill">{{ $status }}</span>

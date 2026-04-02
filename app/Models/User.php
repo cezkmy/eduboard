@@ -23,6 +23,11 @@ class User extends Authenticatable
         return $this->hasMany(Announcement::class, 'posted_by');
     }
 
+    public function tenant()
+    {
+        return $this->hasOne(Tenant::class, 'owner_id');
+    }
+
     /**
      * Determine the user's role.
      */

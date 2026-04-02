@@ -77,29 +77,50 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('tenants/{id}/deactivate', [\App\Http\Controllers\Central\TenantController::class, 'deactivate'])->name('tenants.deactivate');
                 Route::post('tenants/{id}/activate', [\App\Http\Controllers\Central\TenantController::class, 'activate'])->name('tenants.activate');
                 Route::post('tenants/{id}/extend', [\App\Http\Controllers\Central\TenantController::class, 'extend'])->name('tenants.extend');
+                Route::post('tenants/{id}/storage', [\App\Http\Controllers\Central\TenantController::class, 'updateStorage'])->name('tenants.storage');
+                Route::get('tenants/{id}/details', [\App\Http\Controllers\Central\TenantController::class, 'getDetails'])->name('tenants.details');
 
                 Route::get('plans', [\App\Http\Controllers\Central\PlanController::class, 'index'])->name('plans');
                 Route::put('plans/{id}', [\App\Http\Controllers\Central\PlanController::class, 'update'])->name('plans.update');
 
                 Route::get('payments', function () { 
                     if (!auth()->user()->is_admin) return redirect()->route('central.user.dashboard');
-                    return view('central.admin.payments'); 
+                    $payments = \App\Models\BillingHistory::with('tenant')->latest()->get();
+                    return view('central.admin.payments', compact('payments')); 
                 })->name('payments');
 
                 Route::get('reports', function () { 
                     if (!auth()->user()->is_admin) return redirect()->route('central.user.dashboard');
-                    return view('central.admin.reports'); 
+                    
+                    $totalRevenue = \App\Models\BillingHistory::where('payment_status', 'paid')->sum('amount');
+                    $monthlyRevenue = \App\Models\BillingHistory::where('payment_status', 'paid')
+                        ->whereMonth('paid_at', now()->month)
+                        ->whereYear('paid_at', now()->year)
+                        ->sum('amount');
+                    
+                    $totalTenants = \App\Models\Tenant::count();
+                    $activeTenants = \App\Models\Tenant::where('status', 'Active')->count();
+                    
+                    return view('central.admin.reports', compact('totalRevenue', 'monthlyRevenue', 'totalTenants', 'activeTenants')); 
                 })->name('reports');
 
-                Route::get('templates', function () { 
-                    if (!auth()->user()->is_admin) return redirect()->route('central.user.dashboard');
-                    return view('central.admin.templates'); 
-                })->name('templates');
+                Route::get('templates', [\App\Http\Controllers\Central\TemplateController::class, 'index'])->name('templates');
+                Route::post('templates', [\App\Http\Controllers\Central\TemplateController::class, 'store'])->name('templates.store');
+                Route::put('templates/{id}', [\App\Http\Controllers\Central\TemplateController::class, 'update'])->name('templates.update');
+                Route::post('templates/category', [\App\Http\Controllers\Central\TemplateController::class, 'storeCategory'])->name('templates.category.store');
+                Route::post('templates/type', [\App\Http\Controllers\Central\TemplateController::class, 'storeType'])->name('templates.type.store');
 
                 Route::get('profile', function () { 
                     if (!auth()->user()->is_admin) return redirect()->route('central.user.dashboard');
                     return view('central.admin.profile'); 
                 })->name('profile');
+
+                Route::get('users/{id}/billing', function($id) {
+                    $user = \App\Models\User::findOrFail($id);
+                    $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+                    if (!$tenant) return response()->json([]);
+                    return response()->json($tenant->billingHistories()->latest()->get());
+                })->name('users.billing');
 
                 Route::put('profile', [AuthController::class, 'updateProfile'])->name('profile.update');
                 Route::delete('profile', [AuthController::class, 'destroyUser'])->name('profile.delete');
@@ -144,7 +165,11 @@ foreach (config('tenancy.central_domains') as $domain) {
                     $user = auth()->user();
                     
                     // Update user's central billing plan
-                    $user->update(['plan' => $request->plan]);
+                    $user->update([
+                        'plan' => $request->plan,
+                        'status' => 'active',
+                        'trial_ends_at' => null
+                    ]);
                     
                     // Also upgrade their assigned tenant
                     if ($user->school_domain) {
@@ -164,6 +189,29 @@ foreach (config('tenancy.central_domains') as $domain) {
                     // Send Thank You Email to the upgrading School
                     $user->notify(new \App\Notifications\TenantPlanUpgradedNotification($request->plan));
                     
+                    // Create billing history record
+                    if ($user->school_domain) {
+                        $host = explode(':', $user->school_domain)[0];
+                        $domain = \App\Models\Domain::where('domain', $host)->first();
+                        if ($domain && $domain->tenant) {
+                            $planPrice = match($request->plan) {
+                                'Pro' => 2499,
+                                'Ultimate' => 4999,
+                                'Basic' => 999,
+                                default => 0
+                            };
+
+                            \App\Models\BillingHistory::create([
+                                'tenant_id' => $domain->tenant->id,
+                                'plan' => $request->plan,
+                                'amount' => $planPrice,
+                                'payment_status' => 'paid',
+                                'paid_at' => now(),
+                                'invoice_number' => 'INV-' . strtoupper(Str::random(8)),
+                            ]);
+                        }
+                    }
+
                     return response()->json(['success' => true]);
                 })->name('subscription.upgrade');
                 Route::get('templates', function () { 

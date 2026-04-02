@@ -11,6 +11,8 @@
                     <div class="pricing-card {{ $plan->is_popular ? 'highlight' : '' }}">
                         @if($plan->is_popular)
                             <div class="popular-badge">Most Popular</div>
+                        @elseif(strtolower($plan->name ?? '') === 'basic')
+                            <div class="popular-badge popular-badge--free-trial">Free Trial for New Users</div>
                         @endif
                         
                         <h3 class="h4 fw-bold mb-3">{{ $plan->name }}</h3>

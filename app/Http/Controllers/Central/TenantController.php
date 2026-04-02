@@ -33,9 +33,17 @@ class TenantController extends Controller
             $subdomain .= '_eduboard';
         }
         
-        // Standardize on localhost for local development
-        // We want the pattern [subdomain]_eduboard.localhost
-        $domainName = $subdomain . '.localhost';
+        // Use the current host to determine the domain suffix
+        $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
+            $baseHost = 'eduboard.com';
+        } elseif (str_starts_with($host, 'eduboard.')) {
+            $baseHost = substr($host, 9);
+        } else {
+            $baseHost = $host;
+        }
+        
+        $domainName = $subdomain . '.' . $baseHost;
         
         // If we're on a specific port, add it to the domain name if needed for identification
         // However, Stancl/Tenancy usually handles the port separately or expects the domain without port
@@ -109,6 +117,18 @@ class TenantController extends Controller
 
             // We use the tenant context to create the admin user
             $tenant->run(function () use ($user, $centralPasswordHash) {
+                // Determine storage limit based on plan
+                $storageLimit = match($user->plan) {
+                    'Pro' => 15.00,
+                    'Ultimate' => 30.00,
+                    default => 5.00,
+                };
+
+                // Update tenant storage limit directly
+                \App\Models\Tenant::find(tenant('id'))->update([
+                    'storage_limit_gb' => $storageLimit
+                ]);
+
                 \App\Models\User::create([
                     'name' => 'School Admin',
                     'email' => $user->email,
@@ -134,7 +154,7 @@ class TenantController extends Controller
             \Log::info('--- Tenant Creation Complete ---');
 
             // Redirect directly to Domain Management instead of Dashboard
-            return redirect()->route('central.user.domain')->with('success', 'School successfully created! You can manage your domain and database here.');
+            return redirect()->route('central.user.domain')->with('success', 'Your school has been successfully created! You can now manage your domain and database here.');
         } catch (\Exception $e) {
             \Log::error('CRITICAL: Tenant creation failed: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
@@ -208,20 +228,53 @@ class TenantController extends Controller
         return back()->with('success', 'School successfully activated.');
     }
 
-    public function extend($id)
+    public function extend(Request $request, $id)
     {
         $tenant = Tenant::findOrFail($id);
+        $days = $request->input('days', 30);
         
         $currentExpiry = $tenant->expires_at ? \Carbon\Carbon::parse($tenant->expires_at) : now();
-        // If it's already past, start from today
         if ($currentExpiry->isPast()) {
             $currentExpiry = now();
         }
         
-        $tenant->expires_at = $currentExpiry->addDays(30);
-        $tenant->status = 'Active'; // Re-activate by default if extended
+        $tenant->expires_at = $currentExpiry->addDays($days);
+        $tenant->status = 'Active';
         $tenant->save();
 
-        return back()->with('success', 'School subscription extended by 30 days.');
+        return back()->with('success', "School subscription successfully extended by $days days.");
+    }
+
+    public function getDetails($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+        
+        // Count users within the tenant database
+        $stats = $tenant->run(function() {
+            return [
+                'admins' => \App\Models\User::where('role', 'admin')->count(),
+                'teachers' => \App\Models\User::where('role', 'teacher')->count(),
+                'students' => \App\Models\User::where('role', 'student')->count(),
+                'total' => \App\Models\User::count(),
+            ];
+        });
+
+        return response()->json([
+            'school_name' => $tenant->school_name,
+            'stats' => $stats
+        ]);
+    }
+
+    public function updateStorage(Request $request, $id)
+    {
+        $tenant = Tenant::findOrFail($id);
+        $request->validate([
+            'storage_limit_gb' => 'required|numeric|min:0',
+        ]);
+
+        $tenant->storage_limit_gb = $request->storage_limit_gb;
+        $tenant->save();
+
+        return back()->with('success', 'Storage limit updated successfully.');
     }
 }

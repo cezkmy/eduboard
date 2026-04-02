@@ -196,61 +196,41 @@ class AuthController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $user = auth()->user();
+        $userId = $request->input('id', auth()->id());
+        $user = User::findOrFail($userId);
 
-        $rules = [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-        ];
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+        ]);
 
-        // Handle student fields for tenants
-        if ($user->role === 'student') {
-            $rules['course'] = ['nullable', 'string', 'max:255'];
-            $rules['year_level'] = ['nullable', 'string', 'max:255'];
-            $rules['section'] = ['nullable', 'string', 'max:255'];
+        $oldEmail = $user->email;
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+        
+        $user->save();
+
+        // Sync to tenant if email or other details changed
+        $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+        if ($tenant) {
+            $tenant->run(function () use ($user, $oldEmail) {
+                $tenantUser = \App\Models\User::where('email', $oldEmail)->first();
+                if ($tenantUser) {
+                    $tenantUser->update([
+                        'email' => $user->email,
+                        'name' => $user->name,
+                        'password' => $user->password,
+                    ]);
+                }
+            });
         }
 
-        $validated = $request->validate($rules);
-
-        $data = [];
-        if ($request->has('name')) $data['name'] = $validated['name'];
-        if ($request->has('email')) $data['email'] = $validated['email'];
-
-        // Handle profile photo upload
-        if ($request->hasFile('profile_photo')) {
-            // Delete old photo if exists
-            if ($user->profile_photo && \Storage::disk('public')->exists($user->profile_photo)) {
-                \Storage::disk('public')->delete($user->profile_photo);
-            }
-            
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $data['profile_photo'] = $path;
-        }
-
-        if ($user->role === 'student') {
-            if ($request->has('course')) $data['course'] = $validated['course'] ?? null;
-            if ($request->has('year_level')) $data['year_level'] = $validated['year_level'] ?? null;
-            if ($request->has('section')) $data['section'] = $validated['section'] ?? null;
-        }
-
-        if ($request->filled('new_password')) {
-            $data['password'] = Hash::make($request->new_password);
-        }
-
-        $user->update($data);
-
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Profile updated successfully!',
-                'user' => $user,
-                'profile_photo_url' => $user->profile_photo ? asset('storage/' . $user->profile_photo) : null
-            ]);
-        }
-
-        return back()->with('success', 'Profile updated successfully!')
-                     ->with('status', 'profile-updated');
+        return back()->with('success', 'User updated successfully!');
     }
 
     public function updatePassword(Request $request)

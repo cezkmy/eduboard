@@ -73,6 +73,25 @@
         [data-bs-theme="dark"] .modal-header { border-bottom-color: var(--border-color); }
         [data-bs-theme="dark"] .modal-footer { border-top-color: var(--border-color); }
 
+        /* Notification Dropdown Dark Mode Fix */
+        [data-bs-theme="dark"] #notificationsMenu {
+            background-color: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .dropdown-item:hover {
+            background-color: rgba(16, 185, 129, 0.1) !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .border-bottom {
+            border-bottom-color: var(--border-color) !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .text-dark {
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] #notificationsMenu .bg-light {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
         /* Button & Input Overrides for Dark Mode */
         [data-bs-theme="dark"] .btn-success { background-color: #10b981; border-color: #10b981; color: #ffffff !important; }
         [data-bs-theme="dark"] .btn-success:hover { background-color: #059669; border-color: #059669; }
