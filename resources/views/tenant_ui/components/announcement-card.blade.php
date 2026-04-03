@@ -7,20 +7,118 @@
         'Emergency' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     ];
     $reactionEmojis = ['heart' => '❤️', 'like' => '👍', 'fire' => '🔥', 'sad' => '😢'];
-    $mediaPaths = is_array($announcement->media_paths) ? $announcement->media_paths : json_decode($announcement->media_paths ?? '[]', true) ?? [];
+    $mediaPaths = is_array($announcement->media_paths) ? $announcement->media_paths : (json_decode($announcement->media_paths ?? '[]', true) ?? []);
     $mediaCount = count($mediaPaths);
-    $isStacked = $mediaCount >= 4;
+
+    // Fetch template if template_id is set
+    $template = null;
+    if (!empty($announcement->template_id)) {
+        $template = tenancy()->central(function () use ($announcement) {
+            return \App\Models\Template::find($announcement->template_id);
+        });
+    }
+    
+    $templateStyle = '';
+    if ($template && $template->image) {
+        $imgUrl = global_asset('template/' . $template->image);
+        $templateStyle = "border: 50px solid transparent; border-image: url({$imgUrl}) 120 round; border-image-outset: 15px;";
+    }
+
+    $borderColor = $announcement->border_color ?? 'transparent';
+    $bgColor = $announcement->bg_color ?? '#ffffff';
+    $titleColor = $announcement->title_color ?? '#111827';
+    $contentColor = $announcement->content_color ?? '#374151';
+    $categoryColor = $announcement->category_color ?? '#374151';
+    $fontStyle = $announcement->font_style ?? '';
+    $mediaLayout = $announcement->media_layout ?? 'default';
+    $layoutType = $announcement->layout_type ?? 'default';
+    $borderRadius = $announcement->border_radius ?? 32;
+    
+    // Determine if custom BG is white/light and override in dark mode
+    $isLightBg = ($bgColor === '#ffffff' || strtolower($bgColor) === '#fff');
+    $announcementBg = $isLightBg ? 'var(--card-bg-default)' : $bgColor;
+@endphp
+
+<style>
+    :root {
+        --card-bg-default: {{ $bgColor }};
+        --title-color: {{ $titleColor }};
+        --content-color: {{ $contentColor }};
+        --category-color: {{ $categoryColor }};
+    }
+    .dark {
+        --card-bg-default: #1f2937; /* gray-800 */
+        
+        /* Auto-flip default dark colors to light in dark mode */
+        @if($isLightBg)
+            @if($titleColor === '#111827') --title-color: #f9fafb; @endif
+            @if($contentColor === '#374151' || $contentColor === '#4b5563') --content-color: #e5e7eb; @endif
+            @if($categoryColor === '#374151' || $categoryColor === '#4b5563') --category-color: #9ca3af; @endif
+        @endif
+    }
+    .announcement-card-{{ $announcement->id }} {
+        background-color: var(--card-bg-default);
+    }
+</style>
+@php
+    $layoutClasses = 'ann-card relative flex flex-col p-6 transition-all duration-500 shadow-lg group/card';
+    if ($layoutType === 'landscape') $layoutClasses .= ' w-full mx-auto my-12';
+    elseif ($layoutType === 'portrait') $layoutClasses .= ' w-full max-w-4xl mx-auto my-12';
+    else $layoutClasses .= ' w-full max-w-full mx-auto my-12';
+
+    $mediaAspect = 'aspect-video';
+    if ($mediaLayout === 'portrait') $mediaAspect = 'aspect-[3/4]';
+    elseif ($mediaLayout === 'square') $mediaAspect = 'aspect-square';
+
+    $borderStyle = '';
+    if ($templateStyle) {
+        $borderStyle = $templateStyle;
+    } elseif ($borderColor && $borderColor !== 'transparent') {
+        $borderStyle = "border: 8px solid {$borderColor};";
+    } else {
+        $borderStyle = "border: 1px solid rgba(0,0,0,0.05);";
+    }
+
+    // Comment count including replies
+    $totalComments = $announcement->comments->count();
 @endphp
 
 <div 
     x-data="{ 
         galleryOpen: false, 
         viewerOpen: false, 
+        commentsOpen: false,
         currentIndex: 0, 
         media: {{ json_encode(array_map(fn($path) => [
-            'url' => asset('storage/'.$path),
-            'type' => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['mp4', 'mov', 'avi']) ? 'video' : 'image'
+            'url' => (function_exists('tenant_asset') && tenant()) ? tenant_asset($path) : asset('storage/'.$path),
+            'type' => in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['mp4', 'mov', 'avi', 'webm']) ? 'video' : 'image'
         ], $mediaPaths)) }},
+        reactions: {
+            heart: { count: {{ $announcement->heart_count ?? 0 }}, active: {{ in_array('heart', $userReactions ?? []) ? 'true' : 'false' }} },
+            like: { count: {{ $announcement->like_count ?? 0 }}, active: {{ in_array('like', $userReactions ?? []) ? 'true' : 'false' }} },
+            fire: { count: {{ $announcement->fire_count ?? 0 }}, active: {{ in_array('fire', $userReactions ?? []) ? 'true' : 'false' }} },
+            sad: { count: {{ $announcement->sad_count ?? 0 }}, active: {{ in_array('sad', $userReactions ?? []) ? 'true' : 'false' }} }
+        },
+        async toggleReaction(type) {
+            try {
+                const response = await fetch('{{ route("tenant.announcements.react.toggle", $announcement) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ type })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.reactions[type].count = data.count;
+                    this.reactions[type].active = data.active;
+                }
+            } catch (error) {
+                console.error('Error toggling reaction:', error);
+            }
+        },
         openGallery() { 
             this.galleryOpen = true; 
             document.body.style.overflow = 'hidden';
@@ -41,128 +139,251 @@
         next() { this.currentIndex = (this.currentIndex + 1) % this.media.length; },
         prev() { this.currentIndex = (this.currentIndex - 1 + this.media.length) % this.media.length; }
     }"
-    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+    class="{{ $layoutClasses }} announcement-card-{{ $announcement->id }}"
+    data-category="{{ strtolower($announcement->category ?? 'general') }}"
+    style="border-radius: 1.5rem; box-shadow: 0 15px 30px -10px {{ $isLightBg ? 'rgba(0,0,0,0.08)' : $bgColor.'44' }}; {{ $borderStyle }}"
 >
-    <div class="flex items-start justify-between gap-3">
-        <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap mb-2">
+    {{-- Background Decoration --}}
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none group-hover/card:bg-white/10 transition-all duration-700"></div>
+    
+    <div class="flex-1 flex flex-col gap-6 relative z-10 {{ $fontStyle }}">
+        {{-- Header Section --}}
+        <div class="space-y-4 shrink-0">
+            <div class="flex items-start justify-between gap-6">
+                <div class="flex-1 space-y-1">
+                    <h3 class="text-xl font-black leading-tight tracking-tight break-words" style="color: var(--title-color)">
+                        {{ $announcement->title }}
+                    </h3>
+                    <div class="flex items-center gap-3 pt-2">
+                        <span class="px-4 py-1.5 bg-black/5 rounded-full text-[12px] font-black uppercase tracking-[0.1em] shadow-sm" style="color: var(--category-color)">
+                            {{ $announcement->category ?? 'General' }}
+                        </span>
+                        <div class="flex flex-col">
+                            <span class="text-[12px] font-black text-gray-900 dark:text-white">
+                                {{ $announcement->postedBy?->name ?? 'School Administrator' }}
+                            </span>
+                            <span class="text-[11px] font-bold text-gray-500 uppercase tracking-tighter">
+                                {{ $announcement->created_at->format('M d, Y') }} • {{ $announcement->created_at->diffForHumans() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 @if($announcement->is_pinned ?? false)
-                    <span class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5v16M3 12h16.5m-16.5 0L7.5 7.5m-4.5 4.5L7.5 16.5" />
-                        </svg>
-                        Pinned
-                    </span>
+                    <div class="flex flex-col items-center gap-1 shrink-0">
+                        <span class="p-2.5 bg-red-500 text-white rounded-2xl shadow-xl shadow-red-500/40">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+                                <path d="M11 2a1 1 0 1 1 2 0v1.007c3.414.218 6.13 2.924 6.364 6.335L20 12.358V14a1 1 0 0 1-1 1h-6v5h1a1 1 0 1 1 0 2h-4a1 1 0 1 1 0-2h1v-5H5a1 1 0 0 1-1-1v-1.642l.636-2.96c.234-3.41 2.95-6.117 6.364-6.335V2ZM7.14 13h9.72l-.544-2.528A4.4 4.4 0 0 0 12 7a4.4 4.4 0 0 0-4.316 3.472L7.14 13Z"/>
+                            </svg>
+                        </span>
+                        <span class="text-[9px] font-black text-red-500 uppercase tracking-widest">Pinned</span>
+                    </div>
                 @endif
-                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium {{ $categoryColors[$announcement->category ?? 'General'] ?? $categoryColors['General'] }}">
-                    {{ $announcement->category ?? 'General' }}
-                </span>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 leading-tight">{{ $announcement->title }}</h3>
         </div>
-    </div>
 
-    <div class="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-        <span class="inline-flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-            </svg>
-            {{ $announcement->postedBy?->name ?? 'System' }}
-        </span>
-        <span class="inline-flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0h18M12 12.75h.008v.008H12v-.008Z" />
-            </svg>
-            {{ $announcement->created_at->diffForHumans() }}
-        </span>
-    </div>
+        {{-- Content Section --}}
+        <div class="relative">
+            <div class="absolute -left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-black/10 via-black/5 to-transparent rounded-full opacity-50"></div>
+            <p class="text-base leading-relaxed break-words font-medium opacity-90" style="color: var(--content-color)">
+                {{ $announcement->content }}
+            </p>
+        </div>
 
-    <p class="mt-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">{{ Str::limit($announcement->content, 200) }}</p>
-
-    {{-- Display uploaded media --}}
-    @if($mediaPaths && $mediaCount > 0)
-        @if($isStacked)
-            {{-- Facebook-style grid layout for 4+ images --}}
-            <div class="mt-3 grid grid-cols-2 gap-2">
-                @foreach($mediaPaths as $index => $path)
-                    @if($index < 4)
+        {{-- Inner Image Container --}}
+        @if($mediaPaths && $mediaCount > 0)
+            <div class="w-full {{ $mediaAspect }} bg-gray-50 dark:bg-gray-900 border-4 border-white dark:border-gray-800 overflow-hidden shadow-2xl relative group/media shrink-0" style="border-radius: {{ $borderRadius }}px">
+                <div class="w-full h-full grid gap-2 {{ $mediaCount === 1 ? 'grid-cols-1' : 'grid-cols-2' }} {{ $mediaCount >= 3 ? 'grid-rows-2' : '' }}">
+                    @foreach(array_slice($mediaPaths, 0, 4) as $index => $path)
                         @php
                             $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                            $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif']);
-                            $isVideo = in_array($extension, ['mp4', 'mov', 'avi']);
+                            $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                            $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                            
+                            $colSpan = '';
+                            if ($mediaCount === 3 && $index === 0) $colSpan = 'col-span-2 row-span-1';
+                            elseif ($mediaCount === 2) $colSpan = 'col-span-1 row-span-2';
+                            elseif ($mediaCount === 1) $colSpan = 'col-span-1 row-span-2';
                         @endphp
-                        <div 
-                            class="relative h-[250px] sm:h-[300px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer group"
-                            @click="{{ $index === 3 && $mediaCount > 4 ? 'openGallery()' : 'openViewer('.$index.')' }}"
-                        >
+                        
+                        <div class="relative w-full h-full overflow-hidden {{ $colSpan }} bg-gray-100 dark:bg-gray-800">
                             @if($isImage)
-                                <img 
-                                    src="{{ asset('storage/'.$path) }}" 
-                                    alt="{{ $announcement->title }}" 
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                />
+                                <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset($path) : asset('storage/'.$path) }}" class="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform duration-700" @click="openViewer({{ $index }})" loading="lazy">
                             @elseif($isVideo)
-                                <video 
-                                    class="w-full h-full object-cover bg-gray-50 dark:bg-gray-900 group-hover:scale-105 transition-transform duration-200"
-                                >
-                                    <source src="{{ asset('storage/'.$path) }}" type="video/mp4">
+                                <video class="w-full h-full object-cover" controls>
+                                    <source src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset($path) : asset('storage/'.$path) }}" type="video/mp4">
                                 </video>
                             @endif
-                            
-                            {{-- Overlay for 4th image only --}}
+
                             @if($index === 3 && $mediaCount > 4)
-                                <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-                                    <span class="text-white text-2xl font-bold">+{{ $mediaCount - 4 }}</span>
+                                <div class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center cursor-pointer group/more" @click="openGallery()">
+                                    <span class="text-white font-black text-3xl group-hover:scale-125 transition-transform">+{{ $mediaCount - 4 }}</span>
+                                    <span class="text-white/70 text-xs font-bold uppercase tracking-widest mt-1">View All</span>
                                 </div>
                             @endif
                         </div>
-                    @endif
-                @endforeach
-            </div>
-        @else
-            {{-- Grid layout for 1-3 images --}}
-            <div class="mt-3 {{ $mediaCount === 1 ? 'space-y-2' : 'grid grid-cols-2 gap-2' }}">
-                @foreach($mediaPaths as $index => $path)
-                    @php
-                        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif']);
-                        $isVideo = in_array($extension, ['mp4', 'mov', 'avi']);
-                    @endphp
-                    <div 
-                        class="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-90 transition-opacity {{ $mediaCount === 1 ? 'h-[400px] sm:h-[500px]' : 'h-[250px] sm:h-[350px]' }} {{ $mediaCount === 3 && $index === 0 ? 'col-span-2 sm:h-[450px]' : '' }}"
-                        @click="openViewer({{ $index }})"
-                    >
-                        @if($isImage)
-                            <img 
-                                src="{{ asset('storage/'.$path) }}" 
-                                alt="{{ $announcement->title }}" 
-                                class="w-full h-full object-cover"
-                            />
-                        @elseif($isVideo)
-                            <video class="w-full h-full object-cover bg-gray-50 dark:bg-gray-900">
-                                <source src="{{ asset('storage/'.$path) }}" type="video/mp4">
-                            </video>
-                        @endif
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         @endif
-    @endif
 
-    @if($showReactions ?? true)
-        <div class="flex items-center gap-2 mt-4 flex-wrap">
-            @foreach($reactionEmojis as $type => $emoji)
-                <button
-                    type="button"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                >
-                    {{ $emoji }} {{ $announcement->{$type.'_count'} ?? 0 }}
-                </button>
-            @endforeach
+        {{-- Footer/Reactions Section --}}
+        <div class="mt-auto flex items-center justify-between border-t border-black/5 pt-6">
+            @if($showReactions ?? true)
+                <div class="flex items-center gap-3">
+                    @foreach($reactionEmojis as $type => $emoji)
+                        <button 
+                            type="button" 
+                            @click="toggleReaction('{{ $type }}')"
+                            class="group/emoji flex items-center gap-2 px-4 py-2 rounded-2xl text-[14px] font-bold transition-all border shadow-sm active:scale-95"
+                            :class="reactions.{{ $type }}.active ? 'bg-white dark:bg-gray-800 border-{{ $type === 'heart' ? 'red' : ($type === 'like' ? 'blue' : ($type === 'fire' ? 'orange' : 'gray')) }}-200' : 'bg-black/5 border-transparent hover:bg-white dark:hover:bg-gray-800 hover:border-black/5'"
+                        >
+                            <span class="group-hover/emoji:scale-125 transition-transform duration-300" :class="reactions.{{ $type }}.active ? 'scale-110' : ''">{{ $emoji }}</span>
+                            <span class="text-xs" :class="reactions.{{ $type }}.active ? 'text-{{ $type === 'heart' ? 'red' : ($type === 'like' ? 'blue' : ($type === 'fire' ? 'orange' : 'gray')) }}-600' : ''" x-text="reactions.{{ $type }}.count"></span>
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+            
+            <button type="button" @click="commentsOpen = !commentsOpen" class="flex items-center gap-2 px-6 py-2.5 bg-gray-100 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-700 rounded-2xl text-gray-600 dark:text-gray-400 font-bold transition-all border border-transparent hover:border-black/5 active:scale-95 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3h9m-9 3h3m-12 1.5l.5-1.5a9 9 0 1111.21 3H2.25z" />
+                </svg>
+                <span class="text-sm">Comments</span>
+                @php $actualCommentCount = $announcement->comments->count(); @endphp
+                <span class="px-2 py-0.5 bg-white dark:bg-gray-700 rounded-lg text-[10px] shadow-inner" x-text="{{ $actualCommentCount }}"></span>
+            </button>
         </div>
-    @endif
 
-    {{-- Full Gallery Grid Modal --}}
+        {{-- Comments Section (Expandable) --}}
+        <div x-show="commentsOpen" x-collapse class="border-t border-black/5 mt-6 pt-6 space-y-6">
+            <div x-data="{ 
+                commentContent: '', 
+                isSubmitting: false,
+                async postComment() {
+                    if (!this.commentContent.trim() || this.isSubmitting) return;
+                    this.isSubmitting = true;
+                    try {
+                        const response = await fetch('{{ route("tenant.announcements.comment.store", $announcement) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ content: this.commentContent })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            this.commentContent = '';
+                            window.location.reload(); // Simple reload to show new comment
+                        }
+                    } catch (error) {
+                        console.error('Error posting comment:', error);
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                }
+            }" class="flex gap-4">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black shrink-0 shadow-lg shadow-emerald-500/20">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div class="flex-1 relative">
+                    <textarea 
+                        x-model="commentContent"
+                        placeholder="Write a comment..." 
+                        class="w-full px-6 py-4 bg-gray-100 dark:bg-gray-800/50 border border-transparent focus:border-emerald-500 dark:focus:border-emerald-400 rounded-[2rem] text-sm focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none min-h-[56px] custom-scrollbar dark:text-gray-200"
+                        rows="1"
+                        @keydown.enter.prevent="postComment()"
+                    ></textarea>
+                    <button 
+                        @click="postComment()"
+                        :disabled="!commentContent.trim() || isSubmitting"
+                        class="absolute right-2 top-2 p-2 bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12Zm0 0h7.5" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Comments List --}}
+            <div class="space-y-6 pl-4">
+                @forelse($announcement->comments->where('parent_id', null) as $comment)
+                    <div class="flex gap-4 group/comment" x-data="{ replying: false, replyContent: '' }">
+                        <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center font-bold shrink-0">
+                            {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="bg-gray-100 dark:bg-gray-800/80 rounded-[2rem] px-6 py-4 inline-block max-w-full shadow-sm border border-transparent dark:border-gray-700/50">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-sm font-black text-gray-900 dark:text-white">{{ $comment->user->name }}</span>
+                                    <span class="text-[10px] text-gray-400 font-bold">{{ $comment->created_at->diffForHumans() }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words">{{ $comment->content }}</p>
+                            </div>
+                            <div class="flex items-center gap-4 pl-4">
+                                <button @click="replying = !replying" class="text-xs font-black text-gray-400 hover:text-emerald-500 transition-colors">Reply</button>
+                            </div>
+
+                            {{-- Reply Input --}}
+                            <div x-show="replying" class="mt-4 flex gap-3 pl-4 animate-modal-enter">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-lg shadow-emerald-500/20">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                </div>
+                                <div class="flex-1 relative" x-data="{ isSubmittingReply: false }">
+                                    <input 
+                                        x-model="replyContent"
+                                        type="text" 
+                                        placeholder="Write a reply..." 
+                                        class="w-full px-5 py-2.5 bg-gray-100 dark:bg-gray-800/50 border border-transparent focus:border-emerald-500 rounded-2xl text-xs focus:ring-4 focus:ring-emerald-500/10 transition-all dark:text-gray-200"
+                                        @keydown.enter.prevent="
+                                            if(!replyContent.trim() || isSubmittingReply) return;
+                                            isSubmittingReply = true;
+                                            fetch('{{ route('tenant.announcements.comment.store', $announcement) }}', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                                body: JSON.stringify({ content: replyContent, parent_id: {{ $comment->id }} })
+                                            }).then(r => r.json()).then(d => { if(d.success) window.location.reload(); })
+                                        "
+                                    >
+                                </div>
+                            </div>
+
+                            {{-- Replies List --}}
+                            @if($comment->replies->count() > 0)
+                                <div class="mt-4 space-y-4 pl-4 border-l-2 border-black/5">
+                                    @foreach($comment->replies as $reply)
+                                        <div class="flex gap-3">
+                                            <div class="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400 flex items-center justify-center font-bold text-xs shrink-0">
+                                                {{ strtoupper(substr($reply->user->name, 0, 1)) }}
+                                            </div>
+                                            <div class="bg-gray-100 dark:bg-gray-800/60 rounded-3xl px-5 py-3 inline-block max-w-full border border-transparent dark:border-gray-700/30 shadow-sm">
+                                                <div class="flex items-center gap-2 mb-0.5">
+                                                    <span class="text-xs font-black text-gray-900 dark:text-white">{{ $reply->user->name }}</span>
+                                                    <span class="text-[9px] text-gray-400 font-bold uppercase">{{ $reply->created_at->diffForHumans() }}</span>
+                                                </div>
+                                                <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed break-words">{{ $reply->content }}</p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="py-8 text-center space-y-2 opacity-30">
+                        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                        <p class="text-xs font-bold uppercase tracking-widest">No comments yet</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    {{-- Gallery Grid Modal --}}
     <template x-teleport="body">
         <div 
             x-show="galleryOpen" 
@@ -209,7 +430,7 @@
         </div>
     </template>
 
-    {{-- Image/Video Viewer Modal --}}
+    {{-- Viewer Modal --}}
     <template x-teleport="body">
         <div 
             x-show="viewerOpen" 
@@ -225,14 +446,12 @@
             @keydown.window.arrow-left="prev()"
             x-cloak
         >
-            {{-- Close Button --}}
             <button @click="closeViewer()" class="absolute top-6 right-6 z-[80] p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-6 w-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
 
-            {{-- Navigation Buttons --}}
             <template x-if="media.length > 1">
                 <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 sm:px-10 z-[75] pointer-events-none">
                     <button @click.stop="prev()" class="p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors pointer-events-auto">
@@ -248,7 +467,6 @@
                 </div>
             </template>
 
-            {{-- Media Content --}}
             <div class="w-full h-full flex items-center justify-center p-4" @click="closeViewer()">
                 <template x-for="(item, index) in media" :key="index">
                     <div 
@@ -271,20 +489,9 @@
                 </template>
             </div>
 
-            {{-- Counter --}}
             <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium">
                 <span x-text="currentIndex + 1"></span> / <span x-text="media.length"></span>
             </div>
         </div>
     </template>
 </div>
-
-
-
-
-
-
-
-
-
-

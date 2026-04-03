@@ -38,11 +38,6 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api" type="button" role="tab">
-                                <i class="bi bi-code-slash me-2"></i>API
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
                             <button class="nav-link text-primary fw-bold" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">
                                 <i class="bi bi-rocket-takeoff me-2"></i>Release Manager
                             </button>
@@ -69,34 +64,34 @@
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Platform Name</label>
-                                <input type="text" class="form-control" name="platform_name" value="EduBoard">
+                                <input type="text" class="form-control" name="platform_name" value="{{ \App\Models\CentralSetting::get('platform_name', 'EduBoard') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Support Email</label>
-                                <input type="email" class="form-control" name="support_email" value="support@eduboard.com">
+                                <input type="email" class="form-control" name="support_email" value="{{ \App\Models\CentralSetting::get('support_email', 'support@eduboard.com') }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-medium">Platform Description</label>
-                                <textarea class="form-control" name="description" rows="3">Multi-tenant school management platform</textarea>
+                                <textarea class="form-control" name="description" rows="3">{{ \App\Models\CentralSetting::get('description', 'Multi-tenant school management platform') }}</textarea>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">Default Language</label>
                                 <select class="form-select" name="language">
-                                    <option value="en">English</option>
-                                    <option value="fil">Filipino</option>
+                                    <option value="en" {{ \App\Models\CentralSetting::get('language') == 'en' ? 'selected' : '' }}>English</option>
+                                    <option value="fil" {{ \App\Models\CentralSetting::get('language') == 'fil' ? 'selected' : '' }}>Filipino</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">Timezone</label>
                                 <select class="form-select" name="timezone">
-                                    <option value="Asia/Manila">Asia/Manila (GMT+8)</option>
+                                    <option value="Asia/Manila" {{ \App\Models\CentralSetting::get('timezone') == 'Asia/Manila' ? 'selected' : '' }}>Asia/Manila (GMT+8)</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-medium">Date Format</label>
                                 <select class="form-select" name="date_format">
-                                    <option value="Y-m-d">YYYY-MM-DD</option>
-                                    <option value="m/d/Y">MM/DD/YYYY</option>
+                                    <option value="Y-m-d" {{ \App\Models\CentralSetting::get('date_format') == 'Y-m-d' ? 'selected' : '' }}>YYYY-MM-DD</option>
+                                    <option value="m/d/Y" {{ \App\Models\CentralSetting::get('date_format') == 'm/d/Y' ? 'selected' : '' }}>MM/DD/YYYY</option>
                                 </select>
                             </div>
                             <div class="col-12 mt-4">
@@ -117,44 +112,38 @@
                     <h5 class="fw-semibold mb-0">Security Settings</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-4">
-                        <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
-                                <div>
-                                    <h6 class="fw-semibold mb-1">Two-Factor Authentication</h6>
-                                    <p class="text-secondary small mb-0">Add an extra layer of security to your account</p>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="twoFactor" style="cursor: pointer;">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
-                                <div>
-                                    <h6 class="fw-semibold mb-1">Session Timeout</h6>
-                                    <p class="text-secondary small mb-0">Automatically log out after inactivity</p>
-                                </div>
-                                <select class="form-select w-auto">
-                                    <option>15 minutes</option>
-                                    <option>30 minutes</option>
-                                    <option selected>1 hour</option>
-                                    <option>2 hours</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
-                                <div>
-                                    <h6 class="fw-semibold mb-1">Login Notifications</h6>
-                                    <p class="text-secondary small mb-0">Get email alerts for new logins</p>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="loginAlerts" checked>
+                    <form method="POST" action="{{ route('central.admin.settings.security') }}">
+                        @csrf
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
+                                    <div>
+                                        <h6 class="fw-semibold mb-1">Two-Factor Authentication</h6>
+                                        <p class="text-secondary small mb-0">Add an extra layer of security to your account</p>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="twoFactor" id="twoFactor" style="cursor: pointer;" {{ \App\Models\CentralSetting::get('two_factor') == '1' ? 'checked' : '' }}>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
+                                    <div>
+                                        <h6 class="fw-semibold mb-1">Login Notifications</h6>
+                                        <p class="text-secondary small mb-0">Get email alerts for new logins</p>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="loginAlerts" id="loginAlerts" {{ \App\Models\CentralSetting::get('login_notifications') == '1' || \App\Models\CentralSetting::get('login_notifications') === null ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-success px-5">
+                                    <i class="bi bi-shield-check me-2"></i>Save Security Settings
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -166,104 +155,36 @@
                     <h5 class="fw-semibold mb-0">Notification Preferences</h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row g-4">
-                        <div class="col-12">
-                            <h6 class="fw-semibold mb-3">Email Notifications</h6>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
-                                <span>New tenant registration</span>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" checked>
+                    <form method="POST" action="{{ route('central.admin.settings.notifications') }}">
+                        @csrf
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <h6 class="fw-semibold mb-3">System Settings & Toggles</h6>
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
+                                    <span>New tenant registration (Disables central register page if off)</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="registration_enabled" {{ \App\Models\CentralSetting::get('registration_enabled') == '1' || \App\Models\CentralSetting::get('registration_enabled') === null ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
+                                    <span>System updates email blast (Allow broadcast signals)</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="system_updates" {{ \App\Models\CentralSetting::get('system_updates_enabled') == '1' ? 'checked' : '' }}>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
-                                <span>Payment received</span>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" checked>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded mb-2">
-                                <span>Subscription expiring</span>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" checked>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-secondary bg-opacity-10 rounded">
-                                <span>System updates</span>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox">
-                                </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-success px-5">
+                                    <i class="bi bi-bell-check me-2"></i>Update Preferences
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- API Settings -->
-        <div class="tab-pane fade" id="api" role="tabpanel">
-            <div class="card">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-semibold mb-0">API Settings</h5>
-                    <button class="btn btn-sm btn-success">
-                        <i class="bi bi-plus-lg me-1"></i>Generate New Key
-                    </button>
-                </div>
-                <div class="card-body p-4">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        API keys are used to authenticate requests to the EduBoard API.
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Key</th>
-                                    <th>Created</th>
-                                    <th>Last Used</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Production</td>
-                                    <td>
-                                        <code>eduboard_live_••••••••••</code>
-                                        <button class="btn btn-link btn-sm p-0 ms-2">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
-                                    <td>2026-01-15</td>
-                                    <td>2 hours ago</td>
-                                    <td>
-                                        <button class="btn btn-link text-danger p-0">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Development</td>
-                                    <td>
-                                        <code>eduboard_test_••••••••••</code>
-                                        <button class="btn btn-link btn-sm p-0 ms-2">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
-                                    <td>2026-02-20</td>
-                                    <td>1 day ago</td>
-                                    <td>
-                                        <button class="btn btn-link text-danger p-0">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Release Manager Settings -->
         <div class="tab-pane fade" id="system" role="tabpanel">

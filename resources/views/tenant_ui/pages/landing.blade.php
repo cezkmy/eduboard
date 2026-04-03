@@ -10,11 +10,15 @@
             {{-- Decorative pattern --}}
             <div style="position: absolute; top: -10%; right: -10%; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
             
-            <div style="background: rgba(255,255,255,0.2); width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 32px; backdrop-filter: blur(4px);">
-                <svg fill="currentColor" viewBox="0 0 24 24" style="width: 32px; height: 32px; color: white;">
-                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                    <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
-                </svg>
+            <div style="background: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 32px; backdrop-filter: blur(4px); overflow: hidden; border: 1px solid rgba(255,255,255,0.3);">
+                @if(tenant('logo'))
+                    <img src="{{ asset('storage/' . tenant('logo')) }}" class="w-full h-full object-cover">
+                @else
+                    <svg fill="currentColor" viewBox="0 0 24 24" style="width: 40px; height: 40px; color: white;">
+                        <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                        <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+                    </svg>
+                @endif
             </div>
             
             <h1 style="font-size: 36px; color: white; font-weight: 800; margin-bottom: 16px; font-family: 'Sora', sans-serif; letter-spacing: -1px;">Welcome to {{ tenant('school_name') ?? 'Buksu' }}</h1>

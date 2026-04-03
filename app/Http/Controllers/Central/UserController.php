@@ -44,12 +44,20 @@ class UserController extends Controller
             $tenant->run(function () use ($user, $oldEmail, $validated) {
                 $tenantUser = \App\Models\User::where('email', $oldEmail)->first();
                 if ($tenantUser) {
-                    $tenantUser->update([
+                    $syncData = [
                         'email' => $user->email,
                         'name' => $user->name,
                         'phone' => $user->phone,
                         'address' => $user->address,
-                    ]);
+                        'profile_photo' => $user->profile_photo,
+                    ];
+
+                    // Only sync password if it was changed (though updateProfile doesn't usually take password, good for consistency)
+                    if (!empty($validated['password'])) {
+                        $syncData['password'] = $user->password;
+                    }
+
+                    $tenantUser->update($syncData);
                 }
             });
         }
@@ -80,6 +88,7 @@ class UserController extends Controller
             $tenant->run(function () use ($user, $newPasswordHash) {
                 $tenantUser = \App\Models\User::where('email', $user->email)->first();
                 if ($tenantUser) {
+                    // Password specifically updated here
                     $tenantUser->update([
                         'password' => $newPasswordHash,
                     ]);

@@ -29,6 +29,14 @@ class TenancyServiceProvider extends ServiceProvider
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
+                    function ($tenant) {
+                        tenancy()->run($tenant, function () {
+                            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                                '--class' => 'Database\Seeders\Tenant\CategorySeeder',
+                                '--force' => true,
+                            ]);
+                        });
+                    },
                     // Jobs\SeedDatabase::class,
 
                     // Your own jobs to prepare the tenant.

@@ -6,7 +6,7 @@
 
     {{-- Stats --}}
     <div class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300">
             <div class="stat-info">
                 <div class="stat-label">Total Announcements</div>
                 <div class="stat-value">{{ $totalAnnouncements }}</div>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300">
             <div class="stat-info">
                 <div class="stat-label">Total Teachers</div>
                 <div class="stat-value">{{ $totalTeachers }}</div>
@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300">
             <div class="stat-info">
                 <div class="stat-label">Total Students</div>
                 <div class="stat-value">{{ $totalStudents }}</div>
@@ -42,17 +42,29 @@
             </div>
         </div>
 
-        <a href="{{ route('tenant.admin.users') }}?tab=pending" class="stat-card">
+        <a href="{{ route('tenant.admin.users') }}?tab=pending" class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300 group">
             <div class="stat-info">
                 <div class="stat-label">Pending Approvals</div>
                 <div class="stat-value {{ $pendingApprovalsCount > 0 ? 'text-red-500' : '' }}">{{ $pendingApprovalsCount }}</div>
             </div>
-            <div class="stat-icon red">
+            <div class="stat-icon red group-hover:scale-110 transition-transform">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                 </svg>
             </div>
         </a>
+
+        <div class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300">
+            <div class="stat-info">
+                <div class="stat-label">Total Engagement</div>
+                <div class="stat-value">{{ $totalReactions + $totalComments }}</div>
+            </div>
+            <div class="stat-icon purple">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </div>
+        </div>
     </div>
 
     <div class="admin-grid-layout">
@@ -63,55 +75,33 @@
                 <a href="{{ route('tenant.admin.announcements') }}" class="view-all">View All</a>
             </div>
 
-            <div class="ann-list">
+            <div class="space-y-3">
                 @forelse($recentAnnouncements as $announcement)
                     @php
-                        $mediaPaths = is_array($announcement->media_paths) ? $announcement->media_paths : json_decode($announcement->media_paths ?? '[]', true) ?? [];
-                        $mediaCount = count($mediaPaths);
                         $authorInitial = strtoupper(substr($announcement->postedBy?->name ?? 'S', 0, 1));
-                        $categoryClass = strtolower($announcement->category);
                     @endphp
-                    <div class="ann-card">
-                        <div class="ann-card-header">
-                            <div class="ann-author">
-                                <div class="ann-author-avatar {{ $categoryClass }}">
-                                    {{ $authorInitial }}
-                                </div>
-                                <div class="ann-meta">
-                                    <h4 class="ann-author-name">{{ $announcement->postedBy?->name ?? 'System' }}</h4>
-                                    <p class="ann-date">{{ $announcement->created_at->format('M d, Y') }} · {{ $announcement->category }}</p>
+                    <a href="{{ route('tenant.admin.announcements') }}" class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/50 hover:border-[var(--accent)] hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-all group shadow-sm cursor-pointer no-underline">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-gray-50 dark:bg-gray-900/50 flex items-center justify-center text-gray-500 dark:text-gray-400 font-black text-lg border border-gray-100 dark:border-gray-700 group-hover:border-[var(--accent)] group-hover:text-[var(--accent)] transition-all">
+                                {{ $authorInitial }}
+                            </div>
+                            <div>
+                                <h4 class="font-black text-gray-900 dark:text-white leading-tight group-hover:text-[var(--accent)] transition-colors">{{ $announcement->title }}</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors">{{ $announcement->postedBy?->name ?? 'System' }}</span>
+                                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                    <span class="text-[10px] font-black text-[var(--accent)] uppercase tracking-widest">{{ $announcement->category }}</span>
                                 </div>
                             </div>
-                            @if($announcement->is_pinned)
-                                <span class="ann-pin">Pinned</span>
-                            @endif
                         </div>
-                        <h3 class="ann-title">{{ $announcement->title }}</h3>
-                        <p class="ann-excerpt">
-                            {{ Str::limit($announcement->content, 200) }}
-                        </p>
-
-                        @if($mediaCount > 0)
-
-                            <div class="grid {{ $mediaCount > 1 ? 'grid-cols-2' : 'grid-cols-1' }} gap-3 mt-4">
-                                @foreach(array_slice($mediaPaths, 0, 2) as $path)
-                                    <div class="rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700 aspect-video">
-                                        @php $ext = pathinfo($path, PATHINFO_EXTENSION); @endphp
-                                        @if(in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp']))
-                                            <img src="{{ asset('storage/'.$path) }}" alt="Media" class="w-full h-full object-cover">
-                                        @else
-                                            <video class="w-full h-full object-cover" preload="metadata">
-                                                <source src="{{ asset('storage/'.$path) }}" type="video/mp4">
-                                            </video>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter block group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors">{{ $announcement->created_at->format('M d') }}</span>
+                            <span class="text-[9px] font-bold text-gray-400/60 uppercase block">{{ $announcement->created_at->diffForHumans() }}</span>
+                        </div>
+                    </a>
                 @empty
-                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
-                        <p class="text-gray-500">No recent announcements found.</p>
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 p-12 text-center">
+                        <p class="text-gray-500 font-bold uppercase tracking-widest text-xs">No recent announcements</p>
                     </div>
                 @endforelse
             </div>
@@ -127,17 +117,17 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
                 <div class="divide-y divide-gray-100 dark:divide-gray-700">
                     @forelse($recentPendingUsers as $user)
-                        <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs">
+                                <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs group-hover:scale-110 transition-transform">
                                     {{ strtoupper(substr($user->name, 0, 2)) }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $user->name }}</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-[var(--accent)] transition-colors">{{ $user->name }}</p>
                                     <p class="text-[11px] text-gray-500 dark:text-gray-400">{{ $user->course ?? 'N/A' }} · {{ $user->year_level ?? '' }}</p>
                                 </div>
                             </div>
-                            <span class="px-2 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-medium rounded-full border border-amber-100 dark:border-amber-900/30">Pending</span>
+                            <span class="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-amber-100/50 dark:border-amber-900/30">Pending</span>
                         </div>
                     @empty
                         <div class="p-8 text-center">

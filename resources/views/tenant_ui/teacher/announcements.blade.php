@@ -1,8 +1,9 @@
 <x-app-layout>
-    <div class="content-header">
-        <h1 class="content-title">Announcements</h1>
-        <p class="content-subtitle">View all announcements across the school</p>
-    </div>
+    <div class="max-w-5xl mx-auto">
+        <div class="content-header">
+            <h1 class="content-title">Announcements</h1>
+            <p class="content-subtitle">View all announcements across the school</p>
+        </div>
 
     <div class="mt-8">
         {{-- Category Filters --}}
@@ -49,6 +50,7 @@
             <div class="mt-12">
                 {{ $announcements->links() }}
             </div>
+        </div>
         </div>
     </div>
 </x-app-layout>

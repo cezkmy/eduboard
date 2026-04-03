@@ -24,6 +24,14 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::post('login', [AuthController::class, 'login']);
             Route::get('register', [AuthController::class, 'showRegister'])->name('register');
             Route::post('register', [AuthController::class, 'register']);
+
+            // Password Reset
+            Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+            Route::post('forgot-password', [AuthController::class, 'sendResetCode'])->name('password.email');
+            Route::get('verify-code', [AuthController::class, 'showVerifyCode'])->name('password.verify');
+            Route::post('verify-code', [AuthController::class, 'verifyCode'])->name('password.post-verify');
+            Route::get('reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset');
+            Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update-post');
         });
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout')->withoutMiddleware('guest');
@@ -76,6 +84,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                         ->whereYear('created_at', $prev->year)
                         ->count();
 
+                    $latestRelease = \App\Services\GitHubService::getLatestRelease();
                     $tenantGrowthPercent = $newTenantsPrev > 0
                         ? (($newTenantsCurrent - $newTenantsPrev) / $newTenantsPrev) * 100
                         : 0;
@@ -86,7 +95,8 @@ foreach (config('tenancy.central_domains') as $domain) {
                         'recentTenants',
                         'monthlyRevenueCurrent',
                         'revenueGrowthPercent',
-                        'tenantGrowthPercent'
+                        'tenantGrowthPercent',
+                        'latestRelease'
                     ));
                 })->name('dashboard');
 
@@ -195,14 +205,10 @@ foreach (config('tenancy.central_domains') as $domain) {
                     return view('central.admin.settings'); 
                 })->name('settings');
 
-                Route::post('settings/general', [UserController::class, 'updateSettings'])->name('settings.general');
-                Route::post('settings/release', function(\Illuminate\Http\Request $request) {
-                    $request->validate(['version' => 'required|string']);
-                    \Illuminate\Support\Facades\Artisan::call('eduboard:release', [
-                        'version' => $request->version
-                    ]);
-                    return back()->with('success', 'Successfully broadcasted System Update ' . $request->version . ' to all active Tenants!');
-                })->name('settings.release');
+                Route::post('settings/general', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateGeneral'])->name('settings.general');
+                Route::post('settings/security', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateSecurity'])->name('settings.security');
+                Route::post('settings/notifications', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateNotifications'])->name('settings.notifications');
+                Route::post('settings/release', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateRelease'])->name('settings.release');
             });
 
             // Central User Routes
@@ -217,9 +223,6 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::get('profile', function () { return view('central.user.profile'); })->name('profile');
                 Route::put('profile', [UserController::class, 'updateProfile'])->name('profile.update');
                 Route::put('password', [UserController::class, 'updatePassword'])->name('password.update');
-                
-                Route::get('settings', function () { return view('central.user.settings'); })->name('settings');
-                Route::post('settings', [UserController::class, 'updateSettings'])->name('settings.update');
                 
                 Route::get('subscription', function () {
                     $plans = \App\Models\Plan::all();

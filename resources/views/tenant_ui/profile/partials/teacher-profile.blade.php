@@ -75,6 +75,14 @@
                     <input name="department" type="text" value="{{ old('department', $user->department) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                 </div>
 
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Preferred Language</label>
+                    <select name="language" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <option value="en" {{ (old('language', $user->settings['language'] ?? 'en')) == 'en' ? 'selected' : '' }}>English</option>
+                        <option value="fil" {{ (old('language', $user->settings['language'] ?? '')) == 'fil' ? 'selected' : '' }}>Filipino</option>
+                    </select>
+                </div>
+
                 <div class="pt-2">
                     <button type="submit" class="w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md" style="background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">SAVE CHANGES</button>
                 </div>

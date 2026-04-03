@@ -55,9 +55,15 @@
                 @csrf
                 @method('patch')
 
-                <div class="space-y-1.5">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Employee ID</label>
-                    <input name="employee_id" type="text" value="{{ old('employee_id', $user->employee_id) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Employee ID</label>
+                        <input name="employee_id" type="text" value="{{ old('employee_id', $user->employee_id) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Department</label>
+                        <input name="department" type="text" value="{{ old('department', $user->department) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    </div>
                 </div>
 
                 <div class="space-y-1.5">
@@ -68,6 +74,14 @@
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
                     <input name="email" type="email" value="{{ old('email', $user->email) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" required>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Preferred Language</label>
+                    <select name="language" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <option value="en" {{ (old('language', $user->settings['language'] ?? 'en')) == 'en' ? 'selected' : '' }}>English</option>
+                        <option value="fil" {{ (old('language', $user->settings['language'] ?? '')) == 'fil' ? 'selected' : '' }}>Filipino</option>
+                    </select>
                 </div>
 
                 <div class="pt-2">

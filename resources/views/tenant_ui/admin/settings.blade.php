@@ -8,6 +8,17 @@
         basicWarningModal: false,
         plan: '{{ tenant('plan') ?? 'Basic' }}',
         hasUpdatedSettings: {{ tenant('has_updated_settings') ? 'true' : 'false' }},
+        logoPreview: '{{ tenant('logo') ? asset('storage/' . tenant('logo')) : asset('images/Logo.jpg') }}',
+        handleLogoChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.logoPreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
         showSuccess() {
             this.successModal = true;
             setTimeout(() => { this.successModal = false }, 3000);
@@ -76,24 +87,12 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     System Info
                 </button>
-                <button @click="activeSection = 'system_updates'" 
-                        :class="activeSection === 'system_updates' ? 'bg-[rgba(var(--accent-rgb),0.10)] text-[var(--accent)] dark:bg-[rgba(var(--accent-rgb),0.18)] dark:text-[var(--accent)]' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                        class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
-                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v2m0 0l-2-2m2 2l2-2" /></svg>
-                    System Software
-                    @if(tenant('system_version') === 'v1.0')
-                    <span class="ml-auto flex h-2 w-2 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                    @endif
-                </button>
                 <div class="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
                     <button @click="activeSection = 'danger'" 
                             :class="activeSection === 'danger' ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'text-gray-600 dark:text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10'"
                             class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        Danger Zone
+                        Critical Actions
                     </button>
                 </div>
             </div>
@@ -217,15 +216,15 @@
                         </span>
                     </div>
 
-                    <form id="branding-form" method="POST" action="{{ route('tenant.admin.settings.update') }}" class="flex flex-col md:flex-row gap-8 items-start">
+                    <form id="branding-form" method="POST" action="{{ route('tenant.admin.settings.update') }}" enctype="multipart/form-data" class="flex flex-col md:flex-row gap-8 items-start">
                         @csrf
                         <div class="w-full md:w-64 aspect-square bg-gray-50 dark:bg-gray-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center p-8 text-center group relative overflow-hidden">
-                            <img src="{{ asset('images/Logo.jpg') }}" class="w-full h-full object-contain opacity-50 group-hover:opacity-20 transition-opacity">
+                            <img :src="logoPreview" class="w-full h-full object-contain opacity-70 group-hover:opacity-20 transition-opacity">
                             <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
                                 <svg class="w-10 h-10 text-[var(--accent)] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /></svg>
                                 <span class="text-xs font-bold text-gray-900 dark:text-white">Upload New Logo</span>
                             </div>
-                            <input type="file" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <input type="file" name="logo" @change="handleLogoChange" class="absolute inset-0 opacity-0 cursor-pointer">
                         </div>
                         <div class="flex-1 space-y-6">
                             <div class="p-6 rounded-2xl border" style="background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.22);">
@@ -246,7 +245,7 @@
                                 </label>
                                 <label class="block">
                                     <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">School Short Name</span>
-                                    <input type="text" value="Buksu" class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
+                                    <input type="text" name="school_short_name" value="{{ tenant('school_short_name') ?? 'Buksu' }}" class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
                                 </label>
                             </div>
                         </div>
@@ -281,62 +280,14 @@
                                 <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Primary Email</span>
                                 <input type="email" name="primary_email" value="{{ tenant('primary_email') ?? 'admin@buksu.edu.ph' }}" class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
                             </label>
-                            <label class="block">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Timezone</span>
-                                <select class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold appearance-none">
-                                    <option>Asia/Manila (GMT+08:00)</option>
-                                    <option>UTC</option>
-                                </select>
+                            <label class="block opacity-50 cursor-not-allowed">
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Timezone (Managed by Central)</span>
+                                <input type="text" value="{{ tenant('timezone') ?? 'Asia/Manila' }}" disabled class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
                             </label>
                         </div>
                     </form>
                 </div>
 
-                {{-- System Updates Section --}}
-                <div x-show="activeSection === 'system_updates'" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 space-y-8" x-cloak>
-                    <div>
-                        <h2 class="text-xl font-black text-gray-900 dark:text-white">System Software</h2>
-                        <p class="text-sm text-gray-500 mt-1">Manage your platform version and opt-in updates.</p>
-                    </div>
-
-                    @if(tenant('system_version') === 'v1.0')
-                    <div class="p-6 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/30">
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-500 rounded-xl flex items-center justify-center shrink-0">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-black text-amber-900 dark:text-amber-400">Update Available: Version 2.0</h3>
-                                <p class="text-sm text-amber-700 dark:text-amber-500 mt-2 font-medium">A massive redesign of the main Sidebar navigation is available! We've modernized the aesthetics and structure. Your tenant users will see this change immediately.</p>
-                                
-                                <form method="POST" action="{{ route('tenant.admin.settings.system_version') }}" class="mt-6">
-                                    @csrf
-                                    <input type="hidden" name="action" value="upgrade">
-                                    <button class="px-6 py-3 bg-amber-500 text-white rounded-xl text-sm font-black hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-95">Apply Version 2.0 Patch</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="p-6 rounded-2xl border" style="background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.22);">
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.16);">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-black text-[var(--accent)]">System Up to Date</h3>
-                                <p class="text-sm text-[var(--accent)] mt-2 font-medium opacity-90">You are running the latest stable release (Version 2.0). If you prefer the classic layout, you can safely rollback at any time.</p>
-                                
-                                <form method="POST" action="{{ route('tenant.admin.settings.system_version') }}" class="mt-6">
-                                    @csrf
-                                    <input type="hidden" name="action" value="rollback">
-                                    <button onclick="return confirm('Are you sure you want to rollback to the old layout?')" class="px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all">Rollback to v1.0</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                </div>
 
                 {{-- System Info Section --}}
                 <div x-show="activeSection === 'system_info'" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 space-y-8" x-cloak>
@@ -350,15 +301,20 @@
                             <h3 class="text-xs font-black text-gray-400 uppercase tracking-wider">Software Environment</h3>
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-500">Laravel Version</span>
-                                    <span class="text-xs font-black text-[var(--accent)]">v11.x</span>
+                                    <span class="text-xs font-bold text-gray-500">EduBoard Version</span>
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-xs font-black text-[var(--accent)]">{{ tenant('system_version') ?? 'v2.0.0-stable' }}</span>
+                                        @if($latestRelease && ($latestRelease['tag_name'] ?? '') !== tenant('system_version'))
+                                            <span class="text-[9px] font-black text-blue-500 uppercase tracking-tighter mt-1">UPDATE AVAILABLE: {{ $latestRelease['tag_name'] }}</span>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-500">PHP Version</span>
-                                    <span class="text-xs font-black text-[var(--accent)]">v8.2.x</span>
+                                    <span class="text-xs font-bold text-gray-500">Platform License</span>
+                                    <span class="text-xs font-black text-[var(--accent)]">{{ ucfirst(tenant('plan')) ?? 'Basic' }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-500">Database</span>
+                                    <span class="text-xs font-bold text-gray-500">Database Engine</span>
                                     <span class="text-xs font-black text-[var(--accent)]">MySQL 8.0</span>
                                 </div>
                             </div>
@@ -370,35 +326,57 @@
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-[10px] font-black uppercase tracking-tighter">
                                         <span class="text-gray-500">Disk Space</span>
-                                        <span class="text-[var(--accent)]">1.2 GB / 5 GB</span>
+                                        <span class="text-[var(--accent)]">{{ number_format(tenant('storage_used_gb') ?? 0, 1) }} GB / {{ tenant('storage_limit_gb') ?? 5 }} GB</span>
                                     </div>
                                     <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-full" style="width: 24%; background: var(--accent);"></div>
+                                        <div class="h-full" style="width: {{ (tenant('storage_used_gb') ?? 1) / (tenant('storage_limit_gb') ?? 5) * 100 }}%; background: var(--accent);"></div>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-xs font-bold text-gray-500">Media Uploads</span>
-                                    <span class="text-xs font-black text-gray-900 dark:text-white">842 Files</span>
+                                    <span class="text-xs font-black text-gray-900 dark:text-white">{{ \App\Models\Announcement::count() + \App\Models\User::count() }} Entities</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-6 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex gap-4">
-                        <div class="text-blue-500">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    @if($latestRelease && ($latestRelease['tag_name'] ?? '') !== tenant('system_version'))
+                    <div class="p-6 bg-blue-50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex gap-4">
+                            <div class="text-blue-500 dark:text-blue-400 mt-1">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-1">New Version Available! ({{ $latestRelease['tag_name'] }})</h4>
+                                <p class="text-[11px] text-blue-600 dark:text-blue-400/70 leading-relaxed max-w-md">
+                                    {{ Str::limit($latestRelease['body'] ?? 'Performance improvements and bug fixes.', 120) }}
+                                </p>
+                            </div>
+                        </div>
+                        <form action="{{ route('tenant.admin.version.apply') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 whitespace-nowrap uppercase tracking-widest">
+                                Apply Update
+                            </button>
+                        </form>
+                    </div>
+                    @else
+                    <div class="p-6 bg-green-50 dark:bg-green-500/5 rounded-2xl border border-green-100 dark:border-green-500/20 flex gap-4">
+                        <div class="text-green-500 dark:text-green-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
                         <div>
-                            <h4 class="text-xs font-black text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-1">Update Status</h4>
-                            <p class="text-[11px] text-blue-600 dark:text-blue-500 leading-relaxed">Your system is currently up to date. Last checked today at 10:42 AM.</p>
+                            <h4 class="text-xs font-black text-green-700 dark:text-green-400 uppercase tracking-widest mb-1">System Status: Up to Date</h4>
+                            <p class="text-[11px] text-green-600 dark:text-green-400/70 leading-relaxed">Your school instance is currently running the latest platform version.</p>
                         </div>
                     </div>
+                    @endif
                 </div>
 
                 {{-- Danger Zone Section --}}
                 <div x-show="activeSection === 'danger'" class="bg-white dark:bg-gray-800 rounded-2xl border-2 border-red-100 dark:border-red-900/30 shadow-sm p-8 space-y-8" x-cloak>
                     <div>
-                        <h2 class="text-xl font-black text-red-600">Danger Zone</h2>
+                        <h2 class="text-xl font-black text-red-600">Critical Actions</h2>
                         <p class="text-sm text-gray-500 mt-1">Actions in this section are permanent and cannot be undone.</p>
                     </div>
 
@@ -417,6 +395,19 @@
                             </div>
                             <button class="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-black hover:bg-red-100 transition-all">FACTORY RESET</button>
                         </div>
+
+                        @if(tenant('previous_version'))
+                        <div class="py-6 flex items-center justify-between gap-4">
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-white">Rollback to Previous Version</h4>
+                                <p class="text-xs text-gray-500">Revert your school instance from <strong>{{ tenant('system_version') }}</strong> back to <strong>{{ tenant('previous_version') }}</strong>.</p>
+                            </div>
+                            <form action="{{ route('tenant.admin.version.rollback') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-xs font-black hover:bg-orange-100 transition-all uppercase">RESTORE {{ tenant('previous_version') }}</button>
+                            </form>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

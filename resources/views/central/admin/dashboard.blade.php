@@ -14,6 +14,22 @@
 <!-- Stats Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-lg-3">
+        <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+            <div class="card-body text-white">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-white-50 small fw-medium text-uppercase tracking-wider">System Version</span>
+                    <i class="bi bi-github text-white-50"></i>
+                </div>
+                <div class="h3 fw-bold mb-1">{{ $latestRelease['tag_name'] ?? 'v2.0.0' }}</div>
+                <div class="d-flex align-items-center gap-1 small text-white-50">
+                    <span>Latest GitHub Release</span>
+                    <a href="{{ $latestRelease['html_url'] ?? '#' }}" target="_blank" class="text-white ms-1"><i class="bi bi-box-arrow-up-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-2">

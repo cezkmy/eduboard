@@ -46,54 +46,69 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Tenant specific admin routes
     Route::prefix('admin')->middleware(['auth'])->name('tenant.')->group(function () {
         Route::get('/dashboard', function () {
-            $totalAnnouncements = \App\Models\Announcement::count();
-            $totalTeachers = \App\Models\User::where('role', 'teacher')->count();
-            $totalStudents = \App\Models\User::where('role', 'student')->count();
+            $totalAnnouncements = \App\Models\Announcement::where('status', '!=', 'draft')->count();
+            $totalTeachers = \App\Models\User::where('role', 'teacher')->where('status', 'active')->count();
+            $totalStudents = \App\Models\User::where('role', 'student')->where('status', 'active')->count();
             $pendingApprovalsCount = \App\Models\User::where('status', 'pending')->count();
-            $recentAnnouncements = \App\Models\Announcement::with('postedBy')->latest()->take(5)->get();
-            $recentUsers = \App\Models\User::latest()->take(5)->get();
-            $recentPendingUsers = \App\Models\User::where('status', 'pending')->latest()->take(5)->get();
+            
+            // Additional Analytics
+            $totalReactions = \App\Models\Reaction::count();
+            $totalComments = \App\Models\Comment::count();
+
+            $recentAnnouncements = \App\Models\Announcement::where('status', '!=', 'draft')
+                ->with(['postedBy', 'comments', 'reactions'])
+                ->latest()
+                ->take(5)
+                ->get();
+            
+            $recentPendingUsers = \App\Models\User::where('status', 'pending')
+                ->latest()
+                ->take(5)
+                ->get();
 
             return view('tenant_ui.admin.dashboard', [
                 'totalAnnouncements' => $totalAnnouncements,
                 'totalTeachers' => $totalTeachers,
                 'totalStudents' => $totalStudents,
                 'pendingApprovalsCount' => $pendingApprovalsCount,
+                'totalReactions' => $totalReactions,
+                'totalComments' => $totalComments,
                 'recentAnnouncements' => $recentAnnouncements,
-                'recentUsers' => $recentUsers,
                 'recentPendingUsers' => $recentPendingUsers,
                 'appearance' => ['navPos' => 'left']
             ]);
         })->name('admin.dashboard');
 
-        Route::get('/users', function () {
-            $allUsers = \App\Models\User::query()
+        Route::get('/users', [\App\Http\Controllers\Tenant\UserController::class, 'index'])->name('admin.users');
+        Route::post('/users', [\App\Http\Controllers\Tenant\UserController::class, 'store'])->name('admin.users.store');
+        Route::put('/users/{user}', [\App\Http\Controllers\Tenant\UserController::class, 'update'])->name('admin.users.update');
+        Route::delete('/users/{user}', [\App\Http\Controllers\Tenant\UserController::class, 'destroy'])->name('admin.users.destroy');
+        Route::post('/users/bulk-update', [\App\Http\Controllers\Tenant\UserController::class, 'bulkUpdate'])->name('admin.users.bulk_update');
+        Route::post('/users/{user}/approve', [\App\Http\Controllers\Tenant\UserController::class, 'approveUser'])->name('admin.users.approve');
+        Route::get('/announcements', function () { 
+            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
+                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('pinned_at', 'desc')
                 ->latest()
                 ->get();
+            return view('tenant_ui.admin.announcements', compact('announcements')); 
+        })->name('admin.announcements');
 
-            $admins = $allUsers->where('role', 'admin')->where('status', '!=', 'pending')->values();
-            $teachers = $allUsers->where('role', 'teacher')->where('status', '!=', 'pending')->values();
-            $students = $allUsers->where('role', 'student')->where('status', '!=', 'pending')->values();
-            $pendingUsers = $allUsers->where('status', 'pending')->values();
-
-            $adminCount = $admins->count();
-            $teacherCount = $teachers->count();
-
-            return view('tenant_ui.admin.users', compact(
-                'adminCount',
-                'teacherCount',
-                'admins',
-                'teachers',
-                'students',
-                'pendingUsers'
-            ));
-        })->name('admin.users');
-        Route::get('/announcements', function () { return view('tenant_ui.admin.announcements'); })->name('admin.announcements');
-        Route::get('/my-announcements', function () { return view('tenant_ui.admin.my-announcements'); })->name('admin.my-announcements');
-        Route::get('/categories', function () { 
-            if (!tenant()->hasFeature('categories')) abort(403, 'Upgrade your plan to access Categories.');
-            return view('tenant_ui.admin.categories'); 
-        })->name('admin.categories');
+        Route::get('/my-announcements', function () { 
+            $announcements = \App\Models\Announcement::where('posted_by', auth()->id())
+                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('pinned_at', 'desc')
+                ->latest()
+                ->get();
+            return view('tenant_ui.admin.my-announcements', compact('announcements')); 
+        })->name('admin.my-announcements');
+        Route::get('/categories', [\App\Http\Controllers\Tenant\OrganizationController::class, 'index'])->name('admin.categories');
+        Route::post('/categories', [\App\Http\Controllers\Tenant\OrganizationController::class, 'store'])->name('admin.categories.store');
+        Route::post('/categories/presets', [\App\Http\Controllers\Tenant\OrganizationController::class, 'generatePresets'])->name('admin.categories.presets');
+        Route::delete('/categories/{category}', [\App\Http\Controllers\Tenant\OrganizationController::class, 'destroy'])->name('admin.categories.destroy');
+        Route::post('/settings/school-type', [\App\Http\Controllers\Tenant\OrganizationController::class, 'updateType'])->name('admin.settings.school_type');
         Route::get('/reports', function (\Illuminate\Http\Request $request) {
             if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
 
@@ -176,44 +191,15 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
 
             return $pdf->download('system-report-' . date('Y-m-d') . '.pdf');
         })->name('admin.reports.export');
-        Route::get('/settings', function () { return view('tenant_ui.admin.settings'); })->name('admin.settings');
+        Route::get('/settings', function () { 
+            $latestRelease = \App\Services\GitHubService::getLatestRelease();
+            return view('tenant_ui.admin.settings', [
+                'latestRelease' => $latestRelease
+            ]);
+        })->name('admin.settings');
         
-        Route::post('/settings', function (\Illuminate\Http\Request $request) {
-            $tenant = tenant();
-            
-            if ($tenant->plan === 'Basic' && $tenant->has_updated_settings) {
-                return back()->with('error', 'Basic plan allows only one-time settings update. Please upgrade plan to unlock unlimited settings changes.');
-            }
-
-            if ($request->has('site_description')) {
-                $tenant->update(['site_description' => $request->site_description]);
-            }
-            if ($request->has('primary_email')) {
-                $tenant->update(['primary_email' => $request->primary_email]);
-            }
-            if ($request->has('school_name')) {
-                $tenant->update(['school_name' => $request->school_name]);
-            }
-            if ($request->has('theme_color')) {
-                $tenant->update(['theme_color' => $request->theme_color]);
-            }
-            
-            $tenant->update(['has_updated_settings' => true]);
-
-            return back()->with('success', 'Settings updated successfully!');
-        })->name('admin.settings.update');
-
-        Route::post('/settings/system-version', function (\Illuminate\Http\Request $request) {
-            $action = $request->input('action');
-            if ($action === 'upgrade') {
-                tenant()->update(['system_version' => 'v2.0']);
-                return back()->with('success', 'System updated to Version 2.0 successfully!');
-            } else if ($action === 'rollback') {
-                tenant()->update(['system_version' => 'v1.0']);
-                return back()->with('success', 'System safely rolled back to Version 1.0.');
-            }
-            return back();
-        })->name('admin.settings.system_version');
+        Route::post('/settings', [\App\Http\Controllers\Tenant\SettingsController::class, 'update'])->name('admin.settings.update');
+        Route::post('/settings/system-version', [\App\Http\Controllers\Tenant\SettingsController::class, 'updateSystemVersion'])->name('admin.settings.system_version');
 
         Route::get('/subscription', function () { 
             $plans = \App\Models\Plan::all();
@@ -245,8 +231,12 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             $templates = tenancy()->central(function () {
                 return \App\Models\Template::all();
             });
-            return view('tenant_ui.admin.templates', compact('templates')); 
+            return view('tenant_ui.admin.templates', compact('templates'));
         })->name('admin.templates');
+        
+        // Version Management
+        Route::post('/version/apply', [\App\Http\Controllers\Tenant\VersionController::class, 'applyUpdate'])->name('admin.version.apply');
+        Route::post('/version/rollback', [\App\Http\Controllers\Tenant\VersionController::class, 'rollback'])->name('admin.version.rollback');
         
         Route::get('/notifications/read', function () {
             auth()->user()->unreadNotifications->markAsRead();
@@ -257,29 +247,66 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Teacher Routes
     Route::prefix('teacher')->middleware(['auth'])->name('tenant.teacher.')->group(function () {
         Route::get('/dashboard', function () {
-            $myAnnouncementsCount = \App\Models\Announcement::where('posted_by', auth()->id())->count();
-            $recentAnnouncements = \App\Models\Announcement::with('postedBy')
-                ->orderBy('is_pinned', 'desc')
-                ->orderBy('pinned_at', 'desc')
+            $user = auth()->user();
+            $myAnnouncementIds = \App\Models\Announcement::where('posted_by', $user->id)->pluck('id');
+            
+            $myAnnouncementsCount = $myAnnouncementIds->count();
+            
+            // Fetch recent reactions on teacher's posts
+            $recentReactions = \App\Models\Reaction::whereIn('announcement_id', $myAnnouncementIds)
+                ->with(['user', 'announcement'])
                 ->latest()
-                ->take(3)
+                ->take(10)
                 ->get();
+                
+            // Fetch recent comments on teacher's posts
+            $recentComments = \App\Models\Comment::whereIn('announcement_id', $myAnnouncementIds)
+                ->with(['user', 'announcement'])
+                ->latest()
+                ->take(10)
+                ->get();
+
+            $totalReactions = \App\Models\Reaction::whereIn('announcement_id', $myAnnouncementIds)->count();
+            $totalComments = \App\Models\Comment::whereIn('announcement_id', $myAnnouncementIds)->count();
 
             return view('tenant_ui.teacher.dashboard', [
                 'myAnnouncementsCount' => $myAnnouncementsCount,
-                'recentAnnouncements' => $recentAnnouncements,
-                'totalViews' => 0,
-                'totalReactions' => 0,
+                'recentReactions' => $recentReactions,
+                'recentComments' => $recentComments,
+                'totalViews' => 0, // Placeholder if views aren't tracked yet
+                'totalReactions' => $totalReactions,
+                'totalComments' => $totalComments,
             ]);
         })->name('dashboard');
-        Route::get('/announcements', function () { return view('tenant_ui.teacher.announcements'); })->name('announcements');
-        Route::get('/my-announcements', function () { return view('tenant_ui.teacher.my-announcements'); })->name('my-announcements');
+        Route::get('/announcements', function () { 
+            $user = auth()->user();
+            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
+                ->forUser($user)
+                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('pinned_at', 'desc')
+                ->latest()
+                ->get();
+            return view('tenant_ui.teacher.announcements', compact('announcements')); 
+        })->name('announcements');
+        Route::get('/my-announcements', function () { 
+            $announcements = \App\Models\Announcement::where('posted_by', auth()->id())
+                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+                ->orderBy('is_pinned', 'desc')
+                ->orderBy('pinned_at', 'desc')
+                ->latest()
+                ->get();
+            return view('tenant_ui.teacher.my-announcements', compact('announcements')); 
+        })->name('my-announcements');
     });
 
     // Student Routes
     Route::prefix('student')->middleware(['auth', 'student'])->name('tenant.student.')->group(function () {
         Route::get('/dashboard', function () {
-            $announcements = \App\Models\Announcement::with(['postedBy', 'comments.user', 'reactions'])
+            $user = auth()->user();
+            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
+                ->forUser($user)
+                ->with(['postedBy', 'comments.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
@@ -289,35 +316,26 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             ]);
         })->name('page');
 
-        // Interaction routes
-        Route::post('/announcements/{announcement}/comment', [App\Http\Controllers\AnnouncementInteractionController::class, 'storeComment'])->name('comment.store');
-        Route::post('/announcements/{announcement}/react', [App\Http\Controllers\AnnouncementInteractionController::class, 'toggleReaction'])->name('react.toggle');
-        
         // Student Profile Route
         Route::get('/profile', function () { 
             return view('tenant_ui.profile.edit', ['user' => auth()->user()]); 
         })->name('profile');
     });
 
-    // ── Shared Announcement CRUD (Admin & Teacher) ──
+    // ── Shared Announcement CRUD & Interactions ──
     Route::middleware(['auth'])->name('tenant.')->group(function () {
-        Route::post('/announcements', function () {
-            return back()->with('success', 'Announcement posted!');
-        })->name('announcements.store');
+        // Shared Interaction routes (Admin, Teacher, Student)
+        Route::post('/announcements/{announcement}/comment', [App\Http\Controllers\AnnouncementInteractionController::class, 'storeComment'])->name('announcements.comment.store');
+        Route::post('/announcements/{announcement}/react', [App\Http\Controllers\AnnouncementInteractionController::class, 'toggleReaction'])->name('announcements.react.toggle');
+
+        Route::post('/announcements', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'store'])->name('announcements.store');
 
         Route::get('/announcements/{id}/edit', function ($id) {
             return view('tenant_ui.teacher.edit-announcement');
         })->name('announcements.edit');
 
-        Route::put('/announcements/{id}', function ($id) {
-            $role = auth()->user()->role;
-            $redirect = $role === 'admin' ? 'tenant.admin.my-announcements' : 'tenant.teacher.my-announcements';
-            return redirect()->route($redirect)->with('success', 'Announcement updated!');
-        })->name('announcements.update');
-
-        Route::delete('/announcements/{id}', function ($id) {
-            return back()->with('success', 'Announcement deleted!');
-        })->name('announcements.destroy');
+        Route::put('/announcements/{announcement}', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::delete('/announcements/{announcement}', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
         // ── Legacy / Shared Routes ──
         Route::get('/all-announcements', function () {
@@ -347,7 +365,18 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('tenant.login.post');
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('tenant.logout');
 
+    // Password Reset (Tenant)
+    Route::get('/forgot-password', [App\Http\Controllers\AuthController::class, 'showForgotPassword'])->name('tenant.password.request');
+    Route::post('/forgot-password', [App\Http\Controllers\AuthController::class, 'sendResetCode'])->name('tenant.password.email');
+    Route::get('/verify-code', [App\Http\Controllers\AuthController::class, 'showVerifyCode'])->name('tenant.password.verify');
+    Route::post('/verify-code', [App\Http\Controllers\AuthController::class, 'verifyCode'])->name('tenant.password.post-verify');
+    Route::get('/reset-password', [App\Http\Controllers\AuthController::class, 'showResetPassword'])->name('tenant.password.reset');
+    Route::post('/reset-password', [App\Http\Controllers\AuthController::class, 'resetPassword'])->name('tenant.password.update-post');
+
     // Tenant Registration
     Route::get('/register', [App\Http\Controllers\AuthController::class, 'showTenantRegister'])->name('tenant.register');
     Route::post('/register', [App\Http\Controllers\AuthController::class, 'tenantRegister']);
+    Route::get('/waiting-approval', function () {
+        return view('tenant_ui.auth.waiting-approval');
+    })->name('tenant.auth.waiting-approval');
 });

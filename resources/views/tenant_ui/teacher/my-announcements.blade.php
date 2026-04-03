@@ -1,6 +1,11 @@
 <x-app-layout>
     @php
-        $myAnnouncements = \App\Models\Announcement::with('postedBy')->where('posted_by', Auth::id())->latest()->get();
+        $myAnnouncements = \App\Models\Announcement::with('postedBy')
+            ->where('posted_by', Auth::id())
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('pinned_at', 'desc')
+            ->latest()
+            ->get();
     @endphp
 
     <div x-data="{ 
@@ -11,6 +16,7 @@
         showingDraftSuccess: false,
         successMessage: '',
         deleteUrl: '',
+        activeTab: 'published',
         confirmDeletion(url) {
             this.confirmingDeletion = true;
         },
@@ -31,59 +37,102 @@
              this.showingCreateModal = false;
          }
      }" @save-draft-success.window="showingDraftSuccess = true; showingCreateModal = false">
-        {{-- Page Header --}}
-        <div class="flex items-center justify-between mb-8">
-            <div>
-                <h1 class="content-title">My Announcements</h1>
-                <p class="content-subtitle">Manage and track the announcements you've posted</p>
+        <div class="max-w-5xl mx-auto">
+            {{-- Page Header --}}
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="content-title">My Announcements</h1>
+                    <p class="content-subtitle">Manage and track the announcements you've posted</p>
+                </div>
             </div>
-        </div>
 
-        {{-- Announcements List --}}
-        <div id="announcements-list" class="announcements space-y-10">
-            @forelse($myAnnouncements as $announcement)
-                <div class="relative group">
-                    <x-announcement-card :announcement="$announcement" :show-reactions="true" />
-                    
-                    {{-- Edit/Delete Actions --}}
-                    <div class="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                        <a href="{{ route('tenant.teacher.announcements.edit', $announcement) }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-                            </svg>
-                        </a>
-                        <button 
-                            type="button" 
-                            @click="confirmDeletion()"
-                            class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                            </svg>
-                        </button>
-                    </div>
+            {{-- Tabs --}}
+            <div class="flex gap-4 mb-8 border-b border-gray-100 dark:border-gray-800">
+                <button @click="activeTab = 'published'" class="px-6 py-3 text-sm font-bold transition-all border-b-2" :class="activeTab === 'published' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+                    Published ({{ $myAnnouncements->where('status', '!=', 'draft')->count() }})
+                </button>
+                <button @click="activeTab = 'drafts'" class="px-6 py-3 text-sm font-bold transition-all border-b-2" :class="activeTab === 'drafts' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+                    Drafts ({{ $myAnnouncements->where('status', 'draft')->count() }})
+                </button>
+            </div>
+
+            {{-- Announcements List --}}
+            <div id="announcements-list" class="announcements space-y-10">
+                {{-- Published Section --}}
+                <div x-show="activeTab === 'published'" class="space-y-10">
+                    @forelse($myAnnouncements->where('status', '!=', 'draft') as $announcement)
+                        <div class="relative group">
+                            <x-announcement-card :announcement="$announcement" :show-reactions="true" />
+                            
+                            {{-- Edit/Delete Actions --}}
+                            <div class="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                                <a href="{{ route('tenant.announcements.edit', $announcement) }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                                    </svg>
+                                </a>
+                                <button 
+                                    type="button" 
+                                    @click="confirmDeletion()"
+                                    class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="card p-12 text-center bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">No published announcements</h3>
+                            <p class="text-gray-500 dark:text-gray-400 mb-6">You haven't published any announcements yet.</p>
+                            <button class="btn-primary px-6 py-2" @click="showingCreateModal = true">Post Now</button>
+                        </div>
+                    @endforelse
                 </div>
-            @empty
-                <div class="card">
-                    <div class="empty-state-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 32px; height: 32px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                        </svg>
-                    </div>
-                    <h2 class="empty-state-title">You haven't posted any announcements yet</h2>
-                    <p class="empty-state-desc">Share news, updates, or events with the school community to keep everyone informed and engaged.</p>
-                    <button @click="showingCreateModal = true" class="btn-primary">
-                        Post Your First Announcement
-                    </button>
+
+                {{-- Drafts Section --}}
+                <div x-show="activeTab === 'drafts'" class="space-y-10">
+                    @forelse($myAnnouncements->where('status', 'draft') as $announcement)
+                        <div class="relative group">
+                            <x-announcement-card :announcement="$announcement" :show-reactions="true" />
+                            <div class="absolute top-4 right-20">
+                                <span class="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold uppercase rounded-md shadow-sm border border-amber-200">Draft</span>
+                            </div>
+                            {{-- Edit/Delete Actions --}}
+                            <div class="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                                <a href="{{ route('tenant.announcements.edit', $announcement) }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="card p-12 text-center bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">No drafts found</h3>
+                            <p class="text-gray-500 dark:text-gray-400">Save your work as a draft to finish it later.</p>
+                        </div>
+                    @endforelse
                 </div>
-            @endforelse
+            </div>
         </div>
 
         {{-- Create Announcement Modal --}}
         <template x-teleport="body">
             <div x-show="showingCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" x-cloak>
                 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" @click="closeModal()"></div>
-                <div class="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col"
+                <div class="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 max-h-[95vh] flex flex-col"
                      x-show="showingCreateModal"
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 scale-95 translate-y-4"
@@ -92,7 +141,7 @@
                      x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                      x-transition:leave-end="opacity-0 scale-95 translate-y-4">
                     
-                    <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
+                    <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
                         <div>
                             <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Post New Announcement</h2>
                             <p class="text-xs text-gray-500 mt-1">Create a new announcement for students and staff</p>
@@ -118,7 +167,7 @@
                 <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Exit Confirmation</h3>
-                        <button @click="showingExitConfirmation = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                        <button @click="showingExitConfirmation = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -137,7 +186,7 @@
                         </div>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex items-center justify-end gap-3">
-                        <button @click="showingExitConfirmation = false" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <button @click="showingExitConfirmation = false" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                             No, Keep Editing
                         </button>
                         <button @click="confirmExit()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all">
@@ -155,7 +204,7 @@
                 <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Draft Saved</h3>
-                        <button @click="showingDraftSuccess = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                        <button @click="showingDraftSuccess = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -212,7 +261,7 @@
                 <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Delete Announcement</h3>
-                        <button @click="confirmingDeletion = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+                        <button @click="confirmingDeletion = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>

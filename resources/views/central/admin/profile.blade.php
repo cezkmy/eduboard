@@ -33,13 +33,20 @@
             <div class="card h-100">
                 <div class="card-body text-center p-4">
                     <div class="position-relative d-inline-block">
-                        <div class="bg-success bg-opacity-10 p-4 rounded-circle mb-3" style="width: 120px; height: 120px; margin: 0 auto;">
-                            <i class="bi bi-person-fill text-success" style="font-size: 3.5rem;"></i>
+                        <div class="bg-success bg-opacity-10 rounded-circle mb-3 overflow-hidden d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; margin: 0 auto;">
+                            @if(auth()->user()->profile_photo)
+                                <img id="profile_preview_image" src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-100 h-100 object-fit-cover">
+                            @else
+                                <div id="profile_placeholder" class="d-flex align-items-center justify-content-center w-100 h-100">
+                                    <i class="bi bi-person-fill text-success" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <img id="profile_preview_image" src="" alt="Profile" class="w-100 h-100 object-fit-cover d-none">
+                            @endif
                         </div>
-                        <button class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle" 
-                                data-bs-toggle="tooltip" title="Change Photo">
-                            <i class="bi bi-camera"></i>
-                        </button>
+                        <label for="profile_photo_input" class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm border" 
+                                style="cursor: pointer;" data-bs-toggle="tooltip" title="Change Photo">
+                            <i class="bi bi-camera-fill text-primary"></i>
+                        </label>
                     </div>
                     <h4 class="fw-bold mb-1">{{ auth()->user()->name }}</h4>
                     <p class="text-secondary mb-3">{{ ucfirst(auth()->user()->role) }} Administrator</p>
@@ -95,9 +102,11 @@
                     <h5 class="fw-semibold mb-0">Edit Profile Information</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('central.admin.profile.update') }}">
+                    <form method="POST" action="{{ route('central.admin.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+                        
+                        <input type="file" id="profile_photo_input" name="profile_photo" class="d-none" accept="image/*">
                         
                         <div class="row g-4">
                             <div class="col-md-6">
@@ -246,6 +255,25 @@
     // Enable delete button only when DELETE is typed
     document.getElementById('confirmDelete').addEventListener('input', function(e) {
         document.getElementById('deleteBtn').disabled = e.target.value !== 'DELETE';
+    });
+
+    // Profile Photo Preview
+    document.getElementById('profile_photo_input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            const previewImage = document.getElementById('profile_preview_image');
+            const placeholder = document.getElementById('profile_placeholder');
+            
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('d-none');
+                if (placeholder) {
+                    placeholder.classList.add('d-none');
+                }
+            }
+            reader.readAsDataURL(file);
+        }
     });
 </script>
 @endsection

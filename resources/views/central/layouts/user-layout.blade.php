@@ -390,10 +390,6 @@
                                 <i class="bi bi-person"></i>
                                 My Profile
                             </a>
-                            <a href="{{ route('central.user.settings') }}" class="dropdown-item">
-                                <i class="bi bi-gear"></i>
-                                Settings
-                            </a>
                             <div class="dropdown-divider"></div>
                             <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                                 @csrf

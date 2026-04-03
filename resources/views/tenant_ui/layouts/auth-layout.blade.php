@@ -18,14 +18,14 @@
     @vite(['resources/css/tenant/app.css', 'resources/css/tenant/auth.css'])
     
     @php
-        $templateId = (int) (tenant('template_id') ?? 1);
-        $theme = match ($templateId) {
-            1 => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],     // Blue
-            2 => ['accent' => '#198754', 'accent_dark' => '#157347', 'rgb' => '25, 135, 84'],      // Green
-            3 => ['accent' => '#6b21a8', 'accent_dark' => '#581c87', 'rgb' => '107, 33, 168'],     // Violet/Pink
-            5 => ['accent' => '#facc15', 'accent_dark' => '#eab308', 'rgb' => '250, 204, 21'],     // Yellow
-            6 => ['accent' => '#f97316', 'accent_dark' => '#ea580c', 'rgb' => '249, 115, 22'],     // Orange
-            default => ['accent' => '#0D9488', 'accent_dark' => '#0f766e', 'rgb' => '13, 148, 136'],
+        $tenantThemeColor = tenant('theme_color') ?? 'blue';
+        $theme = match ($tenantThemeColor) {
+            'blue' => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],     // Blue
+            'green' => ['accent' => '#198754', 'accent_dark' => '#157347', 'rgb' => '25, 135, 84'],      // Green
+            'pink' => ['accent' => '#ec4899', 'accent_dark' => '#be185d', 'rgb' => '236, 72, 153'],     // Pink
+            'yellow' => ['accent' => '#facc15', 'accent_dark' => '#eab308', 'rgb' => '250, 204, 21'],    // Yellow
+            'orange' => ['accent' => '#f97316', 'accent_dark' => '#ea580c', 'rgb' => '249, 115, 22'],    // Orange
+            default => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],
         };
     @endphp
 

@@ -330,10 +330,10 @@
 }
 
 .admin-content {
-    padding: 24px 32px;
+    padding: 24px;
     flex: 1;
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     width: 100%;
 }
 

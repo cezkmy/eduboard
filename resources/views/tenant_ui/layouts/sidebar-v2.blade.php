@@ -7,19 +7,23 @@
 
     <div class="px-8 pt-10 pb-6 relative z-10 flex items-center justify-between">
         <a href="{{ route('tenant.landing') }}" class="group flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all overflow-hidden"
                  style="background: rgba(255, 255, 255, 0.18); color: #ffffff; box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.28);"
                  onmouseover="this.style.background='rgba(255, 255, 255, 0.26)'; this.style.color='white';"
                  onmouseout="this.style.background='rgba(255, 255, 255, 0.18)'; this.style.color='white';"
             >
-                <svg class="w-6 h-6 transform group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-                </svg>
+                @if(tenant('logo'))
+                    <img src="{{ asset('storage/' . tenant('logo')) }}" class="w-full h-full object-contain">
+                @else
+                    <svg class="w-6 h-6 transform group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                    </svg>
+                @endif
             </div>
             <div>
-                <h1 class="brand-title font-black text-xl tracking-tight" style="color: var(--sidebar-title);">{{ tenant('school_name') ?? 'Buksu' }}</h1>
+                <h1 class="brand-title font-black text-xl tracking-tight" style="color: var(--sidebar-title);">{{ tenant('school_short_name') ?? tenant('school_name') ?? 'Buksu' }}</h1>
                 <p class="brand-subtitle text-[10px] font-bold uppercase tracking-widest leading-none" style="color: var(--sidebar-title); opacity: 0.9;">EduBoard V2</p>
             </div>
         </a>
@@ -95,9 +99,13 @@
 
     <div class="p-6 mt-auto border-t" style="border-color: var(--sidebar-border); background: rgba(0, 0, 0, 0.12);">
         <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full shadow-md flex items-center justify-center text-white font-black"
+            <div class="w-10 h-10 rounded-full shadow-md flex items-center justify-center text-white font-black overflow-hidden"
                  style="background: linear-gradient(135deg, var(--accent), rgba(var(--accent-rgb), 0.55));">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                @if(auth()->user()->profile_photo)
+                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover">
+                @else
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                @endif
             </div>
             <div class="flex-1 overflow-hidden">
                 <p class="font-bold text-sm truncate" style="color: var(--sidebar-title);">{{ auth()->user()->name }}</p>

@@ -329,9 +329,11 @@
 }
 
 .admin-content {
-    padding: 40px;
+    padding: 24px;
     flex: 1;
     min-width: 0; /* Prevent flex children from overflowing */
+    max-width: 100%;
+    margin: 0;
 }
 
 .content-header {

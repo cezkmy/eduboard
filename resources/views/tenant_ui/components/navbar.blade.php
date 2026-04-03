@@ -39,68 +39,35 @@
                     {{-- Header --}}
                     <div class="dropdown-header notif-header">
                         <span class="name">Notifications</span>
-                        <span class="notif-count">3 new</span>
+                        <span class="notif-count">{{ auth()->user()->unreadNotifications->count() }} new</span>
                     </div>
 
                     {{-- Notification Items --}}
-                    <div class="notif-item unread" data-target="card-emergency">
-                        <div class="notif-icon emergency">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                            </svg>
-                        </div>
-                        <div class="notif-content">
-                            <div class="notif-title">Classes Suspended on March 10</div>
-                            <div class="notif-desc">Dr. Santos posted an emergency announcement</div>
-                            <div class="notif-time">2 hours ago</div>
-                        </div>
-                        <div class="notif-unread-dot"></div>
-                    </div>
-
-                    <div class="notif-item unread" data-target="card-events">
-                        <div class="notif-icon events">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5" />
-                            </svg>
-                        </div>
-                        <div class="notif-content">
-                            <div class="notif-title">Foundation Day Celebration</div>
-                            <div class="notif-desc">Events Committee posted a new announcement</div>
-                            <div class="notif-time">5 hours ago</div>
-                        </div>
-                        <div class="notif-unread-dot"></div>
-                    </div>
-
-                    <div class="notif-item unread" data-target="card-administrative">
-                        <div class="notif-icon administrative">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
-                            </svg>
-                        </div>
-                        <div class="notif-content">
-                            <div class="notif-title">Library Extended Hours</div>
-                            <div class="notif-desc">Library Services posted an administrative notice</div>
-                            <div class="notif-time">1 day ago</div>
-                        </div>
-                        <div class="notif-unread-dot"></div>
-                    </div>
-
-                    <div class="notif-item" data-target="card-video">
-                        <div class="notif-icon events">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125v-1.875m0 0a1.125 1.125 0 011.125-1.125H6m-3.75 0V7.875A1.125 1.125 0 013.375 6.75h17.25a1.125 1.125 0 011.125 1.125v9.75" />
-                            </svg>
-                        </div>
-                        <div class="notif-content">
-                            <div class="notif-title">Foundation Day Highlights Video</div>
-                            <div class="notif-desc">Events Committee uploaded a new video</div>
-                            <div class="notif-time">2 days ago</div>
-                        </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        @forelse(auth()->user()->unreadNotifications as $notification)
+                            <div class="notif-item unread">
+                                <div class="notif-icon" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                    </svg>
+                                </div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ $notification->data['title'] ?? 'New Notification' }}</div>
+                                    <div class="notif-desc">{{ $notification->data['desc'] ?? '' }}</div>
+                                    <div class="notif-time">{{ $notification->created_at->diffForHumans() }}</div>
+                                </div>
+                                <div class="notif-unread-dot"></div>
+                            </div>
+                        @empty
+                            <div class="p-6 text-center text-xs text-gray-500">
+                                No new notifications
+                            </div>
+                        @endforelse
                     </div>
 
                     {{-- Footer --}}
                     <div class="notif-footer">
-                        <a href="#">Mark all as read</a>
+                        <a href="{{ route('tenant.notifications.read') }}" class="text-xs font-bold text-emerald-500 hover:text-emerald-600 transition-colors">Mark all as read</a>
                         <a href="#">View all</a>
                     </div>
                 </div>

@@ -103,8 +103,12 @@
         {{-- Account --}}
         <div class="admin-dropdown" x-data="{ open: false }" @click.away="open = false">
             <button class="topbar-btn user overflow-hidden" @click="open = !open" title="Account" style="padding: 0;">
-                <div class="w-full h-full flex items-center justify-center text-white font-bold" style="background: var(--accent);">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <div class="user-avatar w-full h-full flex items-center justify-center text-white font-bold" style="background: var(--accent);">
+                    @if(auth()->user()->profile_photo)
+                        <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    @endif
                 </div>
             </button>
             <div class="admin-dropdown-menu" :class="{ 'show': open }">

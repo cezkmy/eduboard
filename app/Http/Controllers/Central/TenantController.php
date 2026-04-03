@@ -34,9 +34,19 @@ class TenantController extends Controller
             return back()->withErrors(['template_id' => 'No school found for your account.']);
         }
 
+        $themeColor = match ((int) $request->template_id) {
+            1 => 'blue',
+            2 => 'green',
+            3 => 'pink',
+            5 => 'yellow',
+            6 => 'orange',
+            default => 'blue',
+        };
+
         $tenant->update([
             'template_id' => (int) $request->template_id,
             'template_name' => $request->template_name ?? ('Template ' . (int) $request->template_id),
+            'theme_color' => $themeColor,
         ]);
 
         return back()->with('success', 'Domain layout updated successfully.');
@@ -113,11 +123,21 @@ class TenantController extends Controller
 
             \Log::info('Step 1: Calling Tenant::create');
             $adminPassword = Str::random(10);
+            $themeColor = match ((int) $request->template_id) {
+                1 => 'blue',
+                2 => 'green',
+                3 => 'pink',
+                5 => 'yellow',
+                6 => 'orange',
+                default => 'blue',
+            };
+
             $tenant = Tenant::create([
                 'id' => $subdomain,
                 'school_name' => $user->school_name,
                 'template_id' => $request->template_id,
                 'template_name' => $request->template_name ?? "Template " . $request->template_id,
+                'theme_color' => $themeColor,
                 'owner_id' => $user->id,
                 'plan' => $user->plan,
                 'status' => 'Active',

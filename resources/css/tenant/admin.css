@@ -329,7 +329,7 @@
 }
 
 .admin-content {
-    padding: 32px;
+    padding: 24px;
     flex: 1;
     min-width: 0; /* Prevent flex children from overflowing */
     max-width: 100%;

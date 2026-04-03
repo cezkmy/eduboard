@@ -184,7 +184,7 @@
     </style>
 
 </head>
-<body class="admin-body min-h-screen" style="margin:0; padding:0; background: var(--bg-main); font-family: sans-serif;">
+<body class="admin-body min-h-screen" style="margin:0; padding:0; background: var(--bg-main); font-family: 'Sora', sans-serif;">
     <div class="admin-layout {{ ($appearance['navPos'] ?? 'left') === 'top' ? 'nav-top' : (($appearance['navPos'] ?? 'left') === 'right' ? 'nav-right' : 'nav-left') }} min-h-screen w-full">
         @if(auth()->user()->role !== 'student')
             @include('tenant_ui.layouts.sidebar')

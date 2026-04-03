@@ -37,31 +37,62 @@
                 
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" name="password" 
-                           placeholder="••••••••"
-                           required>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="password"
+                               placeholder="••••••••"
+                               required style="padding-right: 44px;">
+                        <button type="button" id="togglePassword" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; padding: 4px;">
+                            <svg id="eyeOpen" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.391 9.851 7.318 6 12 6s8.609 3.85 9.964 5.678a1.012 1.012 0 010 .644C20.609 14.149 16.682 18 12 18s-8.609-3.851-9.964-5.678z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <svg id="eyeClosed" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width: 20px; height: 20px; display: none;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12c1.355 1.829 5.281 5.678 9.964 5.678a10.477 10.477 0 005.074-1.3l2.84 2.84m-9.914-9.914L3.98 3.98m6.02 6.02L9.168 9.168m6.02 6.02l5.031 5.031M16.898 16.898a10.477 10.477 0 002.512-4.898c-1.355-1.829-5.281-5.678-9.964-5.678a10.477 10.477 0 00-2.512.428m0 0l2.512 2.512m0 0a3 3 0 013.951 3.951" />
+                            </svg>
+                        </button>
+                    </div>
                     @error('password')
                         <span class="form-error">{{ $message }}</span>
                     @enderror
+                    <div style="text-align: right; margin-top: 8px;">
+                        <a href="{{ route('tenant.password.request') }}" style="color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 700;">Forgot Password?</a>
+                    </div>
                 </div>
                 
-                <div class="auth-actions">
-                    <label class="form-remember">
-                        <input type="checkbox" name="remember">
-                        Remember me
-                    </label>
+                <div class="auth-actions" style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; align-items: center;">
+                    <div style="display: flex; justify-content: center;">
+                        <div class="g-recaptcha" data-sitekey="6Lf02KQsAAAAAKnEOnptwcS0Bdu_ThNf-u4wAntd"></div>
+                    </div>
                     
-                    <button type="submit" class="btn-auth">
+                    <button type="submit" class="btn-auth" style="width: 100%; justify-content: center; padding: 14px 28px !important;">
                         Sign In
                     </button>
                 </div>
             </form>
 
-            <div style="margin-top: 28px; text-align: center; font-size: 13px;">
+            <div style="margin-top: 32px; text-align: center; font-size: 14px;">
                 <span style="color: var(--muted);">Don't have an account?</span>
-                <a href="{{ route('tenant.register') }}" style="color: var(--accent); text-decoration: none; font-weight: 700; margin-left: 4px;">Register Now</a>
+                <a href="{{ route('tenant.register') }}" style="color: var(--accent); text-decoration: none; font-weight: 800; margin-left: 6px;">Register Now</a>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeOpen.style.display = 'none';
+            eyeClosed.style.display = 'block';
+        } else {
+            passwordInput.type = 'password';
+            eyeOpen.style.display = 'block';
+            eyeClosed.style.display = 'none';
+        }
+    });
+</script>
 @endsection

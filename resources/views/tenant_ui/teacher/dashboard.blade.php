@@ -1,10 +1,10 @@
 <x-app-layout>
     <div class="content-header">
-        <h1 class="content-title">Dashboard</h1>
-        <p class="content-subtitle">Welcome back, {{ Auth::user()->name }}</p>
+        <h1 class="content-title">Interactions</h1>
+        <p class="content-subtitle">Track engagement on your announcements</p>
     </div>
 
-    {{-- Stats Grid matching Admin style --}}
+    {{-- Stats Grid --}}
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-info">
@@ -20,20 +20,8 @@
 
         <div class="stat-card">
             <div class="stat-info">
-                <div class="stat-label">Total Views</div>
-                <div class="stat-value">{{ number_format($totalViews) }}</div>
-            </div>
-            <div class="stat-icon teal">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                </svg>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-info">
                 <div class="stat-label">Total Reactions</div>
-                <div class="stat-value">{{ $totalReactions }}</div>
+                <div class="stat-value">{{ number_format($totalReactions) }}</div>
             </div>
             <div class="stat-icon amber">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -41,20 +29,71 @@
                 </svg>
             </div>
         </div>
+
+        <div class="stat-card">
+            <div class="stat-info">
+                <div class="stat-label">Total Comments</div>
+                <div class="stat-value">{{ number_format($totalComments) }}</div>
+            </div>
+            <div class="stat-icon teal">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+            </div>
+        </div>
     </div>
 
-    <div class="mt-8">
-        <div class="section-header">
-            <h2>Recent Announcements</h2>
-            <a href="{{ route('tenant.teacher.announcements') }}" class="section-link">View All</a>
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {{-- Recent Reactions Feed --}}
+        <div>
+            <div class="section-header">
+                <h2>Latest Reactions</h2>
+            </div>
+            <div class="space-y-3 mt-4">
+                @forelse($recentReactions as $reaction)
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-500 text-lg">
+                            {{ $reaction->type === 'heart' ? '❤️' : ($reaction->type === 'like' ? '👍' : ($reaction->type === 'fire' ? '🔥' : '😢')) }}
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-900 dark:text-white">
+                                <span class="font-black">{{ $reaction->user->name }}</span>
+                                <span class="text-gray-500">reacted to</span>
+                                <span class="font-bold">"{{ Str::limit($reaction->announcement->title, 30) }}"</span>
+                            </p>
+                            <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold">{{ $reaction->created_at->diffForHumans() }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reactions yet.</div>
+                @endforelse
+            </div>
         </div>
-        
-        <div class="announcements">
-            @forelse($recentAnnouncements as $announcement)
-                <x-announcement-card :announcement="$announcement" :show-reactions="false" />
-            @empty
-                <p class="text-sm text-gray-500 dark:text-gray-400">No announcements yet.</p>
-            @endforelse
+
+        {{-- Recent Comments Feed --}}
+        <div>
+            <div class="section-header">
+                <h2>Latest Comments</h2>
+            </div>
+            <div class="space-y-3 mt-4">
+                @forelse($recentComments as $comment)
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3 mb-2">
+                            <img src="{{ url('/api/placeholder/32/32') }}" class="w-8 h-8 rounded-full border-2 border-teal-500/20" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-black text-gray-900 dark:text-white truncate">{{ $comment->user->name }}</p>
+                                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">On: {{ Str::limit($comment->announcement->title, 25) }}</p>
+                            </div>
+                            <span class="text-[10px] text-gray-400 uppercase font-bold">{{ $comment->created_at->diffForHumans(null, true) }}</span>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                            <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{{ Str::limit($comment->content, 80) }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">No comments yet.</div>
+                @endforelse
+            </div>
         </div>
     </div>
 </x-app-layout>
