@@ -729,7 +729,7 @@
                     />
                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">All Students (School-wide)</span>
                 </label>
-                <label class="flex items-center gap-3 p-3 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
                     <input
                         type="checkbox"
                         x-ref="annPinned"
@@ -780,7 +780,7 @@
                     </template>
                 </div>
 
-                <button type="button" @click="showTargetingModal = true" class="w-full py-3 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2">
+                <button type="button" @click="showTargetingModal = true" class="w-full py-3 bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-xs font-black uppercase tracking-widest text-gray-500 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     Select Target Audience(s)
                 </button>
@@ -803,7 +803,7 @@
                     </div>
 
                     <div class="flex border-b border-gray-100 dark:border-gray-800 overflow-x-auto whitespace-nowrap custom-scrollbar px-4">
-                        @foreach(['role' => 'Roles', 'college' => 'Colleges', 'program' => 'Programs', 'level' => 'Years', 'grade_level' => 'Grades', 'strand' => 'Strands', 'section' => 'Sections'] as $key => $label)
+                        @foreach(['role' => 'Roles', 'college' => 'Colleges', 'program' => 'Courses', 'level' => 'Years', 'grade_level' => 'Grades', 'strand' => 'Strands', 'section' => 'Sections'] as $key => $label)
                             <button @click="targetingTab = '{{ $key }}'" 
                                     class="px-4 py-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2"
                                     :class="targetingTab === '{{ $key }}' ? 'text-[var(--accent)] border-[var(--accent)]' : 'text-gray-400 border-transparent hover:text-gray-600'">
@@ -821,11 +821,11 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div x-show="targetingTab === 'role'" class="contents">
                                 @foreach(['student' => 'Students', 'teacher' => 'Teachers'] as $roleKey => $roleLabel)
-                                    <label class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50/50 dark:bg-gray-800/30 border border-transparent hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-gray-700/50 transition-all cursor-pointer group shadow-sm">
-                                        <input type="checkbox" value="{{ $roleKey }}" x-model="targetRoles" class="w-6 h-6 rounded-lg border-gray-300 text-rose-500 focus:ring-rose-500">
+                                    <label class="flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-[var(--accent)] hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-all cursor-pointer group shadow-sm">
+                                        <input type="checkbox" value="{{ $roleKey }}" x-model="targetRoles" class="w-6 h-6 rounded-lg border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]">
                                         <div class="flex flex-col">
-                                            <span class="text-xs font-black text-gray-700 dark:text-gray-200 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors uppercase tracking-widest">{{ $roleLabel }}</span>
-                                            <span class="text-[9px] text-gray-400 font-bold">Target all users with the {{ $roleKey }} role</span>
+                                            <span class="text-xs font-black text-gray-900 dark:text-white group-hover:text-[var(--accent)] transition-colors uppercase tracking-widest">{{ $roleLabel }}</span>
+                                            <span class="text-[9px] text-gray-500 dark:text-gray-400 font-bold">Target all users with the {{ $roleKey }} role</span>
                                         </div>
                                     </label>
                                 @endforeach
@@ -846,9 +846,9 @@
                                     @endphp
                                     @foreach($items as $item)
                                         <label x-show="!targetingSearch || '{{ strtolower($item->name) }}'.includes(targetingSearch.toLowerCase())" 
-                                               class="flex items-center gap-3 p-3 rounded-2xl bg-gray-50/50 dark:bg-gray-800/30 border border-transparent hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-gray-700/50 transition-all cursor-pointer group shadow-sm">
-                                            <input type="checkbox" value="{{ $item->name }}" x-model="{{ $stateKey }}" class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500">
-                                            <span class="text-xs font-black text-gray-700 dark:text-gray-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ $item->name }}</span>
+                                               class="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-[var(--accent)] hover:bg-gray-50 dark:hover:bg-gray-700/80 transition-all cursor-pointer group shadow-sm">
+                                            <input type="checkbox" value="{{ $item->name }}" x-model="{{ $stateKey }}" class="w-5 h-5 rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]">
+                                            <span class="text-xs font-black text-gray-900 dark:text-white group-hover:text-[var(--accent)] transition-colors">{{ $item->name }}</span>
                                         </label>
                                     @endforeach
                                 </div>

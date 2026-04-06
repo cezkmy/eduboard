@@ -53,11 +53,11 @@
             ],
             [
                 'id' => 3,
-                'name' => 'Purple Landing Layout',
-                'category' => 'Purple',
-                'description' => 'Royal/purple themed landing layout.',
-                'circle_color' => '#6b21a8',
-                'circle_bg' => 'rgba(107,33,168,0.10)',
+                'name' => 'Pink Landing Layout',
+                'category' => 'Pink',
+                'description' => 'Cute pink themed landing layout.',
+                'circle_color' => '#ec4899',
+                'circle_bg' => 'rgba(236,72,153,0.10)',
                 'icon' => 'bi bi-heart-fill'
             ],
             [

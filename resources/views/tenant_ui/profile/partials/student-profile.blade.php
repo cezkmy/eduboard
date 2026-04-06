@@ -48,6 +48,10 @@
                         <div class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ auth()->user()->section ?? 'N/A' }}</div>
                     </div>
                 </div>
+                <div>
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Strand</div>
+                    <div class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ auth()->user()->strand ?? 'Not Set' }}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -83,23 +87,53 @@
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Course</label>
-                    <input name="course" type="text" value="{{ old('course', $user->course) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <select id="student-course" name="course" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <option value="">None</option>
+                        @foreach(['BSIT', 'BSCS', 'BSBA', 'BSN', 'BSED'] as $courseOption)
+                            <option value="{{ $courseOption }}" {{ old('course', $user->course) === $courseOption ? 'selected' : '' }}>{{ $courseOption }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Year Level</label>
-                        <select name="year_level" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <select id="student-year-level" name="year_level" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                             <option value="">Select</option>
-                            @foreach(['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'] as $year)
-                                <option value="{{ $year }}" {{ old('year_level', $user->year_level) === $year ? 'selected' : '' }}>{{ $year }}</option>
+                            @php
+                                $yearOptions = [
+                                    'College Years' => ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'],
+                                    'High School Grades' => ['Grade 11', 'Grade 12']
+                                ];
+                            @endphp
+                            @foreach($yearOptions as $group => $options)
+                                <optgroup label="{{ $group }}">
+                                    @foreach($options as $year)
+                                        <option value="{{ $year }}" {{ old('year_level', $user->year_level) === $year ? 'selected' : '' }}>{{ $year }}</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Section</label>
-                        <input name="section" type="text" value="{{ old('section', $user->section) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <select id="student-section" name="section" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                            <option value="">None</option>
+                            @foreach(['Section A', 'Section B', 'Section C'] as $sectionOption)
+                                <option value="{{ $sectionOption }}" {{ old('section', $user->section) === $sectionOption ? 'selected' : '' }}>{{ $sectionOption }}</option>
+                            @endforeach
+                        </select>
                     </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Strand</label>
+                    <select id="student-strand" name="strand" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                        <option value="">None</option>
+                        @foreach(['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL'] as $strandOption)
+                            <option value="{{ $strandOption }}" {{ old('strand', $user->strand) === $strandOption ? 'selected' : '' }}>{{ $strandOption }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="space-y-1.5">
@@ -158,3 +192,52 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const yearSelect = document.getElementById('student-year-level');
+        const courseSelect = document.getElementById('student-course');
+        const strandSelect = document.getElementById('student-strand');
+
+        if (!yearSelect || !courseSelect || !strandSelect) {
+            return;
+        }
+
+        const isGradeLevel = value => value.startsWith('Grade ');
+        const isCollegeYear = value => value.endsWith('Year');
+
+        const updateProfileFields = () => {
+            const selectedYear = yearSelect.value;
+
+            if (isGradeLevel(selectedYear)) {
+                courseSelect.value = '';
+                courseSelect.disabled = true;
+                courseSelect.style.opacity = '0.5';
+                courseSelect.style.cursor = 'not-allowed';
+
+                strandSelect.disabled = false;
+                strandSelect.style.opacity = '';
+                strandSelect.style.cursor = '';
+            } else if (isCollegeYear(selectedYear)) {
+                strandSelect.value = '';
+                strandSelect.disabled = true;
+                strandSelect.style.opacity = '0.5';
+                strandSelect.style.cursor = 'not-allowed';
+
+                courseSelect.disabled = false;
+                courseSelect.style.opacity = '';
+                courseSelect.style.cursor = '';
+            } else {
+                courseSelect.disabled = false;
+                strandSelect.disabled = false;
+                courseSelect.style.opacity = '';
+                courseSelect.style.cursor = '';
+                strandSelect.style.opacity = '';
+                strandSelect.style.cursor = '';
+            }
+        };
+
+        yearSelect.addEventListener('change', updateProfileFields);
+        updateProfileFields();
+    });
+</script>

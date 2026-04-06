@@ -95,6 +95,13 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::user();
             
+            // Check if locked
+            if ($user->locked_until && now()->lessThan($user->locked_until)) {
+                $lockedUntil = \Carbon\Carbon::parse($user->locked_until)->format('M d, Y h:i A');
+                Auth::logout();
+                return back()->withErrors(['email' => "Your account is temporarily locked. Try again after {$lockedUntil}."])->withInput();
+            }
+
             // Check for pending status in tenant context
             if (function_exists('tenant') && tenant() && $user->status === 'pending') {
                 Auth::logout();
@@ -137,6 +144,12 @@ class AuthController extends Controller
                 // Password matches Central! Update local tenant user and log in
                 $localUser = \App\Models\User::where('email', $credentials['email'])->first();
                 if ($localUser) {
+                    // Check if locked
+                    if ($localUser->locked_until && now()->lessThan($localUser->locked_until)) {
+                        $lockedUntil = \Carbon\Carbon::parse($localUser->locked_until)->format('M d, Y h:i A');
+                        return back()->withErrors(['email' => "Your account is temporarily locked. Try again after {$lockedUntil}."])->withInput();
+                    }
+
                     $localUser->update(['password' => $centralMatched]);
                     Auth::login($localUser, $request->boolean('remember'));
                     
@@ -265,6 +278,7 @@ class AuthController extends Controller
             'course' => 'nullable|string|max:100',
             'year_level' => 'nullable|string|max:100',
             'section' => 'nullable|string|max:100',
+            'strand' => 'nullable|string|max:100',
             'language' => 'nullable|string|max:10',
         ]);
 
@@ -287,6 +301,7 @@ class AuthController extends Controller
             $user->course = $validated['course'] ?? $user->course;
             $user->year_level = $validated['year_level'] ?? $user->year_level;
             $user->section = $validated['section'] ?? $user->section;
+            $user->strand = $validated['strand'] ?? $user->strand;
         } else {
             $user->employee_id = $validated['employee_id'] ?? $user->employee_id;
             $user->department = $validated['department'] ?? $user->department;

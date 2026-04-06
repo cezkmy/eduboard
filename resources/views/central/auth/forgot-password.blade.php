@@ -36,6 +36,10 @@
                                style="padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0;"
                                required autofocus>
                     </div>
+
+                    <div class="form-group mb-4">
+                        <div class="g-recaptcha" data-sitekey="6Lf02KQsAAAAAKnEOnptwcS0Bdu_ThNf-u4wAntd"></div>
+                    </div>
                     
                     <button type="submit" class="btn-auth" style="background: #2c7a6e; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; width: 100%; transition: all 0.2s;">
                         Send Verification Code
@@ -48,6 +52,7 @@
                         </a>
                     </div>
                 </form>
+                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
             </div>
         </div>
     </div>

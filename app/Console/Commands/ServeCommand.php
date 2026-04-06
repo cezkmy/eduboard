@@ -30,15 +30,15 @@ class ServeCommand extends BaseServeCommand
     {
         $this->components->info('Starting Vite development server...');
 
-        // Start Vite in the background
-        $viteProcess = new Process(['npm', 'run', 'dev']);
+        // Start Vite in the background with output streaming
+        $viteProcess = Process::fromShellCommandline('npm run dev');
         $viteProcess->setTimeout(null);
-        $viteProcess->start();
+        $viteProcess->start(function ($type, $buffer) {
+            $this->output->write($buffer);
+        });
 
         if (!$viteProcess->isStarted()) {
             $this->components->error('Failed to start Vite.');
-        } else {
-            $this->components->info('Vite is running in the background.');
         }
 
         try {

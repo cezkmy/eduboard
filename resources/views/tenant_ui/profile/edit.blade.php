@@ -81,10 +81,10 @@
                 const file = photoInput.files[0];
                 if (!file) return;
 
-                const formData = new FormData();
+                const profileForm = document.querySelector('form[action="{{ route("tenant.profile.update") }}"]');
+                const formData = profileForm ? new FormData(profileForm) : new FormData();
                 formData.append('profile_photo', file);
-                formData.append('_token', '{{ csrf_token() }}');
-                formData.append('_method', 'PATCH');
+                formData.set('_method', 'PATCH');
 
                 // UI Updates
                 saveBtn.disabled = true;

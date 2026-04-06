@@ -95,6 +95,12 @@ class Announcement extends Model
                     $ssq->whereNull('target_section')
                         ->orWhereJsonContains('target_section', $user->section);
                 });
+
+                // Strand Targeting (Exclusive if set)
+                $sq->where(function($strq) use ($user) {
+                    $strq->whereNull('target_strand')
+                        ->orWhereJsonContains('target_strand', $user->strand);
+                });
             });
         });
     }

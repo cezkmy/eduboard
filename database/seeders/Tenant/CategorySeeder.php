@@ -50,6 +50,7 @@ class CategorySeeder extends Seeder
             ['name' => '2nd Year', 'type' => 'level'],
             ['name' => '3rd Year', 'type' => 'level'],
             ['name' => '4th Year', 'type' => 'level'],
+            ['name' => '5th Year', 'type' => 'level'],
         ];
 
         foreach ($yearLevels as $level) {

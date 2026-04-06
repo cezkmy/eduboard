@@ -28,7 +28,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('password.email') }}" class="auth-form">
+            <form method="POST" action="{{ route((function_exists('tenant') && tenant()) ? 'tenant.password.email' : 'password.email') }}" class="auth-form">
                 @csrf
                 
                 <div class="form-group" style="margin-bottom: 1.5rem;">
@@ -41,10 +41,15 @@
                            onblur="this.style.borderColor='#f3f4f6'; this.style.background='#f9fafb'; this.style.boxShadow='none'">
                 </div>
 
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <div class="g-recaptcha" data-sitekey="6Lf02KQsAAAAAKnEOnptwcS0Bdu_ThNf-u4wAntd"></div>
+                </div>
+
                 <button type="submit" class="btn-auth" style="width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 16px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb), 0.3);">
                     Send Reset Code
                 </button>
             </form>
+            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
             <div style="margin-top: 28px; text-align: center; font-size: 13px;">
                 <a href="{{ route('tenant.login') }}" style="color: var(--accent); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">

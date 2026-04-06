@@ -8,26 +8,19 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
+    // use WithoutModelEvents;
 
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // Central Admin
-        User::factory()->create([
-            'name' => 'SaaS Admin',
-            'email' => 'admin@eduboard.com',
-            'is_admin' => true,
-        ]);
-
-        // Regular User (Tenant Owner)
-        User::factory()->create([
-            'name' => 'School Owner',
-            'email' => 'owner@example.com',
-            'school_name' => 'Test School',
-            'is_admin' => false,
+        $this->call([
+            AdminUserSeeder::class,
+            PlanSeeder::class,
+            TemplateSeeder::class,
+            MockTenantAndBillingSeeder::class,
+            MockUserSeeder::class,
         ]);
     }
 }

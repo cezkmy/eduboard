@@ -1,0 +1,27 @@
+﻿Tenant: ashley_thomas_eduboard
+
+   INFO  Running migrations.  
+
+  2026_04_03_082000_add_target_grade_level_and_strand_to_announcements_table  15.27ms FAIL
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42S21]: Column already exists: 1060 Duplicate column name 'target_grade_level' (Connection: tenant, Host: 127.0.0.1, Port: 3306, Database: ashley_thomas_eduboard_db, SQL: alter table `announcements` add `target_grade_level` varchar(255) null after `target_year`)
+
+  at vendor\laravel\framework\src\Illuminate\Database\Connection.php:841
+    837Γûò             $exceptionType = $this->isUniqueConstraintError($e)
+    838Γûò                 ? UniqueConstraintViolationException::class
+    839Γûò                 : QueryException::class;
+    840Γûò 
+  Γ₧£ 841Γûò             throw new $exceptionType(
+    842Γûò                 $this->getNameWithReadWriteType(),
+    843Γûò                 $query,
+    844Γûò                 $this->prepareBindings($bindings),
+    845Γûò                 $e,
+
+  1   vendor\laravel\framework\src\Illuminate\Database\Connection.php:587
+      PDOException::("SQLSTATE[42S21]: Column already exists: 1060 Duplicate column name 'target_grade_level'")
+
+  2   vendor\laravel\framework\src\Illuminate\Database\Connection.php:587
+      PDOStatement::execute()
+

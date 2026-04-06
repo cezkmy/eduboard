@@ -117,17 +117,17 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
                 <div class="divide-y divide-gray-100 dark:divide-gray-700">
                     @forelse($recentPendingUsers as $user)
-                        <div class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all cursor-pointer group">
+                        <div class="p-4 flex items-center justify-between hover:bg-[var(--accent)] transition-all cursor-pointer group rounded-lg mx-2 my-1">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs group-hover:scale-110 transition-transform">
+                                <div class="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs group-hover:scale-110 group-hover:bg-white group-hover:text-[var(--accent)] transition-all">
                                     {{ strtoupper(substr($user->name, 0, 2)) }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-[var(--accent)] transition-colors">{{ $user->name }}</p>
-                                    <p class="text-[11px] text-gray-500 dark:text-gray-400">{{ $user->course ?? 'N/A' }} · {{ $user->year_level ?? '' }}</p>
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-white transition-colors">{{ $user->name }}</p>
+                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 group-hover:text-white/80 transition-colors">{{ $user->course ?? 'N/A' }} · {{ $user->year_level ?? '' }}</p>
                                 </div>
                             </div>
-                            <span class="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-amber-100/50 dark:border-amber-900/30">Pending</span>
+                            <span class="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-amber-100/50 dark:border-amber-900/30 group-hover:bg-white group-hover:text-[var(--accent)] group-hover:border-white transition-all">Pending</span>
                         </div>
                     @empty
                         <div class="p-8 text-center">
@@ -136,7 +136,7 @@
                     @endforelse
                 </div>
                 
-                <a href="{{ route('tenant.admin.users') }}?tab=pending" class="block p-3 text-center text-xs font-medium text-blue-600 dark:text-blue-400 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <a href="{{ route('tenant.admin.users') }}?tab=pending" class="block p-3 text-center text-xs font-medium text-[var(--accent)] bg-gray-50 dark:bg-gray-700/50 hover:bg-[var(--accent)] hover:text-white transition-all">
                     View All Pending Requests
                 </a>
             </div>
@@ -144,10 +144,10 @@
             {{-- Quick Tip --}}
             <div class="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30">
                 <div class="flex gap-3">
-                    <svg class="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-white-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p class="text-[12px] text-blue-700 dark:text-blue-300 leading-relaxed">
+                    <p class="text-[12px] text-slate-900 dark:text-white-200 leading-relaxed">
                         New student registrations require admin approval before they can access their portal.
                     </p>
                 </div>

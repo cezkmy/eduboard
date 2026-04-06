@@ -85,6 +85,12 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::delete('/users/{user}', [\App\Http\Controllers\Tenant\UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/users/bulk-update', [\App\Http\Controllers\Tenant\UserController::class, 'bulkUpdate'])->name('admin.users.bulk_update');
         Route::post('/users/{user}/approve', [\App\Http\Controllers\Tenant\UserController::class, 'approveUser'])->name('admin.users.approve');
+        Route::post('/users/{user}/reject', [\App\Http\Controllers\Tenant\UserController::class, 'rejectUser'])->name('admin.users.reject');
+        Route::post('/users/{id}/restore', [\App\Http\Controllers\Tenant\UserController::class, 'restore'])->name('admin.users.restore');
+        Route::delete('/users/{id}/force', [\App\Http\Controllers\Tenant\UserController::class, 'forceDelete'])->name('admin.users.force_delete');
+        Route::post('/users/{user}/lock-account', [\App\Http\Controllers\Tenant\UserController::class, 'lockAccount'])->name('admin.users.lock_account');
+        Route::post('/users/{user}/edit-lock', [\App\Http\Controllers\Tenant\UserController::class, 'editLock'])->name('admin.users.edit_lock');
+        Route::post('/users/{user}/edit-unlock', [\App\Http\Controllers\Tenant\UserController::class, 'editUnlock'])->name('admin.users.edit_unlock');
         Route::get('/announcements', function () { 
             $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
                 ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])

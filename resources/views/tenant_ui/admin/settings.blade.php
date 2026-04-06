@@ -2,7 +2,6 @@
     <x-slot name="title">Settings - Buksu Eduboard</x-slot>
 
     <div class="admin-content" x-data="{ 
-        theme: '{{ $appearance['theme'] ?? 'light' }}',
         activeSection: '{{ request()->query('tab') ?? ((tenant('plan') ?? 'Basic') === 'Basic' ? 'branding' : 'appearance') }}',
         successModal: {{ session('success') ? 'true' : 'false' }},
         basicWarningModal: false,
@@ -105,7 +104,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">Appearance</h2>
-                            <p class="text-sm text-gray-500 mt-1">Customize the visual experience of your dashboard.</p>
+                            <p class="text-sm text-gray-500 mt-1">Choose a color theme for your school's dashboard and interface.</p>
                         </div>
                         <button @click="handleSave('appearance')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save Appearance
@@ -114,49 +113,7 @@
 
                     <form id="appearance-form" method="POST" action="{{ route('tenant.admin.settings.update') }}">
                         @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="theme" value="light" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
-                                <div class="aspect-video rounded-lg bg-gray-50 border border-gray-100 mb-3 overflow-hidden flex">
-                                    <div class="w-1/4 bg-white border-r border-gray-100"></div>
-                                    <div class="flex-1 p-2 space-y-2">
-                                        <div class="h-2 w-3/4 bg-gray-200 rounded"></div>
-                                        <div class="h-2 w-1/2 bg-gray-200 rounded"></div>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-bold text-gray-900 dark:text-white">Light Mode</span>
-                            </div>
-                        </label>
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="theme" value="dark" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
-                                <div class="aspect-video rounded-lg bg-gray-900 border border-gray-800 mb-3 overflow-hidden flex">
-                                    <div class="w-1/4 bg-gray-800 border-r border-gray-700"></div>
-                                    <div class="flex-1 p-2 space-y-2">
-                                        <div class="h-2 w-3/4 bg-gray-700 rounded"></div>
-                                        <div class="h-2 w-1/2 bg-gray-700 rounded"></div>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-bold text-gray-900 dark:text-white">Dark Mode</span>
-                            </div>
-                        </label>
-                        <label class="relative cursor-pointer group">
-                            <input type="radio" name="theme" value="system" x-model="theme" class="peer sr-only">
-                            <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-[var(--accent)] peer-checked:bg-[rgba(var(--accent-rgb),0.10)] transition-all">
-                                <div class="aspect-video rounded-lg bg-gray-100 border border-gray-200 mb-3 overflow-hidden flex relative">
-                                    <div class="absolute inset-0 bg-gray-900 translate-x-1/2"></div>
-                                    <div class="w-1/4 bg-white border-r border-gray-100 z-10"></div>
-                                    <div class="flex-1 p-2 space-y-2 z-10">
-                                        <div class="h-2 w-3/4 bg-gray-200 rounded"></div>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-bold text-gray-900 dark:text-white">System Default</span>
-                            </div>
-                        </label>
-                        </div>
-                    
-                        <div class="pt-8 mt-8 border-t border-gray-100 dark:border-gray-700">
+                        <div>
                             <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider mb-6">Domain Layout / Theme Preset</h3>
                             @php $currentTheme = tenant('theme_color') ?? 'blue'; @endphp
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">

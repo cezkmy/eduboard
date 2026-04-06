@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('announcements', function (Blueprint $table) {
-            $table->string('target_grade_level')->nullable()->after('target_year');
-            $table->string('target_strand')->nullable()->after('target_grade_level');
+            if (!Schema::hasColumn('announcements', 'target_grade_level')) {
+                $table->string('target_grade_level')->nullable()->after('target_year');
+            }
+            if (!Schema::hasColumn('announcements', 'target_strand')) {
+                $table->string('target_strand')->nullable()->after('target_grade_level');
+            }
         });
     }
 
