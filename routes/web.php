@@ -209,6 +209,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('settings/security', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateSecurity'])->name('settings.security');
                 Route::post('settings/notifications', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateNotifications'])->name('settings.notifications');
                 Route::post('settings/release', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateRelease'])->name('settings.release');
+                Route::post('settings/release/rollback', [\App\Http\Controllers\Central\SystemSettingsController::class, 'rollbackRelease'])->name('settings.release.rollback');
             });
 
             // Central User Routes

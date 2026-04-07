@@ -215,6 +215,19 @@
                             <i class="bi bi-send-fill me-2"></i> Broadcast Update to All Tenants
                         </button>
                     </form>
+
+                    @if(\App\Models\CentralSetting::get('previous_system_version'))
+                    <div class="mt-5 pt-4 border-top">
+                        <h6 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Danger Zone: Rollback</h6>
+                        <p class="text-muted small mb-3">If the last broadcasted version had issues, you can rollback the central system version to the previous one ({{ \App\Models\CentralSetting::get('previous_system_version') }}).</p>
+                        <form method="POST" action="{{ route('central.admin.settings.release.rollback') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to rollback to version {{ \App\Models\CentralSetting::get('previous_system_version') }}?')">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Rollback to {{ \App\Models\CentralSetting::get('previous_system_version') }}
+                            </button>
+                        </form>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

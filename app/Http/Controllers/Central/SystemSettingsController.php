@@ -58,6 +58,12 @@ class SystemSettingsController extends Controller
     {
         $request->validate(['version' => 'required|string']);
         
+        // Store current as previous for rollback
+        $currentVersion = CentralSetting::get('system_version');
+        if ($currentVersion && $currentVersion !== $request->version) {
+            CentralSetting::set('previous_system_version', $currentVersion);
+        }
+
         CentralSetting::set('system_version', $request->version);
 
         // Clear the GitHub release cache to ensure dashboard shows latest
@@ -73,5 +79,22 @@ class SystemSettingsController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', "Version saved, but broadcast failed: " . $e->getMessage());
         }
+    }
+
+    public function rollbackRelease()
+    {
+        $previousVersion = CentralSetting::get('previous_system_version');
+
+        if (!$previousVersion) {
+            return back()->with('error', 'No previous version found to rollback to.');
+        }
+
+        $currentVersion = CentralSetting::get('system_version');
+
+        // Rollback
+        CentralSetting::set('system_version', $previousVersion);
+        CentralSetting::set('previous_system_version', null); // Clear after one use
+
+        return back()->with('success', "Successfully rolled back from {$currentVersion} to {$previousVersion}.");
     }
 }
