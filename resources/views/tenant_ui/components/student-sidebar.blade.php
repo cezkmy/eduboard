@@ -34,8 +34,18 @@
 
     <div class="sidebar-footer">
         <div class="sidebar-user">
-            <div class="sidebar-avatar">
+            <div class="sidebar-avatar" style="position: relative;">
                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <span class="status-indicator" style="
+                    position: absolute;
+                    bottom: -2px;
+                    right: -2px;
+                    width: 12px;
+                    height: 12px;
+                    background-color: #22c55e;
+                    border: 2px solid var(--color-sidebar-bg, #1e293b);
+                    border-radius: 50%;
+                "></span>
             </div>
             <div class="sidebar-user-info">
                 <div class="sidebar-user-name">{{ auth()->user()->name }}</div>
