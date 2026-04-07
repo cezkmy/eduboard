@@ -60,9 +60,18 @@ class SystemSettingsController extends Controller
         
         CentralSetting::set('system_version', $request->version);
 
-        // Here you would trigger the email blast or versioning logic
-        // For now, we just save the version.
+        // Clear the GitHub release cache to ensure dashboard shows latest
+        \App\Services\GitHubService::getLatestRelease(true);
 
-        return back()->with('success', "Version {$request->version} broadcasted successfully.");
+        // Broadcast the update to all active tenants
+        try {
+            \Illuminate\Support\Facades\Artisan::call('eduboard:release', [
+                'version' => $request->version
+            ]);
+            
+            return back()->with('success', "Version {$request->version} broadcasted successfully to all active schools.");
+        } catch (\Exception $e) {
+            return back()->with('error', "Version saved, but broadcast failed: " . $e->getMessage());
+        }
     }
 }

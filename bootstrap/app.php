@@ -31,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Stancl\Tenancy\Middleware\InitializeTenancyByRequestData::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('eduboard:check-github')->everyMinute();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TenantCouldNotBeIdentifiedOnDomainException $e, \Illuminate\Http\Request $request) {
             // Avoid 500s when visiting a non-existent tenant domain.

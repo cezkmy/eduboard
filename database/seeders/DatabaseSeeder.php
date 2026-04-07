@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             PlanSeeder::class,
             TemplateSeeder::class,
+            MockUserSeeder::class, // Run users before tenants
             MockTenantAndBillingSeeder::class,
-            MockUserSeeder::class,
         ]);
     }
 }

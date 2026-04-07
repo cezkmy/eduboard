@@ -14,18 +14,29 @@ class GitHubService
      *
      * @return array|null
      */
-    public static function getLatestRelease()
+    public static function getLatestRelease($force = false)
     {
-        $fetch = function () {
-            return Cache::remember('github_latest_release', now()->addHours(24), function () {
+        $fetch = function () use ($force) {
+            $cacheKey = 'github_latest_release';
+            if ($force) {
+                Cache::forget($cacheKey);
+            }
+
+            return Cache::remember($cacheKey, now()->addHours(1), function () {
                 try {
                     $owner = 'cezkmy';
                     $repo = 'eduboard';
                     $url = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
 
-                    $response = Http::withHeaders([
+                    $headers = [
                         'User-Agent' => 'EduBoard-Version-Tracker'
-                    ])->get($url);
+                    ];
+
+                    if ($token = config('services.github.token')) {
+                        $headers['Authorization'] = "token {$token}";
+                    }
+
+                    $response = Http::withHeaders($headers)->get($url);
 
                     if ($response->successful()) {
                         $data = $response->json();

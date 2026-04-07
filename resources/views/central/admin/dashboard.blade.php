@@ -25,6 +25,10 @@
                     <span>Latest GitHub Release</span>
                     <a href="{{ $latestRelease['html_url'] ?? '#' }}" target="_blank" class="text-white ms-1"><i class="bi bi-box-arrow-up-right"></i></a>
                 </div>
+                <div class="mt-2 pt-2 border-top border-white-10 text-white-50" style="font-size: 0.65rem;">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Last auto-check: {{ \App\Models\CentralSetting::get('last_github_check_at') ? \Carbon\Carbon::parse(\App\Models\CentralSetting::get('last_github_check_at'))->diffForHumans() : 'Never' }}
+                </div>
             </div>
         </div>
     </div>
