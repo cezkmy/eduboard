@@ -19,7 +19,11 @@
             if (storedTheme) { return storedTheme; }
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         };
-        document.documentElement.setAttribute('data-bs-theme', getPreferredTheme());
+        const theme = getPreferredTheme();
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
     </script>
 
     <!-- Google Fonts for Modern Typography -->
@@ -467,6 +471,11 @@
                     const currentTheme = document.documentElement.getAttribute('data-bs-theme');
                     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                     document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    if (newTheme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
                     localStorage.setItem('central-theme', newTheme);
                     refreshToggleState();
                 });
@@ -490,6 +499,10 @@
         }
     </script>
     
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    @include('central.components.support-chat')
     @stack('scripts')
 </body>
 </html>

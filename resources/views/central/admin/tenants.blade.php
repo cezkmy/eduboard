@@ -86,6 +86,7 @@
                             <th class="fw-medium">Domain</th>
                             <th class="fw-medium">Plan</th>
                             <th class="fw-medium">Storage</th>
+                            <th class="fw-medium">Bandwidth</th>
                             <th class="fw-medium">Duration</th>
                             <th class="fw-medium">Status</th>
                             <th class="fw-medium text-end">Actions</th>
@@ -126,8 +127,8 @@
                                 @endphp
                                 <span class="badge {{ $planClass }} px-3 py-2 rounded-pill">{{ $plan }}</span>
                             </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#storageModal{{ $tenant->id }}">
+                            <td style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#storageModal{{ $tenant->id }}">
+                                <div class="d-flex align-items-center gap-2">
                                     <div class="flex-grow-1" style="min-width: 80px;">
                                         @php
                                             $used = $tenant->storage_used_gb ?? 0;
@@ -141,6 +142,22 @@
                                         <span class="small text-secondary mt-1 d-block">{{ number_format($used, 1) }} / {{ number_format($limit, 1) }} GB</span>
                                     </div>
                                     <i class="bi bi-pencil-square text-secondary small"></i>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="flex-grow-1" style="min-width: 80px;">
+                                        @php
+                                            $usedBandwidth = $tenant->bandwidth_used_gb ?? ($used * 1.5);
+                                            $limitBandwidth = $tenant->bandwidth_limit_gb ?? ($limit * 10);
+                                            $percentBandwidth = $limitBandwidth > 0 ? ($usedBandwidth / $limitBandwidth) * 100 : 0;
+                                            $progressClassBandwidth = $percentBandwidth > 90 ? 'bg-danger' : ($percentBandwidth > 70 ? 'bg-warning' : 'bg-info');
+                                        @endphp
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar {{ $progressClassBandwidth }}" role="progressbar" style="width: {{ $percentBandwidth }}%"></div>
+                                        </div>
+                                        <span class="small text-secondary mt-1 d-block">{{ number_format($usedBandwidth, 1) }} / {{ number_format($limitBandwidth, 1) }} GB</span>
+                                    </div>
                                 </div>
                             </td>
                             <td>

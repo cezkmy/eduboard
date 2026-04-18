@@ -46,6 +46,7 @@ class GitHubService
                             'body' => $data['body'] ?? 'No release notes available.',
                             'published_at' => $data['published_at'] ?? now()->toDateTimeString(),
                             'html_url' => $data['html_url'] ?? "https://github.com/{$owner}/{$repo}",
+                            'zipball_url' => $data['zipball_url'] ?? null,
                         ];
                     }
 

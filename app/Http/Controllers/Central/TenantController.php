@@ -251,12 +251,21 @@ class TenantController extends Controller
         // Switch to tenant context and save token
         $tenant->run(function () use ($user, $token, $expiresAt) {
             $tenantUser = \App\Models\User::where('email', $user->email)->first();
-            if ($tenantUser) {
-                $tenantUser->update([
-                    'autologin_token' => $token,
-                    'autologin_token_expires_at' => $expiresAt,
+            if (!$tenantUser) {
+                $tenantUser = \App\Models\User::create([
+                    'name' => 'School Admin',
+                    'email' => $user->email,
+                    'password' => $user->password,
+                    'role' => 'admin',
+                    'school_name' => tenant('school_name'),
+                    'status' => 'active',
+                    'email_verified_at' => now(),
                 ]);
             }
+            $tenantUser->update([
+                'autologin_token' => $token,
+                'autologin_token_expires_at' => $expiresAt,
+            ]);
         });
 
         // Logout from Central

@@ -1,43 +1,16 @@
 <header class="admin-topbar">
-    <div class="admin-topbar-left">
-        <h2 class="admin-topbar-title">
-            @if(request()->routeIs('tenant.admin.dashboard'))
-                Dashboard
-            @elseif(request()->routeIs('tenant.admin.users'))
-                User Management
-            @elseif(request()->routeIs('tenant.admin.announcements'))
-                Announcements
-            @elseif(request()->routeIs('tenant.admin.my-announcements'))
-                My Announcements
-            @elseif(request()->routeIs('tenant.admin.categories'))
-                Categories
-            @elseif(request()->routeIs('tenant.admin.reports'))
-                Reports
-            @elseif(request()->routeIs('tenant.admin.settings'))
-                Settings
-            @elseif(request()->routeIs('tenant.admin.subscription'))
-                Subscription
-            @elseif(request()->routeIs('tenant.admin.templates'))
-                Templates
-            @elseif(request()->routeIs('tenant.teacher.dashboard'))
-                Dashboard
-            @elseif(request()->routeIs('tenant.teacher.announcements'))
-                Announcements
-            @elseif(request()->routeIs('tenant.teacher.my-announcements'))
-                My Announcements
-            @elseif(request()->routeIs('tenant.profile.edit'))
-                Profile
-            @elseif(request()->routeIs('tenant.student.page'))
-                Student Page
-            @else
-                {{ tenant('school_name') ?? 'Buksu Eduboard' }}
-            @endif
+    <div class="admin-topbar-left" style="display: flex; align-items: center; gap: 12px;">
+        @if(tenant('logo') && auth()->check() && auth()->user()->role === 'student')
+            <img src="{{ tenant_asset(tenant('logo')) }}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 6px;" onerror="this.style.display='none';">
+        @endif
+        <h2 class="admin-topbar-title" style="margin: 0;">
+            {{ $title ?? (tenant('school_short_name') ?? tenant('school_name') ?? 'EduBoard') }}
         </h2>
     </div>
     <div class="topbar-actions">
 
         {{-- Dark mode --}}
-        <button class="topbar-btn" id="themeBtn" title="Toggle theme">
+        <button class="topbar-btn" id="themeBtn" title="Toggle theme" onclick="toggleTheme()">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
             </svg>
@@ -45,7 +18,7 @@
 
         {{-- Notifications --}}
         <div class="admin-dropdown" x-data="{ open: false }" @click.away="open = false">
-            <button class="topbar-btn" @click="open = !open" title="Notifications">
+            <button class="topbar-btn" @click="open = !open" onclick="toggleDropdown('notif-dropdown')" title="Notifications">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
@@ -53,7 +26,7 @@
                     <span class="topbar-notif-dot"></span>
                 @endif
             </button>
-            <div class="admin-dropdown-menu notif-menu" :class="{ 'show': open }">
+            <div id="notif-dropdown" class="admin-dropdown-menu notif-menu" :class="{ 'show': open }">
                 <div class="dropdown-header notif-header">
                     <span class="name">Notifications</span>
                     <span class="notif-count">{{ auth()->user()->unreadNotifications->count() }} new</span>
@@ -102,7 +75,7 @@
 
         {{-- Account --}}
         <div class="admin-dropdown" x-data="{ open: false }" @click.away="open = false">
-            <button class="topbar-btn user overflow-hidden" @click="open = !open" title="Account" style="padding: 0;">
+            <button class="topbar-btn user overflow-hidden" @click="open = !open" onclick="toggleDropdown('account-dropdown')" title="Account" style="padding: 0;">
                 <div class="user-avatar w-full h-full flex items-center justify-center text-white font-bold" style="background: var(--accent);">
                     @if(auth()->user()->profile_photo)
                         <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover">
@@ -111,7 +84,7 @@
                     @endif
                 </div>
             </button>
-            <div class="admin-dropdown-menu" :class="{ 'show': open }">
+            <div id="account-dropdown" class="admin-dropdown-menu" :class="{ 'show': open }">
                 <div class="dropdown-header">
                     <div class="name">{{ auth()->user()->name }}</div>
                     <div class="email">{{ auth()->user()->email }}</div>

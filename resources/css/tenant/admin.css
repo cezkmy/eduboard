@@ -179,24 +179,28 @@
     align-items: center;
     gap: 12px;
     position: relative;
+    pointer-events: auto;
+    z-index: 5;
 }
 
 .admin-dropdown {
     position: relative;
+    pointer-events: auto;
 }
 
 .admin-dropdown-menu {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
-    width: 280px;
+    min-width: 280px;
     background: var(--bg-card);
     border-radius: 20px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-color);
     display: none;
-    z-index: 100;
+    z-index: 1000;
     overflow: hidden;
+    pointer-events: auto;
 }
 
 .admin-dropdown-menu.show {
@@ -555,6 +559,8 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    pointer-events: auto;
+    z-index: 10;
 }
 
 .topbar-notif-dot {

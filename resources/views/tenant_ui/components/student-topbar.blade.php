@@ -2,22 +2,28 @@
 
 <header class="admin-topbar">
     <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: var(--accent);">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-            </svg>
-        </div>
-        <div class="flex flex-col leading-[0.9]">
-            <span class="text-xl font-bold text-gray-900 tracking-tight">Buksu</span>
-            <span class="text-[10px] font-bold uppercase tracking-[0.2em]" style="color: var(--accent);">Eduboard</span>
+        @if(tenant('logo'))
+            <img src="{{ tenant_asset(tenant('logo')) }}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;" onerror="this.style.display='none';">
+        @else
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: var(--accent);">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                </svg>
+            </div>
+        @endif
+        
+        <div class="flex flex-col leading-[1.1]">
+            <span class="text-[17px] font-black text-gray-900 tracking-tight dark:text-white">
+                {{ $title ?? (tenant('school_short_name') ?? tenant('school_name') ?? 'EduBoard') }}
+            </span>
         </div>
     </div>
     
     <div class="topbar-actions">
         {{-- Dark mode --}}
-        <button class="topbar-btn" id="themeBtn" title="Toggle theme">
+        <button class="topbar-btn" id="themeBtn" title="Toggle theme" onclick="window.toggleTheme()">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
             </svg>

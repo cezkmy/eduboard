@@ -17,17 +17,23 @@
         <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-white-50 small fw-medium text-uppercase tracking-wider">System Version</span>
-                    <i class="bi bi-github text-white-50"></i>
+                    <span class="text-white-50 small fw-medium text-uppercase tracking-wider">Installed Version</span>
+                    <i class="bi bi-motherboard text-white-50"></i>
                 </div>
-                <div class="h3 fw-bold mb-1">{{ $latestRelease['tag_name'] ?? 'v2.0.0' }}</div>
+                <div class="h3 fw-bold mb-1">{{ config('app.version', 'v1.0.0') }}</div>
                 <div class="d-flex align-items-center gap-1 small text-white-50">
-                    <span>Latest GitHub Release</span>
-                    <a href="{{ $latestRelease['html_url'] ?? '#' }}" target="_blank" class="text-white ms-1"><i class="bi bi-box-arrow-up-right"></i></a>
+                    @if(version_compare($latestRelease['tag_name'] ?? config('app.version', 'v1.0.0'), config('app.version', 'v1.0.0'), '>'))
+                        <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-1"></i> Update Available: {{ $latestRelease['tag_name'] }}</span>
+                    @else
+                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> System Up to Date</span>
+                    @endif
                 </div>
-                <div class="mt-2 pt-2 border-top border-white-10 text-white-50" style="font-size: 0.65rem;">
-                    <i class="bi bi-clock-history me-1"></i>
-                    Last auto-check: {{ \App\Models\CentralSetting::get('last_github_check_at') ? \Carbon\Carbon::parse(\App\Models\CentralSetting::get('last_github_check_at'))->diffForHumans() : 'Never' }}
+                <div class="mt-2 pt-2 border-top border-white-10 text-white-50 d-flex justify-content-between align-items-center" style="font-size: 0.65rem;">
+                    <span>
+                        <i class="bi bi-clock-history me-1"></i>
+                        Last auto-check: {{ \App\Models\CentralSetting::get('last_github_check_at') ? \Carbon\Carbon::parse(\App\Models\CentralSetting::get('last_github_check_at'))->diffForHumans() : 'Never' }}
+                    </span>
+                    <a href="{{ $latestRelease['html_url'] ?? '#' }}" target="_blank" class="text-white" title="View GitHub Release"><i class="bi bi-github"></i></a>
                 </div>
             </div>
         </div>

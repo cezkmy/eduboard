@@ -13,35 +13,76 @@ class SettingsController extends Controller
         $tenant = tenant();
 
         // Handle Branding & General
-        if ($request->hasAny(['school_name', 'school_short_name', 'site_description', 'primary_email'])) {
-            $data = $request->only(['school_name', 'school_short_name', 'site_description', 'primary_email']);
+        if ($request->hasAny(['school_name', 'school_short_name', 'site_description', 'primary_email', 'logo'])) {
             
-            foreach ($data as $key => $value) {
-                if ($value !== null) {
-                    $tenant->update([$key => $value]);
-                }
+            // Validate logo if uploaded
+            if ($request->hasFile('logo')) {
+                $request->validate([
+                    'logo' => 'file|mimes:png,jpg,jpeg|max:102400', // 100MB max
+                ]);
+            }
+
+            // Update text fields via central DB connection
+            $textData = array_filter($request->only(['school_name', 'school_short_name', 'site_description', 'primary_email']));
+            if (!empty($textData)) {
+                \Illuminate\Support\Facades\DB::connection('mysql')
+                    ->table('tenants')
+                    ->where('id', $tenant->id)
+                    ->update($textData);
             }
             
             // Handle Logo Upload
             if ($request->hasFile('logo')) {
-                $path = $request->file('logo')->store('branding', 'public');
-                $tenant->update(['logo' => $path]);
+                // Delete old logo if exists
+                if ($tenant->logo) {
+                    Storage::disk('public')->delete($tenant->logo);
+                }
+                $file = $request->file('logo');
+                $fileSize = $file->getSize();
+                $path = $file->store('branding', 'public');
+                
+                // Track Upload Bandwidth
+                if ($fileSize > 0) {
+                    $gb = $fileSize / 1073741824;
+                    \Illuminate\Support\Facades\DB::connection('mysql')
+                        ->table('tenants')
+                        ->where('id', $tenant->id)
+                        ->increment('bandwidth_used_gb', $gb);
+                }
+                
+                // Save via central DB connection
+                \Illuminate\Support\Facades\DB::connection('mysql')
+                    ->table('tenants')
+                    ->where('id', $tenant->id)
+                    ->update(['logo' => $path]);
+
+                // Also refresh the in-memory tenant so tenant('logo') returns the new value
+                $tenant->logo = $path;
+                $tenant->syncOriginal();
+                
+                // Re-calculate total storage
+                $tenant->updateStorageUsage();
             }
             
-            $tenant->update(['has_updated_settings' => true]);
+            // has_updated_settings is stored in the JSON data blob (not a real column)
+            // so use Eloquent here — Tenancy's model handles writing it to the `data` field
+            $tenant->setAttribute('has_updated_settings', true);
+            $tenant->save();
+
             return back()->with('success', 'Settings updated successfully.');
         }
 
         // Handle Appearance
         if ($request->has('theme') || $request->has('theme_color')) {
-            if ($request->has('theme')) {
-                // We store appearance settings in a JSON column or as direct tenant attributes
-                // Based on the blade, it uses tenant('appearance') or simple attributes
-                $tenant->update(['theme_preference' => $request->theme]);
-            }
-            if ($request->has('theme_color')) {
-                $tenant->update(['theme_color' => $request->theme_color]);
-            }
+            $appearanceData = [];
+            if ($request->has('theme')) $appearanceData['theme_preference'] = $request->theme;
+            if ($request->has('theme_color')) $appearanceData['theme_color'] = $request->theme_color;
+            
+            \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', $tenant->id)
+                ->update($appearanceData);
+
             return back()->with('success', 'Appearance updated successfully.');
         }
 

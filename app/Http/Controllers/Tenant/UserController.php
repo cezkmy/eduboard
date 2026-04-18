@@ -7,45 +7,170 @@ use App\Models\User;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Notifications\UserApprovedNotification;
+use App\Notifications\UserCredentialsNotification;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $allUsers = User::withTrashed()
-            ->latest()
-            ->get();
+        $activeTab = $request->query('tab', 'teachers');
+        $searchQuery = $request->query('search');
+        $deptFilter = $request->query('dept');
 
-        $admins = $allUsers->whereNull('deleted_at')->where('role', 'admin')->where('status', '!=', 'pending')->values();
-        $teachers = $allUsers->whereNull('deleted_at')->where('role', 'teacher')->where('status', '!=', 'pending')->values();
-        $students = $allUsers->whereNull('deleted_at')->where('role', 'student')->where('status', '!=', 'pending')->values();
-        $pendingUsers = $allUsers->whereNull('deleted_at')->where('status', 'pending')->values();
-        $archivedUsers = $allUsers->whereNotNull('deleted_at')->values();
+        $query = User::withTrashed()->latest();
 
-        $adminCount = $admins->count();
-        $teacherCount = $teachers->count();
+        // Apply filters if present
+        if ($searchQuery) {
+            $query->where(function($q) use ($searchQuery) {
+                $q->where('name', 'like', "%{$searchQuery}%")
+                  ->orWhere('email', 'like', "%{$searchQuery}%");
+            });
+        }
+
+        if ($deptFilter && $deptFilter !== 'all') {
+            $query->where(function($q) use ($deptFilter) {
+                $q->where('department', $deptFilter)
+                  ->orWhere('course', $deptFilter);
+            });
+        }
+
+        // Get counts for each role efficiently
+        // Get counts for each role efficiently, excluding deleted and pending for accurate tabs
+        $roleCounts = User::whereNull('deleted_at')
+            ->where('status', '!=', 'pending')
+            ->selectRaw('role, count(*) as count')
+            ->groupBy('role')
+            ->pluck('count', 'role');
+
+        $pendingCount  = User::whereNull('deleted_at')->where('status', 'pending')->count();
+        $archivedCount = User::onlyTrashed()->count();
+
+        // Fetch users for the active tab with pagination
+        if ($activeTab === 'pending') {
+            $users = User::whereNull('deleted_at')->where('status', 'pending')->latest()->paginate(20)->withQueryString();
+        } elseif ($activeTab === 'archived') {
+            $users = User::onlyTrashed()->latest()->paginate(20)->withQueryString();
+        } else {
+            $role  = rtrim($activeTab, 's');
+            $users = User::withTrashed()
+                ->where('role', $role)
+                ->whereNull('deleted_at')
+                ->where('status', '!=', 'pending')
+                ->latest()
+                ->paginate(20)
+                ->withQueryString();
+        }
+
+        // Build permissionsSchema identical to RoleController so both pages are in sync
+        $permissionsSchema = [
+            'Dashboard'      => [
+                'view_admin_dashboard'        => 'View Admin Dashboard',
+                'view_recent_announcements'   => 'View Recent Announcements Feed',
+                'view_pending_approvals_stats'=> 'View Pending Approvals Count',
+                'view_engagement_overview'    => 'View Total Engagement Stats',
+            ],
+            'Category'       => [
+                'manage_categories'    => 'Manage Organization Categories',
+                'use_category_presets' => 'Use Category Presets',
+                'create_categories'    => 'Create New Categories',
+                'delete_categories'    => 'Delete Categories',
+            ],
+            'Users'          => [
+                'view_users_list' => 'View All Users List',
+                'approve_users'   => 'Approve/Reject Pending Users',
+                'edit_users'      => 'Edit User Information',
+                'delete_users'    => 'Delete/Archive Users',
+                'lock_users'      => 'Lock/Unlock User Accounts',
+                'restore_users'   => 'Restore Archived Users',
+            ],
+            'Reports'        => [
+                'view_admin_reports'     => 'Access System Reports',
+                'generate_pdf_reports'   => 'Generate & Export PDF Reports',
+                'filter_reports_by_date' => 'Filter Reports by Date',
+            ],
+            'Settings'       => [
+                'manage_general_settings' => 'Manage General System Settings',
+                'manage_branding'         => 'Branding Settings',
+                'manage_appearance'       => 'Appearance Settings',
+                'manage_templates'        => 'Manage Templates',
+                'manage_danger_zone'      => 'Access Critical/Danger Zone Actions',
+            ],
+            'Subscription'   => [
+                'view_subscription_plan' => 'View Subscription Plan',
+                'manage_billing'         => 'Manage Billing & Payments',
+                'upgrade_plan'           => 'Upgrade/Downgrade Subscription',
+            ],
+            'Profile'        => [
+                'view_profile'        => 'View Own Profile',
+                'update_profile'      => 'Update Personal Info',
+                'update_security'     => 'Update Account Security',
+                'update_profile_photo'=> 'Change Profile Photo',
+            ],
+            'Teacher Portal' => [
+                'access_teacher_dashboard' => 'View Teacher Dashboard',
+                'manage_announcements'     => 'Create & Manage Announcements',
+                'view_my_announcements'    => 'View My Announcements',
+                'edit_announcements'       => 'Edit Announcements',
+            ],
+            'Student Portal' => [
+                'access_student_page'  => 'View Student Feed',
+                'filter_by_category'   => 'Filter by Category',
+                'filter_by_date'       => 'Filter by Date',
+                'interact_with_posts'  => 'React & Comment on Posts',
+            ],
+        ];
+
+        // Merge any custom permissions saved in the database
+        foreach (\App\Models\TenantPermission::all() as $cp) {
+            $group = $cp->group ?: 'Custom Capabilities';
+            if (!isset($permissionsSchema[$group])) $permissionsSchema[$group] = [];
+            $permissionsSchema[$group][$cp->code] = $cp->label;
+        }
+
+        // Strict mapping of groups to roles
+        $roleGroupMapping = [
+            'admin' => ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Custom Capabilities'],
+            'teacher' => ['Teacher Portal', 'Profile', 'Custom Capabilities'],
+            'student' => ['Student Portal', 'Profile', 'Custom Capabilities']
+        ];
+        
+        // Only dynamically append CUSTOM groups (not base system ones) to roles that don't have them
+        $baseGroups = ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Teacher Portal', 'Student Portal'];
+        foreach ($permissionsSchema as $groupName => $perms) {
+            if (!in_array($groupName, $baseGroups)) {
+                foreach ($roleGroupMapping as $role => &$mapping) {
+                    if (!in_array($groupName, $mapping)) {
+                        $mapping[] = $groupName;
+                    }
+                }
+            }
+        }
+
+        // tenantRoles as plain array: ['admin' => ['permissions' => [...]], ...]
+        $tenantRoles = \App\Models\TenantRole::all()->keyBy('name')->map(fn($r) => [
+            'permissions' => $r->permissions ?? [],
+        ])->toArray();
 
         $schoolType = tenant('school_type') ?? 'college';
-        
-        // Fetch organizational structures for bulk actions
         $levels = Category::where('type', $schoolType === 'college' ? 'level' : 'grade_level')->get();
         $programs = Category::where('type', $schoolType === 'college' ? 'program' : 'strand')->get();
         $colleges = Category::where('type', 'college')->get();
         $sections = Category::where('type', 'section')->get();
 
         return view('tenant_ui.admin.users', compact(
-            'adminCount',
-            'teacherCount',
-            'admins',
-            'teachers',
-            'students',
-            'pendingUsers',
-            'archivedUsers',
+            'users',
+            'roleCounts',
+            'pendingCount',
+            'archivedCount',
+            'activeTab',
             'levels',
             'programs',
             'colleges',
             'sections',
-            'schoolType'
+            'schoolType',
+            'permissionsSchema',
+            'tenantRoles',
+            'roleGroupMapping'
         ));
     }
 
@@ -63,6 +188,45 @@ class UserController extends Controller
         ]);
 
         return response()->json(['success' => true, 'message' => 'Bulk update successful!']);
+    }
+
+    public function bulkUpdatePermissions(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+            'permissions' => 'required|array'
+        ]);
+
+        $users = User::whereIn('id', $request->user_ids)->get();
+
+        foreach ($users as $user) {
+            $custom = $user->custom_permissions ?? ['granted' => [], 'denied' => []];
+            
+            // Ensure granted and denied are arrays
+            $granted = $custom['granted'] ?? [];
+            $denied = $custom['denied'] ?? [];
+
+            foreach ($request->permissions as $perm) {
+                // If not already explicitly granted, add it
+                if (!in_array($perm, $granted)) {
+                    $granted[] = $perm;
+                }
+                
+                // If it was previously explicitly denied, remove it from denied
+                if (in_array($perm, $denied)) {
+                    $denied = array_values(array_diff($denied, [$perm]));
+                }
+            }
+
+            $custom['granted'] = $granted;
+            $custom['denied'] = $denied;
+            
+            $user->custom_permissions = $custom;
+            $user->save();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Permissions granted successfully to selected users!']);
     }
 
     public function approveUser(User $user)
@@ -91,24 +255,39 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'role' => 'required|string|in:admin,teacher,student',
-            'password' => 'required|string|min:8',
             'status' => 'required|string|in:active,inactive'
         ]);
 
-        User::create([
+        // Automatically generate a secure password if not provided
+        $plainPassword = $request->password ?: \Illuminate\Support\Str::random(10);
+
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'password' => bcrypt($request->password),
+            'password' => bcrypt($plainPassword),
             'status' => $request->status,
             'department' => $request->department,
             'employee_id' => $request->employee_id,
             'course' => $request->course,
             'year_level' => $request->year_level,
             'section' => $request->section,
+            'custom_permissions' => $request->custom_permissions ?? null,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'User created successfully!']);
+        // Notify the user with their credentials
+        try {
+            $user->notify(new UserCredentialsNotification(
+                $request->name, 
+                $request->email, 
+                $plainPassword, 
+                tenant('school_name')
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send User Credentials Notification: ' . $e->getMessage());
+        }
+
+        return response()->json(['success' => true, 'message' => 'User created successfully! Login details sent to Gmail.', 'password' => $plainPassword ?? null]);
     }
 
     public function update(Request $request, User $user)
@@ -124,6 +303,10 @@ class UserController extends Controller
         
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
+        }
+
+        if ($request->has('custom_permissions')) {
+            $data['custom_permissions'] = $request->custom_permissions;
         }
 
         $user->update($data);

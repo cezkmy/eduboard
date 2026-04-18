@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
         $schedule->command('eduboard:check-github')->everyMinute();
+        $schedule->command('eduboard:update-storage-usage')->hourly();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TenantCouldNotBeIdentifiedOnDomainException $e, \Illuminate\Http\Request $request) {

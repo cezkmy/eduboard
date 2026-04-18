@@ -4,12 +4,19 @@
 <aside class="sidebar">
     <div class="sidebar-brand">
         <a href="{{ route('tenant.landing') }}" class="sidebar-brand-link">
-            <div class="sidebar-brand-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 24px; height: 24px;">
-                    <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                    <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
-                </svg>
+            <div class="sidebar-brand-icon" style="overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.18);">
+                @if(tenant('logo'))
+                    <img src="{{ tenant_asset(tenant('logo')) }}" style="width: 100%; height: 100%; object-fit: contain; padding: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <svg style="display:none; width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                    </svg>
+                @else
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 24px; height: 24px;">
+                        <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                    </svg>
+                @endif
             </div>
             <div class="sidebar-brand-name-wrapper">
                 <span class="sidebar-brand-name">{{ tenant('school_short_name') ?? tenant('school_name') ?? 'Buksu' }}</span>

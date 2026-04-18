@@ -10,6 +10,10 @@ class OrganizationController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+            abort(403, 'Unauthorized. Only administrators can manage categories.');
+        }
+
         if (!tenant()->hasFeature('categories')) abort(403, 'Upgrade your plan to access Categories.');
 
         $schoolType = tenant('school_type') ?? 'college';
@@ -27,6 +31,10 @@ class OrganizationController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string',
@@ -78,6 +86,10 @@ class OrganizationController extends Controller
 
     public function destroy(Category $category)
     {
+        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $category->delete();
         return back()->with('success', 'Item deleted successfully.');
     }

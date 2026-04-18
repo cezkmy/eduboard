@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'email', 'role', 'profile_photo', 'phone', 'address', 'password', 'school_name', 'status', 'trial_ends_at', 'plan', 'has_selected_template', 'school_domain', 'autologin_token', 'autologin_token_expires_at', 'employee_id', 'department', 'course', 'year_level', 'section', 'strand', 'settings', 'locked_until'])]
+#[Fillable(['name', 'email', 'role', 'profile_photo', 'phone', 'address', 'password', 'school_name', 'status', 'trial_ends_at', 'plan', 'has_selected_template', 'school_domain', 'autologin_token', 'autologin_token_expires_at', 'employee_id', 'department', 'course', 'year_level', 'section', 'strand', 'settings', 'locked_until', 'custom_permissions'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -46,6 +46,39 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if the user has a specific permission.
+     * Evaluates custom_permissions first, then falls back to TenantRole defaults.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // For local dev or superadmins, you could bypass checking here if needed
+        // if ($this->is_admin) return true; // Central admin check if applicable
+
+        $custom = $this->custom_permissions ?? [];
+        $granted = $custom['granted'] ?? [];
+        $denied = $custom['denied'] ?? [];
+
+        // 1. Explicitly denied?
+        if (in_array($permission, $denied)) {
+            return false;
+        }
+
+        // 2. Explicitly granted?
+        if (in_array($permission, $granted)) {
+            return true;
+        }
+
+        // 3. Fallback to Role Default
+        $role = TenantRole::where('name', $this->role)->first();
+        if ($role) {
+            $rolePerms = $role->permissions ?? [];
+            return in_array($permission, $rolePerms);
+        }
+
+        return false;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -57,6 +90,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'settings' => 'array',
+            'custom_permissions' => 'array',
         ];
     }
 }

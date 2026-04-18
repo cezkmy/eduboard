@@ -38,6 +38,16 @@ class AnnouncementController extends Controller
             'media.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400',
         ]);
 
+        if ($request->hasFile('media')) {
+            if (tenant()->isStorageFull()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have exceeded your storage limit. Image uploads are temporarily disabled. Please upgrade your storage plan.',
+                    'errors' => ['media' => ['Storage limit exceeded.']]
+                ], 422);
+            }
+        }
+
         $mediaPaths = [];
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
@@ -73,6 +83,24 @@ class AnnouncementController extends Controller
             'target_roles' => $request->target_roles ?: null,
             'media_paths' => $mediaPaths,
         ]);
+
+        if (count($mediaPaths) > 0) {
+            // Recalculate physical storage using raw DB (bypasses tenancy data-bag)
+            tenant()->updateStorageUsage();
+            
+            // Calculate the actual uploaded file size in GB
+            $uploadSizeGB = 0;
+            foreach ($request->file('media') as $file) {
+                $uploadSizeGB += $file->getSize() / 1073741824;
+            }
+            
+            // IMPORTANT: Use central DB connection — inside tenant context, DB::table()
+            // defaults to the tenant database, so we must force 'mysql' (central)
+            \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', tenant('id'))
+                ->increment('bandwidth_used_gb', round($uploadSizeGB + 0.001, 4));
+        }
 
         if ($request->ajax()) {
             return response()->json([
@@ -169,6 +197,9 @@ class AnnouncementController extends Controller
         }
 
         $announcement->delete();
+
+        // Recalculate usage after deleting files
+        tenant()->updateStorageUsage();
 
         return response()->json([
             'success' => true,

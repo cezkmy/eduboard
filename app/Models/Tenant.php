@@ -53,6 +53,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'previous_version',
             'storage_limit_gb',
             'storage_used_gb',
+            'bandwidth_limit_gb',
+            'bandwidth_used_gb',
             'expires_at',
             'custom_disabled_message',
             'created_at',
@@ -92,5 +94,46 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         
         $plan = $this->plan ?? 'Basic';
         return $limits[$plan][$type] ?? 0;
+    }
+
+    public function updateStorageUsage(): float
+    {
+        $totalBytes = 0;
+        
+        try {
+            // Scan all tenant-uploaded files in their local public disk (announcements, branding, etc)
+            $disk = \Illuminate\Support\Facades\Storage::disk('public');
+            
+            // This safely retrieves all files spanning across any newly created subdirectories 
+            $files = $disk->allFiles();
+            foreach ($files as $file) {
+                $totalBytes += $disk->size($file);
+            }
+        } catch (\Throwable $e) {
+            return (float) ($this->storage_used_gb ?? 0);
+        }
+        
+        // Convert bytes to GB
+        $gb = $totalBytes > 0 ? round($totalBytes / 1073741824, 4) : 0;
+        
+        // IMPORTANT: Use central DB connection explicitly — inside tenant context
+        // DB::table() defaults to the tenant DB, so we must force 'mysql' (central)
+        \Illuminate\Support\Facades\DB::connection('mysql')
+            ->table('tenants')
+            ->where('id', $this->id)
+            ->update(['storage_used_gb' => $gb]);
+
+        $this->storage_used_gb = $gb;
+
+        return $gb;
+    }
+
+    public function isStorageFull(): bool
+    {
+        $limit = (float) ($this->storage_limit_gb ?? 5.0);
+        $used = $this->updateStorageUsage();
+        
+        // Give a tiny absolute buffer (e.g., 0.001 GB ~ 1MB) or strictly check
+        return $used >= $limit;
     }
 }

@@ -48,6 +48,8 @@
     @endphp
 
     <style>
+        [x-cloak] { display: none !important; }
+
         :root{
             --accent: {{ $theme['accent'] }};
             --accent-dark: {{ $theme['accent_dark'] }};
@@ -240,21 +242,33 @@
                 applyTheme("light", false);
             }
 
-            document.addEventListener("click", function (event) {
-                const toggleBtn = event.target.closest("#themeBtn");
-                if (!toggleBtn) return;
+            // Using window.toggleTheme via onclick instead of a document event listener
 
-                const current = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
-                applyTheme(current === "dark" ? "light" : "dark");
-            });
 
             window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
                 if (localStorage.getItem(themeKey) === "system") {
                     applyTheme("system", false);
                 }
             });
+
+            // Global function for onclick handler
+            window.toggleTheme = function() {
+                const current = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+                applyTheme(current === "dark" ? "light" : "dark");
+            };
+
+            // Global function for dropdown toggles
+            window.toggleDropdown = function(dropdownId) {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) {
+                    dropdown.classList.toggle('show');
+                }
+            };
         })();
     </script>
     @stack('scripts')
+
+    {{-- Floating Support Chat (all authenticated users) --}}
+    @include('tenant_ui.components.support-chat')
 </body>
 </html>

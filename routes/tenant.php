@@ -46,6 +46,10 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Tenant specific admin routes
     Route::prefix('admin')->middleware(['auth'])->name('tenant.')->group(function () {
         Route::get('/dashboard', function () {
+            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) {
+                abort(403, 'Unauthorized. Standard users cannot access the admin dashboard.');
+            }
+
             $totalAnnouncements = \App\Models\Announcement::where('status', '!=', 'draft')->count();
             $totalTeachers = \App\Models\User::where('role', 'teacher')->where('status', 'active')->count();
             $totalStudents = \App\Models\User::where('role', 'student')->where('status', 'active')->count();
@@ -84,6 +88,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::put('/users/{user}', [\App\Http\Controllers\Tenant\UserController::class, 'update'])->name('admin.users.update');
         Route::delete('/users/{user}', [\App\Http\Controllers\Tenant\UserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/users/bulk-update', [\App\Http\Controllers\Tenant\UserController::class, 'bulkUpdate'])->name('admin.users.bulk_update');
+        Route::post('/users/bulk-permissions', [\App\Http\Controllers\Tenant\UserController::class, 'bulkUpdatePermissions'])->name('admin.users.bulk_permissions');
         Route::post('/users/{user}/approve', [\App\Http\Controllers\Tenant\UserController::class, 'approveUser'])->name('admin.users.approve');
         Route::post('/users/{user}/reject', [\App\Http\Controllers\Tenant\UserController::class, 'rejectUser'])->name('admin.users.reject');
         Route::post('/users/{id}/restore', [\App\Http\Controllers\Tenant\UserController::class, 'restore'])->name('admin.users.restore');
@@ -91,6 +96,18 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::post('/users/{user}/lock-account', [\App\Http\Controllers\Tenant\UserController::class, 'lockAccount'])->name('admin.users.lock_account');
         Route::post('/users/{user}/edit-lock', [\App\Http\Controllers\Tenant\UserController::class, 'editLock'])->name('admin.users.edit_lock');
         Route::post('/users/{user}/edit-unlock', [\App\Http\Controllers\Tenant\UserController::class, 'editUnlock'])->name('admin.users.edit_unlock');
+        
+        // Roles & Permissions
+        Route::get('/roles', [\App\Http\Controllers\Tenant\RoleController::class, 'index'])->name('admin.roles');
+        Route::post('/roles', [\App\Http\Controllers\Tenant\RoleController::class, 'store'])->name('admin.roles.store');
+        Route::delete('/roles/{roleName}', [\App\Http\Controllers\Tenant\RoleController::class, 'destroy'])->name('admin.roles.destroy');
+        Route::post('/roles/permissions', [\App\Http\Controllers\Tenant\RoleController::class, 'updatePermissions'])->name('admin.roles.permissions.update');
+        Route::post('/roles/user-permissions/{userId}', [\App\Http\Controllers\Tenant\RoleController::class, 'updateUserPermissions'])->name('admin.roles.user_permissions.update');
+        
+        // Custom System Permissions
+        Route::post('/custom-permissions', [\App\Http\Controllers\Tenant\RoleController::class, 'storeCustomPermission'])->name('admin.roles.permissions.custom.store');
+        Route::delete('/custom-permissions/{code}', [\App\Http\Controllers\Tenant\RoleController::class, 'deleteCustomPermission'])->name('admin.roles.permissions.custom.destroy');
+
         Route::get('/announcements', function () { 
             $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
                 ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
@@ -116,6 +133,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::delete('/categories/{category}', [\App\Http\Controllers\Tenant\OrganizationController::class, 'destroy'])->name('admin.categories.destroy');
         Route::post('/settings/school-type', [\App\Http\Controllers\Tenant\OrganizationController::class, 'updateType'])->name('admin.settings.school_type');
         Route::get('/reports', function (\Illuminate\Http\Request $request) {
+            if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('view_reports')) {
+                abort(403, 'Unauthorized.');
+            }
             if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
 
             $year = $request->get('year', date('Y'));
@@ -169,6 +189,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         })->name('admin.reports');
         
         Route::get('/reports/export', function (\Illuminate\Http\Request $request) {
+            if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('view_reports')) {
+                abort(403, 'Unauthorized.');
+            }
             if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
 
             $year = $request->get('year');
@@ -195,9 +218,26 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 'day' => $day
             ]);
 
-            return $pdf->download('system-report-' . date('Y-m-d') . '.pdf');
+            $pdfContent = $pdf->output();
+            $fileSize = strlen($pdfContent);
+            
+            // Track Download Bandwidth
+            if ($fileSize > 0) {
+                $gb = $fileSize / 1073741824;
+                $tenant = tenant();
+                \Illuminate\Support\Facades\DB::connection('mysql')
+                    ->table('tenants')
+                    ->where('id', $tenant->id)
+                    ->increment('bandwidth_used_gb', $gb);
+            }
+
+            return response()->streamDownload(
+                fn () => print($pdfContent),
+                'system-report-' . date('Y-m-d') . '.pdf'
+            );
         })->name('admin.reports.export');
         Route::get('/settings', function () { 
+            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
             $latestRelease = \App\Services\GitHubService::getLatestRelease();
             return view('tenant_ui.admin.settings', [
                 'latestRelease' => $latestRelease
@@ -208,6 +248,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::post('/settings/system-version', [\App\Http\Controllers\Tenant\SettingsController::class, 'updateSystemVersion'])->name('admin.settings.system_version');
 
         Route::get('/subscription', function () { 
+            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
             $plans = \App\Models\Plan::all();
             return view('tenant_ui.admin.subscription', compact('plans')); 
         })->name('admin.subscription');
@@ -233,7 +274,61 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 
             return response()->json(['success' => true]);
         })->name('admin.subscription.upgrade');
+
+        Route::post('/storage/purchase', function (\Illuminate\Http\Request $request) {
+            $request->validate(['gb' => 'required|numeric', 'price' => 'required|numeric']);
+            
+            $tenant = tenant();
+            $currentLimit = (float)($tenant->storage_limit_gb ?? 5.0);
+            $newLimit = $currentLimit + $request->gb;
+            
+            // Use central DB connection — inside tenant context, must force 'mysql'
+            \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', $tenant->id)
+                ->update(['storage_limit_gb' => $newLimit]);
+
+            // Add payment to billing history in central DB
+            tenancy()->central(function () use ($tenant, $request) {
+                \App\Models\BillingHistory::create([
+                    'tenant_id' => $tenant->id,
+                    'invoice_number' => 'INV-' . strtoupper(\Illuminate\Support\Str::random(8)),
+                    'plan' => 'Add-on: +' . $request->gb . 'GB Storage',
+                    'amount' => $request->price,
+                ]);
+            });
+
+            return response()->json(['success' => true]);
+        })->name('admin.storage.purchase');
+
+        Route::post('/bandwidth/purchase', function (\Illuminate\Http\Request $request) {
+            $request->validate(['gb' => 'required|numeric', 'price' => 'required|numeric']);
+            
+            $tenant = tenant();
+            $currentLimit = (float)($tenant->bandwidth_limit_gb ?? 50.0);
+            $newLimit = $currentLimit + $request->gb;
+
+            // Use central DB connection — inside tenant context, must force 'mysql'
+            \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', $tenant->id)
+                ->update(['bandwidth_limit_gb' => $newLimit]);
+
+            // Add payment to billing history in central DB
+            tenancy()->central(function () use ($tenant, $request) {
+                \App\Models\BillingHistory::create([
+                    'tenant_id' => $tenant->id,
+                    'invoice_number' => 'INV-' . strtoupper(\Illuminate\Support\Str::random(8)),
+                    'plan' => 'Add-on: +' . $request->gb . 'GB Bandwidth',
+                    'amount' => $request->price,
+                ]);
+            });
+
+            return response()->json(['success' => true]);
+        })->name('admin.bandwidth.purchase');
+
         Route::get('/templates', function () { 
+            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
             $templates = tenancy()->central(function () {
                 return \App\Models\Template::all();
             });
@@ -324,6 +419,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
 
         // Student Profile Route
         Route::get('/profile', function () { 
+            if (!auth()->user()->hasPermission('view_profile')) abort(403, 'Unauthorized access to profile.');
             return view('tenant_ui.profile.edit', ['user' => auth()->user()]); 
         })->name('profile');
     });
@@ -347,6 +443,19 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::get('/all-announcements', function () {
             return view('tenant_ui.announcements');
         })->name('announcements.all');
+
+        // ── Support Chat ──
+        Route::get('/support/messages', [\App\Http\Controllers\Tenant\SupportController::class, 'messages'])->name('support.messages');
+        Route::post('/support/send', [\App\Http\Controllers\Tenant\SupportController::class, 'send'])->name('support.send');
+        Route::post('/support/ticket', [\App\Http\Controllers\Tenant\SupportController::class, 'createTicket'])->name('support.ticket');
+        Route::get('/support/inbox', [\App\Http\Controllers\Tenant\SupportController::class, 'inbox'])->name('support.inbox');
+        Route::get('/support/unread', [\App\Http\Controllers\Tenant\SupportController::class, 'unreadCount'])->name('support.unread');
+        
+        // Tenant Admin -> Central routes
+        Route::get('/support/central/inbox', [\App\Http\Controllers\Tenant\SupportController::class, 'centralInbox'])->name('support.central.inbox');
+        Route::get('/support/central/messages', [\App\Http\Controllers\Tenant\SupportController::class, 'centralMessages'])->name('support.central.messages');
+        Route::post('/support/central/send', [\App\Http\Controllers\Tenant\SupportController::class, 'centralSend'])->name('support.central.send');
+        Route::post('/support/central/ticket', [\App\Http\Controllers\Tenant\SupportController::class, 'centralCreateTicket'])->name('support.central.ticket');
     });
 
     // ── Subscription Plans (public) ──
@@ -357,12 +466,19 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // ── Profile ──
     Route::middleware(['auth'])->name('tenant.')->group(function () {
         Route::get('/profile', function () { 
+            if (!auth()->user()->hasPermission('view_profile')) abort(403, 'Unauthorized access to profile.');
             return view('tenant_ui.profile.edit', ['user' => auth()->user()]); 
         })->name('profile.edit');
         
-        Route::patch('/profile', [App\Http\Controllers\AuthController::class, 'updateProfile'])->name('profile.update');
+        Route::patch('/profile', function (\Illuminate\Http\Request $request) {
+            if (!auth()->user()->hasPermission('update_profile')) abort(403, 'Unauthorized.');
+            return app(App\Http\Controllers\AuthController::class)->updateProfile($request);
+        })->name('profile.update');
         Route::delete('/profile', [App\Http\Controllers\AuthController::class, 'destroyUser'])->name('profile.destroy');
-        Route::put('/password', [App\Http\Controllers\AuthController::class, 'updatePassword'])->name('password.update');
+        Route::put('/password', function (\Illuminate\Http\Request $request) {
+            if (!auth()->user()->hasPermission('update_security')) abort(403, 'Unauthorized.');
+            return app(App\Http\Controllers\AuthController::class)->updatePassword($request);
+        })->name('password.update');
     });
 
     // Tenant Login/Logout

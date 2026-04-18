@@ -292,8 +292,24 @@ class AuthController extends Controller
             if ($user->profile_photo) {
                 Storage::disk('public')->delete($user->profile_photo);
             }
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            
+            $file = $request->file('profile_photo');
+            $fileSize = $file->getSize();
+            $path = $file->store('profile-photos', 'public');
             $user->profile_photo = $path;
+            
+            // If in a tenant context, update limits
+            if (function_exists('tenant') && tenant()) {
+                $tenant = tenant();
+                if ($fileSize > 0) {
+                    $gb = $fileSize / 1073741824;
+                    \Illuminate\Support\Facades\DB::connection('mysql')
+                        ->table('tenants')
+                        ->where('id', $tenant->id)
+                        ->increment('bandwidth_used_gb', $gb);
+                }
+                $tenant->updateStorageUsage();
+            }
         }
         
         // Role-specific fields
@@ -383,7 +399,7 @@ class AuthController extends Controller
 
     public function updatePassword(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);

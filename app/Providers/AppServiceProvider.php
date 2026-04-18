@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,5 +41,16 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\Blade::anonymousComponentPath(resource_path('views/central/components'));
             \Illuminate\Support\Facades\Blade::anonymousComponentPath(resource_path('views/central/layouts'));
         }
+
+        // Global Gate hook to resolve custom permissions seamlessly format (e.g. @can('users.edit'))
+        Gate::before(function ($user, $ability) {
+            // Check if method exists on user model (Tenant environment only)
+            if (method_exists($user, 'hasPermission')) {
+                // If it resolves to true, grand access. Otherwise, fall back to other gates.
+                if ($user->hasPermission($ability)) {
+                    return true;
+                }
+            }
+        });
     }
 }

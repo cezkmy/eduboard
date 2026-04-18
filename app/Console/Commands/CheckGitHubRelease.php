@@ -56,9 +56,14 @@ class CheckGitHubRelease extends Command
 
                 // Update the last notified version so we don't spam
                 CentralSetting::set('last_notified_version', $latestTagName);
-                
                 // Keep the central system version in sync for the dashboard
                 CentralSetting::set('system_version', $latestTagName);
+
+                // Notify Central Admins
+                $centralAdmins = \App\Models\User::where('is_admin', true)->get();
+                foreach ($centralAdmins as $admin) {
+                    $admin->notify(new \App\Notifications\CentralSystemUpdateNotification($latestRelease));
+                }
 
                 $this->info("Successfully broadcasted {$latestTagName} automatically.");
             } catch (\Exception $e) {

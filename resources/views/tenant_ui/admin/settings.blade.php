@@ -7,7 +7,7 @@
         basicWarningModal: false,
         plan: '{{ tenant('plan') ?? 'Basic' }}',
         hasUpdatedSettings: {{ tenant('has_updated_settings') ? 'true' : 'false' }},
-        logoPreview: '{{ tenant('logo') ? asset('storage/' . tenant('logo')) : asset('images/Logo.jpg') }}',
+        logoPreview: '{{ tenant('logo') ? tenant_asset(tenant('logo')) : asset('images/Logo.jpg') }}',
         handleLogoChange(event) {
             const file = event.target.files[0];
             if (file) {
@@ -180,21 +180,11 @@
                             <div class="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
                                 <svg class="w-10 h-10 text-[var(--accent)] mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4-4m4 4v12" /></svg>
                                 <span class="text-xs font-bold text-gray-900 dark:text-white">Upload New Logo</span>
+                                <span class="text-[10px] text-gray-400 font-medium mt-1">PNG or JPEG, max 100MB</span>
                             </div>
-                            <input type="file" name="logo" @change="handleLogoChange" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <input type="file" name="logo" accept="image/png,image/jpeg" @change="handleLogoChange" class="absolute inset-0 opacity-0 cursor-pointer">
                         </div>
                         <div class="flex-1 space-y-6">
-                            <div class="p-6 rounded-2xl border" style="background: rgba(var(--accent-rgb), 0.08); border-color: rgba(var(--accent-rgb), 0.22);">
-                                <h4 class="text-sm font-bold text-[var(--accent)] flex items-center gap-2">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
-                                    Logo Requirements
-                                </h4>
-                                <ul class="mt-2 space-y-1 text-xs text-[var(--accent)] font-medium opacity-90">
-                                    <li>• Recommended size: 512x512 pixels</li>
-                                    <li>• Format: Transparent PNG preferred</li>
-                                    <li>• Max file size: 2MB</li>
-                                </ul>
-                            </div>
                             <div class="space-y-4">
                                 <label class="block">
                                     <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">School Full Name</span>
@@ -280,18 +270,23 @@
                         <div class="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4">
                             <h3 class="text-xs font-black text-gray-400 uppercase tracking-wider">Storage Usage</h3>
                             <div class="space-y-4">
+                                @php
+                                    $usedGB = tenant()->updateStorageUsage();
+                                    $limitGB = tenant()->storage_limit_gb ?? 5.0;
+                                    $percent = $limitGB > 0 ? min(100, ($usedGB / $limitGB) * 100) : 0;
+                                @endphp
                                 <div class="space-y-1.5">
                                     <div class="flex justify-between text-[10px] font-black uppercase tracking-tighter">
-                                        <span class="text-gray-500">Disk Space</span>
-                                        <span class="text-[var(--accent)]">{{ number_format(tenant('storage_used_gb') ?? 0, 1) }} GB / {{ tenant('storage_limit_gb') ?? 5 }} GB</span>
+                                        <span class="text-gray-500">Server Disk Space</span>
+                                        <span class="text-[var(--accent)]">{{ number_format($usedGB, 2) }} GB / {{ number_format($limitGB, 2) }} GB</span>
                                     </div>
                                     <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div class="h-full" style="width: {{ (tenant('storage_used_gb') ?? 1) / (tenant('storage_limit_gb') ?? 5) * 100 }}%; background: var(--accent);"></div>
+                                        <div class="h-full" style="width: {{ $percent }}%; background: var(--accent);"></div>
                                     </div>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-500">Media Uploads</span>
-                                    <span class="text-xs font-black text-gray-900 dark:text-white">{{ \App\Models\Announcement::count() + \App\Models\User::count() }} Entities</span>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-xs font-bold text-gray-500">Total System Announcements</span>
+                                    <span class="text-xs font-black text-gray-900 dark:text-white">{{ \App\Models\Announcement::count() }} Posted</span>
                                 </div>
                             </div>
                         </div>

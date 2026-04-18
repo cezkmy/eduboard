@@ -52,6 +52,15 @@ foreach (config('tenancy.central_domains') as $domain) {
                 return back();
             })->name('central.notifications.read');
 
+            // Central Support Chat Routes
+            Route::prefix('support')->name('central.support.')->group(function () {
+                Route::get('inbox', [\App\Http\Controllers\Central\SupportController::class, 'inbox'])->name('inbox');
+                Route::post('ticket', [\App\Http\Controllers\Central\SupportController::class, 'createTicket'])->name('ticket');
+                Route::get('messages', [\App\Http\Controllers\Central\SupportController::class, 'messages'])->name('messages');
+                Route::post('send', [\App\Http\Controllers\Central\SupportController::class, 'send'])->name('send');
+                Route::get('unread', [\App\Http\Controllers\Central\SupportController::class, 'unreadCount'])->name('unread');
+            });
+
             // Central Admin Routes
             Route::prefix('admin')->name('central.admin.')->middleware(['auth'])->group(function () {
                 Route::get('dashboard', function () {
@@ -99,6 +108,10 @@ foreach (config('tenancy.central_domains') as $domain) {
                         'latestRelease'
                     ));
                 })->name('dashboard');
+
+                Route::get('system/update', [\App\Http\Controllers\Central\SystemUpdateController::class, 'index'])->name('system.update');
+                Route::post('system/update/trigger', [\App\Http\Controllers\Central\SystemUpdateController::class, 'trigger'])->name('system.update.trigger');
+                Route::get('system/update/logs/{id}', [\App\Http\Controllers\Central\SystemUpdateController::class, 'logs'])->name('system.update.logs');
 
                 Route::get('users', function () {
                     if (!auth()->user()->is_admin) {

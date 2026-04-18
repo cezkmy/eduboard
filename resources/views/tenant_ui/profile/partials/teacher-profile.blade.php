@@ -57,34 +57,38 @@
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Employee ID</label>
-                    <input name="employee_id" type="text" value="{{ old('employee_id', $user->employee_id) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <input name="employee_id" type="text" value="{{ old('employee_id', $user->employee_id) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <x-input-error :messages="$errors->get('employee_id')" class="mt-1" />
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                    <input name="name" type="text" value="{{ old('name', $user->name) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" required>
+                    <input name="name" type="text" value="{{ old('name', $user->name) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" required>
+                    <x-input-error :messages="$errors->get('name')" class="mt-1" />
                 </div>
                 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
-                    <input name="email" type="email" value="{{ old('email', $user->email) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" required>
+                    <input name="email" type="email" value="{{ old('email', $user->email) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" required>
+                    <x-input-error :messages="$errors->get('email')" class="mt-1" />
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Department</label>
-                    <input name="department" type="text" value="{{ old('department', $user->department) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <input name="department" type="text" value="{{ old('department', $user->department) }}" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <x-input-error :messages="$errors->get('department')" class="mt-1" />
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Preferred Language</label>
-                    <select name="language" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <select name="language" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                         <option value="en" {{ (old('language', $user->settings['language'] ?? 'en')) == 'en' ? 'selected' : '' }}>English</option>
                         <option value="fil" {{ (old('language', $user->settings['language'] ?? '')) == 'fil' ? 'selected' : '' }}>Filipino</option>
                     </select>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full py-3 text-white rounded-xl text-xs font-bold transition-all shadow-md" style="background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">SAVE CHANGES</button>
+                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-600/20">SAVE CHANGES</button>
                 </div>
             </form>
         </div>
@@ -109,21 +113,24 @@
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Current Password</label>
-                    <input name="current_password" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <input name="current_password" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-1" />
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">New Password</label>
-                    <input name="password" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <input name="password" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-1" />
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Confirm Password</label>
-                    <input name="password_confirmation" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <input name="password_confirmation" type="password" class="w-full bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-3 text-sm focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                    <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-1" />
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md">UPDATE PASSWORD</button>
+                    <button type="submit" class="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl text-xs font-bold hover:bg-gray-800 dark:hover:bg-white transition-all shadow-md">UPDATE PASSWORD</button>
                 </div>
             </form>
         </div>

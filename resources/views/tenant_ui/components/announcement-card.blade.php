@@ -61,10 +61,12 @@
     }
 </style>
 @php
+    $wrapperClasses = 'ann-wrapper relative my-12 flex flex-col gap-4';
+    if ($layoutType === 'landscape') $wrapperClasses .= ' w-full mx-auto';
+    elseif ($layoutType === 'portrait') $wrapperClasses .= ' w-full max-w-4xl mx-auto';
+    else $wrapperClasses .= ' w-full max-w-full mx-auto';
+    
     $layoutClasses = 'ann-card relative flex flex-col p-6 transition-all duration-500 shadow-lg group/card';
-    if ($layoutType === 'landscape') $layoutClasses .= ' w-full mx-auto my-12';
-    elseif ($layoutType === 'portrait') $layoutClasses .= ' w-full max-w-4xl mx-auto my-12';
-    else $layoutClasses .= ' w-full max-w-full mx-auto my-12';
 
     $mediaAspect = 'aspect-video';
     if ($mediaLayout === 'portrait') $mediaAspect = 'aspect-[3/4]';
@@ -139,14 +141,19 @@
         next() { this.currentIndex = (this.currentIndex + 1) % this.media.length; },
         prev() { this.currentIndex = (this.currentIndex - 1 + this.media.length) % this.media.length; }
     }"
-    class="{{ $layoutClasses }} announcement-card-{{ $announcement->id }}"
-    data-category="{{ strtolower($announcement->category ?? 'general') }}"
-    style="border-radius: 1.5rem; box-shadow: 0 15px 30px -10px {{ $isLightBg ? 'rgba(0,0,0,0.08)' : $bgColor.'44' }}; {{ $borderStyle }}"
+    class="{{ $wrapperClasses }}"
+    id="announcement-wrapper-{{ $announcement->id }}"
 >
-    {{-- Background Decoration --}}
-    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none group-hover/card:bg-white/10 transition-all duration-700"></div>
-    
-    <div class="flex-1 flex flex-col gap-6 relative z-10 {{ $fontStyle }}">
+    {{-- INNER BORDERED ANNOUNCEMENT CARD --}}
+    <div 
+        class="{{ $layoutClasses }} announcement-card-{{ $announcement->id }}"
+        data-category="{{ strtolower($announcement->category ?? 'general') }}"
+        style="border-radius: 1.5rem; box-shadow: 0 15px 30px -10px {{ $isLightBg ? 'rgba(0,0,0,0.08)' : $bgColor.'44' }}; {{ $borderStyle }}"
+    >
+        {{-- Background Decoration --}}
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none group-hover/card:bg-white/10 transition-all duration-700"></div>
+        
+        <div class="flex-1 flex flex-col gap-6 relative z-10 {{ $fontStyle }}">
         {{-- Header Section --}}
         <div class="space-y-4 shrink-0">
             <div class="flex items-start justify-between gap-6">
@@ -225,9 +232,13 @@
                 </div>
             </div>
         @endif
+        </div>
+    </div>
 
+    {{-- OUTER REACTIONS & COMMENTS (OUTSIDE THE BORDER) --}}
+    <div class="flex flex-col gap-6 px-2">
         {{-- Footer/Reactions Section --}}
-        <div class="mt-auto flex items-center justify-between border-t border-black/5 pt-6">
+        <div class="flex items-center justify-between pt-2">
             @if($showReactions ?? true)
                 <div class="flex items-center gap-3">
                     @foreach($reactionEmojis as $type => $emoji)
