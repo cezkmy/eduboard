@@ -234,7 +234,32 @@ foreach (config('tenancy.central_domains') as $domain) {
                     return view('central.user.dashboard');
                 })->name('dashboard');
                 
-                Route::get('profile', function () { return view('central.user.profile'); })->name('profile');
+                Route::get('profile', function () {
+                    $user = auth()->user();
+                    $dbSize = null;
+                    $tenantDbName = null;
+
+                    if ($user->tenant) {
+                        try {
+                            $tenantDbName = $user->tenant->getInternal('db_name');
+                        } catch (\Throwable $e) {
+                            $tenantDbName = null;
+                        }
+                    }
+
+                    if ($tenantDbName) {
+                        try {
+                            $dbSize = \Illuminate\Support\Facades\DB::select(
+                                'SELECT SUM(data_length + index_length) as size FROM information_schema.TABLES WHERE table_schema = ?',
+                                [$tenantDbName]
+                            )[0]->size ?? 0;
+                        } catch (\Throwable $e) {
+                            $dbSize = null;
+                        }
+                    }
+
+                    return view('central.user.profile', compact('dbSize'));
+                })->name('profile');
                 Route::put('profile', [UserController::class, 'updateProfile'])->name('profile.update');
                 Route::put('password', [UserController::class, 'updatePassword'])->name('password.update');
                 

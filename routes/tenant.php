@@ -46,7 +46,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Tenant specific admin routes
     Route::prefix('admin')->middleware(['auth'])->name('tenant.')->group(function () {
         Route::get('/dashboard', function () {
-            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) {
+            if (!auth()->user()->hasPermission('view_admin_dashboard')) {
                 abort(403, 'Unauthorized. Standard users cannot access the admin dashboard.');
             }
 
@@ -133,7 +133,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::delete('/categories/{category}', [\App\Http\Controllers\Tenant\OrganizationController::class, 'destroy'])->name('admin.categories.destroy');
         Route::post('/settings/school-type', [\App\Http\Controllers\Tenant\OrganizationController::class, 'updateType'])->name('admin.settings.school_type');
         Route::get('/reports', function (\Illuminate\Http\Request $request) {
-            if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('view_reports')) {
+            if (!auth()->user()->hasPermission('view_admin_reports')) {
                 abort(403, 'Unauthorized.');
             }
             if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
@@ -189,7 +189,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         })->name('admin.reports');
         
         Route::get('/reports/export', function (\Illuminate\Http\Request $request) {
-            if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('view_reports')) {
+            if (!auth()->user()->hasPermission('generate_pdf_reports')) {
                 abort(403, 'Unauthorized.');
             }
             if (!tenant()->hasFeature('reports')) abort(403, 'Upgrade your plan to access Reports.');
@@ -237,7 +237,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             );
         })->name('admin.reports.export');
         Route::get('/settings', function () { 
-            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
+            if (!auth()->user()->hasPermission('manage_general_settings')) {
+                abort(403, 'Unauthorized.');
+            }
             $latestRelease = \App\Services\GitHubService::getLatestRelease();
             return view('tenant_ui.admin.settings', [
                 'latestRelease' => $latestRelease
@@ -248,11 +250,16 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::post('/settings/system-version', [\App\Http\Controllers\Tenant\SettingsController::class, 'updateSystemVersion'])->name('admin.settings.system_version');
 
         Route::get('/subscription', function () { 
-            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
+            if (!auth()->user()->hasPermission('view_subscription_plan')) {
+                abort(403, 'Unauthorized.');
+            }
             $plans = \App\Models\Plan::all();
             return view('tenant_ui.admin.subscription', compact('plans')); 
         })->name('admin.subscription');
         Route::post('/subscription/upgrade', function (\Illuminate\Http\Request $request) { 
+            if (!auth()->user()->hasPermission('manage_billing')) {
+                return response()->json(['error' => 'Unauthorized. You do not have permission to manage billing.'], 403);
+            }
             $request->validate(['plan' => 'required|string']);
             
             // Set the new plan in the tenant database
@@ -276,6 +283,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         })->name('admin.subscription.upgrade');
 
         Route::post('/storage/purchase', function (\Illuminate\Http\Request $request) {
+            if (!auth()->user()->hasPermission('manage_billing')) {
+                return response()->json(['error' => 'Unauthorized. You do not have permission to manage billing.'], 403);
+            }
             $request->validate(['gb' => 'required|numeric', 'price' => 'required|numeric']);
             
             $tenant = tenant();
@@ -302,6 +312,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         })->name('admin.storage.purchase');
 
         Route::post('/bandwidth/purchase', function (\Illuminate\Http\Request $request) {
+            if (!auth()->user()->hasPermission('manage_billing')) {
+                return response()->json(['error' => 'Unauthorized. You do not have permission to manage billing.'], 403);
+            }
             $request->validate(['gb' => 'required|numeric', 'price' => 'required|numeric']);
             
             $tenant = tenant();
@@ -328,7 +341,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         })->name('admin.bandwidth.purchase');
 
         Route::get('/templates', function () { 
-            if (auth()->user()->role !== 'admin' && empty(auth()->user()->custom_permissions['granted'])) abort(403, 'Unauthorized.');
+            if (!auth()->user()->hasPermission('manage_templates')) {
+                abort(403, 'Unauthorized.');
+            }
             $templates = tenancy()->central(function () {
                 return \App\Models\Template::all();
             });
@@ -420,7 +435,11 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         // Student Profile Route
         Route::get('/profile', function () { 
             if (!auth()->user()->hasPermission('view_profile')) abort(403, 'Unauthorized access to profile.');
-            return view('tenant_ui.profile.edit', ['user' => auth()->user()]); 
+            
+            // Calculate DB size for the tenant
+            $dbSize = \Illuminate\Support\Facades\DB::select("SELECT SUM(data_length + index_length) as size FROM information_schema.TABLES WHERE table_schema = DATABASE()")[0]->size ?? 0;
+            
+            return view('tenant_ui.profile.edit', ['user' => auth()->user(), 'dbSize' => $dbSize]); 
         })->name('profile');
     });
 
@@ -467,7 +486,11 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     Route::middleware(['auth'])->name('tenant.')->group(function () {
         Route::get('/profile', function () { 
             if (!auth()->user()->hasPermission('view_profile')) abort(403, 'Unauthorized access to profile.');
-            return view('tenant_ui.profile.edit', ['user' => auth()->user()]); 
+            
+            // Calculate DB size for the tenant
+            $dbSize = \Illuminate\Support\Facades\DB::select("SELECT SUM(data_length + index_length) as size FROM information_schema.TABLES WHERE table_schema = DATABASE()")[0]->size ?? 0;
+            
+            return view('tenant_ui.profile.edit', ['user' => auth()->user(), 'dbSize' => $dbSize]); 
         })->name('profile.edit');
         
         Route::patch('/profile', function (\Illuminate\Http\Request $request) {

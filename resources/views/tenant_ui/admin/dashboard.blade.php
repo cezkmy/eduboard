@@ -42,6 +42,7 @@
             </div>
         </div>
 
+        @if(auth()->user()->hasPermission('view_pending_approvals_stats'))
         <a href="{{ route('tenant.admin.users') }}?tab=pending" class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300 group">
             <div class="stat-info">
                 <div class="stat-label">Pending Approvals</div>
@@ -53,7 +54,9 @@
                 </svg>
             </div>
         </a>
+        @endif
 
+        @if(auth()->user()->hasPermission('view_engagement_overview'))
         <div class="stat-card hover:shadow-lg dark:hover:bg-gray-700/80 transition-all duration-300">
             <div class="stat-info">
                 <div class="stat-label">Total Engagement</div>
@@ -65,10 +68,12 @@
                 </svg>
             </div>
         </div>
+        @endif
     </div>
 
     <div class="admin-grid-layout">
         {{-- Left: Recent Announcements --}}
+        @if(auth()->user()->hasPermission('view_recent_announcements'))
         <div class="grid-main">
             <div class="section-header">
                 <h2>Recent Announcements</h2>
@@ -106,8 +111,10 @@
                 @endforelse
             </div>
         </div>
+        @endif
 
         {{-- Right: Recent Pending Approvals --}}
+        @if(auth()->user()->hasPermission('view_pending_approvals_stats'))
         <div class="lg:col-span-1">
             <div class="section-header">
                 <h2>Pending Approvals</h2>
@@ -153,6 +160,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </x-app-layout>
 

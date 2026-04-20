@@ -10,7 +10,7 @@ class OrganizationController extends Controller
 {
     public function index()
     {
-        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+        if (!auth()->user()->hasPermission('manage_categories')) {
             abort(403, 'Unauthorized. Only administrators can manage categories.');
         }
 
@@ -31,7 +31,10 @@ class OrganizationController extends Controller
 
     public function store(Request $request)
     {
-        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+        if (!auth()->user()->hasPermission('create_categories')) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized. You do not have permission to create categories.'], 403);
+            }
             abort(403, 'Unauthorized.');
         }
 
@@ -44,11 +47,19 @@ class OrganizationController extends Controller
 
         Category::create($request->all());
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => ucfirst(str_replace('_', ' ', $request->type)) . ' added successfully.']);
+        }
+
         return back()->with('success', ucfirst(str_replace('_', ' ', $request->type)) . ' added successfully.');
     }
 
     public function updateType(Request $request)
     {
+        if (!auth()->user()->hasPermission('manage_general_settings')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $request->validate(['school_type' => 'required|in:college,highschool']);
         
         tenant()->update(['school_type' => $request->school_type]);
@@ -58,6 +69,10 @@ class OrganizationController extends Controller
 
     public function generatePresets(Request $request)
     {
+        if (!auth()->user()->hasPermission('use_category_presets')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $request->validate(['type' => 'required|in:elementary,jhs,shs,college']);
         $type = $request->type;
         $created = 0;
@@ -86,11 +101,19 @@ class OrganizationController extends Controller
 
     public function destroy(Category $category)
     {
-        if (auth()->user()->role !== 'admin' && !auth()->user()->hasPermission('manage_categories')) {
+        if (!auth()->user()->hasPermission('delete_categories')) {
+            if (request()->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized. You do not have permission to delete categories.'], 403);
+            }
             abort(403, 'Unauthorized.');
         }
 
         $category->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Item deleted successfully.']);
+        }
+
         return back()->with('success', 'Item deleted successfully.');
     }
 }

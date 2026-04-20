@@ -31,110 +31,145 @@
     </div>
     @push('scripts')
         <script>
-            const photoInput = document.getElementById('profile_photo_input');
-            const previewContainer = document.getElementById('profile-photo-preview');
-            const photoActions = document.getElementById('photo-actions');
-            const saveBtn = document.getElementById('save-photo-btn');
-            const cancelBtn = document.getElementById('cancel-photo-btn');
-            const statusIndicator = document.getElementById('upload-status');
-            
-            // Store original content for cancel
-            const originalPreviewContent = previewContainer.innerHTML;
+            document.addEventListener('DOMContentLoaded', function() {
+                const photoInput = document.getElementById('profile_photo_input');
+                const previewContainer = document.getElementById('profile-photo-preview');
+                const photoActions = document.getElementById('photo-actions');
+                const saveBtn = document.getElementById('save-photo-btn');
+                const cancelBtn = document.getElementById('cancel-photo-btn');
+                const statusIndicator = document.getElementById('upload-status');
+                
+                if (!photoInput || !previewContainer) return;
 
-            // Extra insurance: ensure label click triggers input
-            document.querySelector('label[for="profile_photo_input"]').addEventListener('click', function() {
-                photoInput.click();
-            });
+                // Store original content for cancel
+                const originalPreviewContent = previewContainer.innerHTML;
 
-            photoInput.addEventListener('change', function(e) {
-                console.log('File input changed');
-                const file = e.target.files[0];
-                if (!file) {
-                    console.log('No file selected');
-                    return;
+                // File input change - preview before upload
+                photoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    // Validate file is an image
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please select a valid image file');
+                        photoInput.value = '';
+                        return;
+                    }
+
+                    // Show Preview
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            previewContainer.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
+                            photoActions.classList.remove('hidden');
+                            statusIndicator.classList.add('hidden');
+                        };
+                        img.onerror = function() {
+                            alert('Invalid image file');
+                            photoInput.value = '';
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.onerror = function(e) {
+                        console.error('FileReader error:', e);
+                        alert('Error reading file');
+                    };
+                    reader.readAsDataURL(file);
+                });
+
+                // Cancel button - reset everything
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        // Reset file input
+                        photoInput.value = '';
+                        // Restore original preview
+                        previewContainer.innerHTML = originalPreviewContent;
+                        // Hide action buttons
+                        photoActions.classList.add('hidden');
+                        statusIndicator.classList.add('hidden');
+                    });
                 }
 
-                console.log('File selected:', file.name, file.size, file.type);
-
-                // Show Preview
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    console.log('FileReader loaded');
-                    previewContainer.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
-                    photoActions.classList.remove('hidden');
-                    statusIndicator.classList.add('hidden');
-                };
-                reader.onerror = function(e) {
-                    console.error('FileReader error:', e);
-                };
-                reader.readAsDataURL(file);
-            });
-
-            cancelBtn.addEventListener('click', function() {
-                photoInput.value = '';
-                previewContainer.innerHTML = originalPreviewContent;
-                photoActions.classList.add('hidden');
-                statusIndicator.classList.add('hidden');
-            });
-
-            saveBtn.addEventListener('click', async function() {
-                const file = photoInput.files[0];
-                if (!file) return;
-
-                const profileForm = document.querySelector('form[action="{{ route("tenant.profile.update") }}"]');
-                const formData = profileForm ? new FormData(profileForm) : new FormData();
-                formData.append('profile_photo', file);
-                formData.set('_method', 'PATCH');
-
-                // UI Updates
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'SAVING...';
-                statusIndicator.textContent = 'UPLOADING...';
-                statusIndicator.classList.remove('hidden', 'text-green-500', 'text-red-500');
-                statusIndicator.style.color = 'var(--accent)';
-
-                try {
-                    const response = await fetch('{{ route("tenant.profile.update") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || `Server error: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        statusIndicator.textContent = 'SAVED SUCCESSFULLY';
-                        statusIndicator.style.color = '#22c55e';
-                        photoActions.classList.add('hidden');
-                        
-                        // Update Topbar Photo
-                        const topbarAvatar = document.querySelector('.topbar-btn.user .user-avatar');
-                        if (topbarAvatar) {
-                            topbarAvatar.innerHTML = `<img src="${data.profile_photo_url}" class="w-full h-full object-cover">`;
+                // Save button - upload file
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', async function() {
+                        const file = photoInput.files[0];
+                        if (!file) {
+                            alert('No file selected');
+                            return;
                         }
 
-                        // Update local "original" content
-                        previewContainer.innerHTML = `<img src="${data.profile_photo_url}" class="w-full h-full object-cover">`;
+                        // Get current user data from the form
+                        const nameInput = document.querySelector('input[name="name"]');
+                        const emailInput = document.querySelector('input[name="email"]');
                         
-                        setTimeout(() => statusIndicator.classList.add('hidden'), 3000);
-                    } else {
-                        throw new Error(data.message || 'Upload failed');
-                    }
-                } catch (error) {
-                    statusIndicator.textContent = 'UPLOAD FAILED';
-                    statusIndicator.style.color = '#ef4444';
-                    console.error('Error:', error);
-                } finally {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'SAVE PHOTO';
+                        if (!nameInput || !emailInput) {
+                            alert('Form data not found');
+                            return;
+                        }
+
+                        // Prepare form data with photo + required fields
+                        const formData = new FormData();
+                        formData.append('profile_photo', file);
+                        formData.append('name', nameInput.value);
+                        formData.append('email', emailInput.value);
+
+                        // UI Updates
+                        saveBtn.disabled = true;
+                        saveBtn.textContent = 'SAVING...';
+                        statusIndicator.textContent = 'UPLOADING...';
+                        statusIndicator.classList.remove('hidden');
+                        statusIndicator.style.color = 'var(--accent)';
+
+                        try {
+                            const response = await fetch('{{ route("tenant.profile.update") }}', {
+                                method: 'PATCH',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: formData
+                            });
+
+                            const data = await response.json();
+                            
+                            if (response.ok && data.success) {
+                                statusIndicator.textContent = 'PHOTO SAVED SUCCESSFULLY';
+                                statusIndicator.style.color = '#22c55e';
+                                
+                                // Delay before resetting to let user see success message
+                                setTimeout(() => {
+                                    // Reset input and hide actions
+                                    photoInput.value = '';
+                                    photoActions.classList.add('hidden');
+                                    
+                                    // Update preview with new photo URL (add cache buster)
+                                    if (data.profile_photo_url) {
+                                        const cacheUrl = data.profile_photo_url + (data.profile_photo_url.includes('?') ? '&' : '?') + 't=' + Date.now();
+                                        previewContainer.innerHTML = `<img src="${cacheUrl}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '<div style=\\"color: var(--accent); font-weight: bold;\\">' + String.fromCharCode(65) + '</div>'">`;
+                                        
+                                        // Update topbar if it exists
+                                        const topbarAvatar = document.querySelector('.topbar-btn.user .user-avatar');
+                                        if (topbarAvatar) {
+                                            topbarAvatar.innerHTML = `<img src="${cacheUrl}" class="w-full h-full object-cover">`;
+                                        }
+                                    }
+                                    
+                                    statusIndicator.classList.add('hidden');
+                                }, 1500);
+                            } else {
+                                throw new Error(data.message || 'Upload failed');
+                            }
+                        } catch (error) {
+                            statusIndicator.textContent = 'UPLOAD FAILED: ' + (error.message || 'Unknown error');
+                            statusIndicator.style.color = '#ef4444';
+                            console.error('Error:', error);
+                        } finally {
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = 'SAVE PHOTO';
+                        }
+                    });
                 }
             });
         </script>

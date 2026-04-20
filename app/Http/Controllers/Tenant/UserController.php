@@ -13,6 +13,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        if (!auth()->user()->hasPermission('view_users_list')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $activeTab = $request->query('tab', 'teachers');
         $searchQuery = $request->query('search');
         $deptFilter = $request->query('dept');
@@ -176,6 +180,10 @@ class UserController extends Controller
 
     public function bulkUpdate(Request $request)
     {
+        if (!auth()->user()->hasPermission('edit_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to edit users.'], 403);
+        }
+
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
@@ -192,6 +200,10 @@ class UserController extends Controller
 
     public function bulkUpdatePermissions(Request $request)
     {
+        if (!auth()->user()->hasPermission('edit_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to modify user permissions.'], 403);
+        }
+
         $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
@@ -231,6 +243,10 @@ class UserController extends Controller
 
     public function approveUser(User $user)
     {
+        if (!auth()->user()->hasPermission('approve_users')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $user->update(['status' => 'active']);
         
         // Notify the user via Email & Database
@@ -251,6 +267,10 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('edit_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to create users.'], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -292,6 +312,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        if (!auth()->user()->hasPermission('edit_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to edit users.'], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -316,12 +340,20 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if (!auth()->user()->hasPermission('delete_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to delete users.'], 403);
+        }
+
         $user->delete();
         return response()->json(['success' => true, 'message' => 'User deleted (archived) successfully!']);
     }
 
     public function restore($id)
     {
+        if (!auth()->user()->hasPermission('restore_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to restore users.'], 403);
+        }
+
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
         return response()->json(['success' => true, 'message' => 'User restored successfully!']);
@@ -329,6 +361,10 @@ class UserController extends Controller
 
     public function forceDelete($id)
     {
+        if (!auth()->user()->hasPermission('delete_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to delete users.'], 403);
+        }
+
         $user = User::withTrashed()->findOrFail($id);
         $user->forceDelete();
         return response()->json(['success' => true, 'message' => 'User permanently deleted!']);
@@ -336,6 +372,10 @@ class UserController extends Controller
 
     public function lockAccount(Request $request, User $user)
     {
+        if (!auth()->user()->hasPermission('lock_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to lock/unlock user accounts.'], 403);
+        }
+
         $request->validate([
             'days' => 'required|integer|min:0'
         ]);

@@ -337,10 +337,19 @@ class AuthController extends Controller
         $user->save();
 
         if ($request->wantsJson()) {
+            $photoUrl = null;
+            if ($user->profile_photo) {
+                if (function_exists('tenant_asset') && function_exists('tenant') && tenant()) {
+                    $photoUrl = tenant_asset($user->profile_photo);
+                } else {
+                    $photoUrl = asset('storage/' . $user->profile_photo);
+                }
+            }
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Profile updated successfully!',
-                'profile_photo_url' => $user->profile_photo ? asset('storage/' . $user->profile_photo) : null,
+                'profile_photo_url' => $photoUrl,
                 'user' => $user
             ]);
         }

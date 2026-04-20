@@ -399,14 +399,18 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm overflow-hidden
                                         {{ $user->role === 'admin' ? 'bg-blue-600 text-white' : '' }}
                                         {{ $user->role === 'teacher' ? 'bg-[rgba(var(--accent-rgb),0.16)] text-[var(--accent)]' : '' }}
                                         {{ $user->role === 'student' ? 'bg-blue-100 text-blue-600' : '' }}
                                         {{ !in_array($user->role, ['admin', 'teacher', 'student']) ? 'bg-amber-600 text-white' : '' }}
                                         {{ $user->deleted_at ? 'bg-gray-200 text-gray-500' : '' }}
                                     ">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                        @if($user->profile_photo)
+                                            <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset($user->profile_photo) : asset('storage/' . $user->profile_photo) }}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr($user->name, 0, 1)) }}'">
+                                        @else
+                                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                                        @endif
                                     </div>
                                     <div>
                                         <p class="text-sm font-black text-gray-900 dark:text-white {{ $user->deleted_at ? 'line-through' : '' }}">{{ $user->name }}</p>

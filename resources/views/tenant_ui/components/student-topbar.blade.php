@@ -79,9 +79,9 @@
         {{-- Account --}}
         <div class="admin-dropdown" x-data="{ open: false }" @click.away="open = false">
             <button class="topbar-btn user overflow-hidden" @click="open = !open" title="Account" style="padding: 0;">
-                <div class="user-avatar" style="width: 100%; height: 100%; border-radius: 0; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                <div class="user-avatar" style="width: 100%; height: 100%; border-radius: 0; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; overflow: hidden;">
                     @if(auth()->user()->profile_photo)
-                        <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover">
+                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'">
                     @else
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     @endif

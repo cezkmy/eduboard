@@ -2,24 +2,7 @@
     <x-slot name="title">Categories - EduBoard Admin</x-slot>
 
     @php $schoolType = tenant('school_type') ?? 'college'; @endphp
-    <div class="admin-content" x-data="{ 
-        categoryModal: false, 
-        deleteModal: false, 
-        successModal: false,
-        activeTab: 'announcement_category',
-        modalTitle: 'Add Category',
-        categoryName: '',
-        selectedType: 'announcement_category',
-        selectedColor: 'blue',
-        deleteTargetName: '',
-        deleteTargetId: null,
-        showSuccess(msg) {
-            this.successMessage = msg;
-            this.successModal = true;
-            setTimeout(() => { if(this.successModal) this.successModal = false; }, 3000);
-        },
-        successMessage: 'Action completed successfully.'
-    }">
+    <div class="admin-content" x-data="categoryManager()">
 
         {{-- Page Header --}}
         <div class="content-header flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -144,7 +127,7 @@
                             </svg>
                         </button>
                     </div>
-                    <form class="px-8 pb-10 space-y-6" action="{{ route('tenant.admin.categories.store') }}" method="POST">
+                    <form class="px-8 pb-10 space-y-6" action="{{ route('tenant.admin.categories.store') }}" method="POST" @submit.prevent="submitCategoryForm">
                         @csrf
                         <input type="hidden" name="type" :value="activeTab">
                         
@@ -158,13 +141,26 @@
                         <template x-if="activeTab === 'announcement_category'">
                             <div class="space-y-4 pt-2">
                                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Color Theme</label>
+                                @php
+                                    $categoryColors = [
+                                        'blue' => '#3B82F6',
+                                        'green' => '#22C55E',
+                                        'amber' => '#F59E0B',
+                                        'red' => '#EF4444',
+                                        'gray' => '#6B7280',
+                                        'purple' => '#8B5CF6',
+                                        'emerald' => '#10B981',
+                                        'indigo' => '#6366F1',
+                                    ];
+                                @endphp
                                 <div class="flex flex-wrap gap-2">
                                     <input type="hidden" name="color" :value="selectedColor">
-                                    @foreach(['blue', 'green', 'amber', 'red', 'gray', 'purple', 'emerald', 'indigo'] as $color)
-                                        <button type="button" 
+                                    @foreach($categoryColors as $color => $hex)
+                                        <button type="button"
                                                 @click="selectedColor = '{{ $color }}'"
-                                                class="w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center"
-                                                :class="selectedColor === '{{ $color }}' ? 'border-[var(--accent)] bg-{{ $color }}-500 ring-4 ring-[var(--accent)]/10 scale-110' : 'border-transparent bg-{{ $color }}-500/80 hover:scale-105 opacity-60 hover:opacity-100'">
+                                                class="w-10 h-10 rounded-xl border-2 transition-all flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+                                                :style="{ backgroundColor: '{{ $hex }}' }"
+                                                :class="selectedColor === '{{ $color }}' ? 'border-[var(--accent)] ring-4 ring-[var(--accent)]/10 scale-110' : 'border-white/10 hover:scale-105'">
                                             <template x-if="selectedColor === '{{ $color }}'">
                                                 <svg fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="3" class="w-4 h-4">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -189,9 +185,8 @@
             <div x-show="deleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" x-cloak>
                 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="deleteModal = false"></div>
                 <div class="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden animate-modal-enter">
-                    <form :action="'{{ url('admin/categories') }}/' + deleteTargetId" method="POST" class="p-8 text-center">
+                    <form @submit.prevent="deleteCategory" class="p-8 text-center">
                         @csrf
-                        @method('DELETE')
                         <div class="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] flex items-center justify-center text-red-500 mx-auto mb-6">
                             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -227,4 +222,89 @@
         @endif
 
     </div>
+
+    <script>
+        function categoryManager() {
+            return {
+                categoryModal: false,
+                deleteModal: false,
+                successModal: false,
+                activeTab: 'announcement_category',
+                modalTitle: 'Add Category',
+                categoryName: '',
+                selectedType: 'announcement_category',
+                selectedColor: 'blue',
+                deleteTargetName: '',
+                deleteTargetId: null,
+                successMessage: 'Action completed successfully.',
+                showSuccess(msg) {
+                    this.successMessage = msg;
+                    this.successModal = true;
+                    setTimeout(() => {
+                        if (this.successModal) this.successModal = false;
+                    }, 3000);
+                },
+                showError(msg) {
+                    alert(msg);
+                },
+                async submitCategoryForm(event) {
+                    const form = event.target;
+                    const url = form.action;
+                    const formData = new FormData(form);
+                    formData.set('type', this.activeTab);
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json().catch(() => null);
+
+                        if (!response.ok) {
+                            this.showError(data?.error || 'You do not have permission to perform this action.');
+                            return;
+                        }
+
+                        this.categoryModal = false;
+                        this.showSuccess(data?.message || 'Category added successfully.');
+                        setTimeout(() => window.location.reload(), 800);
+                    } catch (error) {
+                        this.showError('A connection error occurred.');
+                    }
+                },
+                async deleteCategory(event) {
+                    event.preventDefault();
+                    const url = `{{ url('admin/categories') }}/${this.deleteTargetId}`;
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            }
+                        });
+
+                        const data = await response.json().catch(() => null);
+
+                        if (!response.ok) {
+                            this.showError(data?.error || 'You do not have permission to perform this action.');
+                            return;
+                        }
+
+                        this.deleteModal = false;
+                        this.showSuccess(data?.message || 'Category deleted successfully.');
+                        setTimeout(() => window.location.reload(), 800);
+                    } catch (error) {
+                        this.showError('A connection error occurred.');
+                    }
+                }
+            };
+        }
+    </script>
 </x-app-layout>

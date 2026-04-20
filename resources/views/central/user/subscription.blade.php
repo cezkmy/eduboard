@@ -11,6 +11,12 @@
         </div>
     </div>
 
+    @php
+        $currentPlan = auth()->user()->tenant?->plan ?? auth()->user()->plan ?? 'Basic';
+        $subscriptionStatus = strtolower(auth()->user()->tenant?->status ?? auth()->user()->status ?? '');
+        $isTrial = $subscriptionStatus === 'trial';
+    @endphp
+
     <!-- Current Plan -->
     <div class="row mb-4">
         <div class="col-12">
@@ -20,14 +26,14 @@
                         <div class="col-md-8">
                             <h4 class="fw-bold mb-2">Current Plan: 
                                 <span class="badge bg-white text-success border-0 shadow-none">
-                                    {{ auth()->user()->plan ?? 'Basic' }} 
-                                    @if(auth()->user()->status === 'trial')(Trial)@endif
+                                    {{ $currentPlan }} 
+                                    @if($isTrial)(Trial)@endif
                                 </span>
                             </h4>
                             <p class="mb-0 opacity-75">
-                                @if(auth()->user()->status === 'trial' && auth()->user()->trial_ends_at)
+                                @if($isTrial && auth()->user()->trial_ends_at)
                                     Free Trial • Ends {{ \Carbon\Carbon::parse(auth()->user()->trial_ends_at)->format('F d, Y') }}
-                                @elseif(auth()->user()->status === 'trial')
+                                @elseif($isTrial)
                                     Free for 1 month • Select 1 free template • Domain Management after template selection
                                 @else
                                     Active Subscription
@@ -36,7 +42,7 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <span class="badge bg-white text-success border-0 shadow-none py-2 px-3">
-                                {{ auth()->user()->status === 'trial' ? 'Trial' : 'Active' }}
+                                {{ $isTrial ? 'Trial' : 'Active' }}
                             </span>
                         </div>
                     </div>
@@ -58,7 +64,7 @@
             // Temporarily mark the Pro plan as popular for styling
             $isPopular = $plan->name === 'Pro';
             // Current user plan logic
-            $isCurrent = (auth()->user()->plan ?? 'Basic') === $plan->name;
+            $isCurrent = ($currentPlan === $plan->name);
         @endphp
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 {{ $isPopular ? 'border-success border-2' : '' }}">

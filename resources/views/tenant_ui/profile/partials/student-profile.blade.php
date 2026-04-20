@@ -5,7 +5,7 @@
             <div class="relative group">
                 <div class="w-24 h-24 rounded-2xl text-white flex items-center justify-center font-bold text-3xl shadow-lg mb-4 overflow-hidden" id="profile-photo-preview" style="background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                     @if(auth()->user()->profile_photo)
-                        <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover">
+                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
                     @else
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     @endif

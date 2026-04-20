@@ -72,13 +72,22 @@
                                 <span class="fw-medium">{{ \Carbon\Carbon::parse(auth()->user()->created_at)->format('F d, Y') }}</span>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-3">
                             <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
                                 <i class="bi bi-clock text-secondary"></i>
                             </div>
                             <div>
                                 <small class="text-secondary d-block">Last Login</small>
                                 <span class="fw-medium">{{ \Carbon\Carbon::parse(auth()->user()->updated_at)->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-secondary bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-server text-secondary"></i>
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">DB Storage Used</small>
+                                <span class="fw-medium">{{ isset($dbSize) ? number_format($dbSize / 1024 / 1024, 2) : 'Calculating...' }} MB</span>
                             </div>
                         </div>
                     </div>

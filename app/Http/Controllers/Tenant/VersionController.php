@@ -14,6 +14,10 @@ class VersionController extends Controller
      */
     public function applyUpdate(Request $request)
     {
+        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $tenant = tenant();
         $latestVersion = GitHubService::getLatestVersion();
 
@@ -35,6 +39,10 @@ class VersionController extends Controller
      */
     public function rollback(Request $request)
     {
+        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $tenant = tenant();
 
         if (!$tenant->previous_version) {

@@ -10,11 +10,14 @@ class SettingsController extends Controller
 {
     public function update(Request $request)
     {
-        $tenant = tenant();
-
         // Handle Branding & General
         if ($request->hasAny(['school_name', 'school_short_name', 'site_description', 'primary_email', 'logo'])) {
+            if (!auth()->user()->hasPermission('manage_branding')) {
+                abort(403, 'Unauthorized.');
+            }
             
+            $tenant = tenant();
+
             // Validate logo if uploaded
             if ($request->hasFile('logo')) {
                 $request->validate([
@@ -74,14 +77,20 @@ class SettingsController extends Controller
 
         // Handle Appearance
         if ($request->has('theme') || $request->has('theme_color')) {
+            if (!auth()->user()->hasPermission('manage_appearance')) {
+                abort(403, 'Unauthorized.');
+            }
+
+            $tenant = tenant();
             $appearanceData = [];
-            if ($request->has('theme')) $appearanceData['theme_preference'] = $request->theme;
-            if ($request->has('theme_color')) $appearanceData['theme_color'] = $request->theme_color;
-            
-            \Illuminate\Support\Facades\DB::connection('mysql')
-                ->table('tenants')
-                ->where('id', $tenant->id)
-                ->update($appearanceData);
+            if ($request->has('theme')) {
+                $appearanceData['theme_preference'] = $request->theme;
+            }
+            if ($request->has('theme_color')) {
+                $appearanceData['theme_color'] = $request->theme_color;
+            }
+
+            $tenant->update($appearanceData);
 
             return back()->with('success', 'Appearance updated successfully.');
         }
@@ -91,6 +100,10 @@ class SettingsController extends Controller
 
     public function updateSystemVersion(Request $request)
     {
+        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+            abort(403, 'Unauthorized.');
+        }
+
         $request->validate(['action' => 'required|in:upgrade,rollback']);
         $tenant = tenant();
 

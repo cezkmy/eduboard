@@ -58,24 +58,25 @@ class User extends Authenticatable
         $granted = $custom['granted'] ?? [];
         $denied = $custom['denied'] ?? [];
 
-        // 1. Explicitly denied?
+        // 1. Explicitly denied? (This overrides everything)
         if (in_array($permission, $denied)) {
             return false;
         }
 
-        // 2. Explicitly granted?
+        // 2. Explicitly granted? (This overrides role defaults)
         if (in_array($permission, $granted)) {
             return true;
         }
 
-        // 3. Fallback to Role Default
+        // 3. Fallback to Role Default ONLY if no custom setting exists
         $role = TenantRole::where('name', $this->role)->first();
         if ($role) {
             $rolePerms = $role->permissions ?? [];
             return in_array($permission, $rolePerms);
         }
 
-        return false;
+        // If no role found, default to true for admin, false for others
+        return $this->role === 'admin';
     }
 
     /**

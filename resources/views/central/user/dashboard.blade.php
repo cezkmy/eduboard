@@ -31,8 +31,14 @@
         </div>
     </div>
 
+    @php
+        $currentPlan = auth()->user()->tenant?->plan ?? auth()->user()->plan ?? 'Basic';
+        $subscriptionStatus = strtolower(auth()->user()->tenant?->status ?? auth()->user()->status ?? '');
+        $isTrial = $subscriptionStatus === 'trial';
+    @endphp
+
     <!-- Trial Banner (with null check) -->
-    @if(auth()->user()->status === 'trial')
+    @if($isTrial)
     <div class="row mb-4">
         <div class="col-12">
             <div class="alert alert-info" role="alert">
@@ -63,9 +69,9 @@
                 <div class="card-body p-4">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h4 class="fw-bold mb-2">Current Plan: <span class="badge bg-white text-success">{{ auth()->user()->plan ?? 'Basic' }} @if(auth()->user()->status === 'trial')(Trial)@endif</span></h4>
+                            <h4 class="fw-bold mb-2">Current Plan: <span class="badge bg-white text-success">{{ $currentPlan }} @if($isTrial)(Trial)@endif</span></h4>
                             <p class="mb-0 opacity-75">
-                                @if(auth()->user()->status === 'trial')
+                                @if($isTrial)
                                     Free for 1 month • Select 1 free template • Domain Management after template selection
                                 @else
                                     Active Subscription

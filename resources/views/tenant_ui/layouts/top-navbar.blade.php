@@ -78,7 +78,7 @@
             <button class="topbar-btn user overflow-hidden" @click="open = !open" onclick="toggleDropdown('account-dropdown')" title="Account" style="padding: 0;">
                 <div class="user-avatar w-full h-full flex items-center justify-center text-white font-bold" style="background: var(--accent);">
                     @if(auth()->user()->profile_photo)
-                        <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover">
+                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
                     @else
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     @endif

@@ -5,7 +5,7 @@
             <div class="relative group">
                 <div class="w-20 h-20 rounded-2xl text-white flex items-center justify-center font-bold text-2xl shadow-lg mb-3 overflow-hidden" id="profile-photo-preview" style="background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                     @if(auth()->user()->profile_photo)
-                        <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover">
+                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
                     @else
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     @endif
@@ -32,6 +32,31 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ auth()->user()->email }}</p>
             
             <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">Administrator</span>
+
+            <div class="mt-4 space-y-3 text-left w-full">
+                <div class="flex items-center gap-3 justify-start w-full">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Last Login</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ auth()->user()->updated_at->diffForHumans() }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 justify-start w-full">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">DB Storage Used</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ isset($dbSize) ? number_format($dbSize / 1024 / 1024, 2) : 'Calculating...' }} MB</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
