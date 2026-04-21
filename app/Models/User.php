@@ -49,34 +49,32 @@ class User extends Authenticatable
      * Check if the user has a specific permission.
      * Evaluates custom_permissions first, then falls back to TenantRole defaults.
      */
+    protected static $cachedRolePermissions = [];
+
     public function hasPermission(string $permission): bool
     {
-        // For local dev or superadmins, you could bypass checking here if needed
-        // if ($this->is_admin) return true; // Central admin check if applicable
-
+        // 1. If user has EXPLICIT custom permissions, they override EVERYTHING.
         $custom = $this->custom_permissions ?? [];
         $granted = $custom['granted'] ?? [];
         $denied = $custom['denied'] ?? [];
 
-        // 1. Explicitly denied? (This overrides everything)
-        if (in_array($permission, $denied)) {
-            return false;
+        // Explicitly denied?
+        if (in_array($permission, $denied)) return false;
+        
+        // Explicitly granted?
+        if (in_array($permission, $granted)) return true;
+
+        // 2. Main Admin Always has access (Bypass check)
+        // If the user's role is 'admin', they are the primary owner/administrator.
+        if ($this->role === 'admin') return true;
+
+        // 3. Fallback to Role defaults in database (Cached for request duration)
+        if (!isset(static::$cachedRolePermissions[$this->role])) {
+            $role = TenantRole::where('name', $this->role)->first();
+            static::$cachedRolePermissions[$this->role] = $role ? ($role->permissions ?? []) : [];
         }
 
-        // 2. Explicitly granted? (This overrides role defaults)
-        if (in_array($permission, $granted)) {
-            return true;
-        }
-
-        // 3. Fallback to Role Default ONLY if no custom setting exists
-        $role = TenantRole::where('name', $this->role)->first();
-        if ($role) {
-            $rolePerms = $role->permissions ?? [];
-            return in_array($permission, $rolePerms);
-        }
-
-        // If no role found, default to true for admin, false for others
-        return $this->role === 'admin';
+        return in_array($permission, static::$cachedRolePermissions[$this->role]);
     }
 
     /**

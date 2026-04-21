@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    protected $fillable = ['name', 'type', 'color', 'parent_id'];
+    protected $fillable = ['name', 'type', 'color', 'parent_id', 'educational_level'];
 
     /**
      * Scope for filtering by type.

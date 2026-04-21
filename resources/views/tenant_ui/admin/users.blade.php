@@ -17,6 +17,11 @@
         window.__activeTab   = '{{ $activeTab }}';
         window.__search      = '{{ request('search') }}';
         window.__deptFilter  = '{{ request('dept', 'all') }}';
+        window.__yearLevels  = @json($yearLevels ?? []);
+        window.__gradeLevels = @json($gradeLevels ?? []);
+        window.__programs    = @json($programs ?? []);
+        window.__strands     = @json($strands ?? []);
+        window.__colleges    = @json($colleges ?? []);
 
         function usersManager() {
             return {
@@ -25,10 +30,12 @@
                 deptFilter: window.__deptFilter,
                 userModal: false,
                 deleteModal: false,
+                forceDeleteModal: false,
                 successModal: false,
                 limitModal: false,
                 limitMessage: '',
                 generatedPasswordAlert: null,
+                showGeneratedPassword: false,
                 modalTitle: 'Add User',
                 successMessage: '',
                 selectedUsers: [],
@@ -46,6 +53,13 @@
                 permissionsSchema: window.permissionsSchema,
                 roleGroupMapping: window.roleGroupMapping,
                 tenantRoles: window.tenantRoles,
+                schoolLevel: 'college',
+                allYearLevels: window.__yearLevels,
+                allGradeLevels: window.__gradeLevels,
+                allPrograms: window.__programs,
+                allStrands: window.__strands,
+                allColleges: window.__colleges,
+                allSections: @json($sections ?? []),
                 currentUser: {
                     id: null, name: '', email: '', role: 'teacher',
                     status: 'active', department: '', employee_id: '',
@@ -75,6 +89,72 @@
                     return filtered;
                 },
 
+                get filteredColleges() {
+                    const target = this.schoolLevel === 'college' ? 'tertiary' : (this.schoolLevel === 'elementary' ? 'elementary' : 'secondary');
+                    return this.allColleges.filter(c => c.educational_level === target);
+                },
+
+                get filteredPrograms() {
+                    if (this.schoolLevel === 'shs') return this.allStrands.filter(s => s.educational_level === 'secondary');
+                    if (this.schoolLevel === 'college') return this.allPrograms.filter(p => p.educational_level === 'tertiary');
+                    return [];
+                },
+
+                get filteredLevels() {
+                    if (this.schoolLevel === 'college') return this.allYearLevels.filter(l => l.educational_level === 'tertiary');
+                    
+                    const target = this.schoolLevel === 'elementary' ? 'elementary' : 'secondary';
+                    return this.allGradeLevels.filter(l => {
+                        if (l.educational_level !== target) return false;
+                        
+                        // Extract number from Grade name (e.g., "Grade 7" -> 7)
+                        const gradeNum = parseInt(l.name.replace(/\D/g, ''));
+                        if (isNaN(gradeNum)) return true; // Show if no number (flexible)
+
+                        if (this.schoolLevel === 'elementary') return gradeNum <= 6;
+                        if (this.schoolLevel === 'jhs') return gradeNum >= 7 && gradeNum <= 10;
+                        if (this.schoolLevel === 'shs') return gradeNum >= 11;
+                        
+                        return true;
+                    });
+                },
+
+                get filteredSections() {
+                    const target = this.schoolLevel === 'college' ? 'tertiary' : (this.schoolLevel === 'elementary' ? 'elementary' : 'secondary');
+                    return this.allSections.filter(s => s.educational_level === target);
+                },
+
+                validateStep1() {
+                    if (!this.currentUser.name || !this.currentUser.email) {
+                        this.showError('Name and Email are required.');
+                        return false;
+                    }
+                    if (this.currentUser.role === 'teacher' && !this.currentUser.employee_id) {
+                        this.showError('Employee ID is required for Teachers.');
+                        return false;
+                    }
+                    if (this.currentUser.role === 'student') {
+                        if (!this.currentUser.year_level || !this.currentUser.section) {
+                            this.showError('Level and Section are required for Students.');
+                            return false;
+                        }
+                        if ((this.schoolLevel === 'college' || this.schoolLevel === 'shs') && !this.currentUser.course) {
+                            this.showError(this.schoolLevel === 'college' ? 'Program / Course is required.' : 'Strand / Track is required.');
+                            return false;
+                        }
+                    }
+                    if ((this.schoolLevel === 'college' || this.currentUser.role !== 'student') && !this.currentUser.department) {
+                        this.showError(this.schoolLevel === 'college' ? 'College / Faculty is required.' : 'Department / Office is required.');
+                        return false;
+                    }
+                    return true;
+                },
+
+                goToStep(step) {
+                    if (step === 2 && !this.validateStep1()) return;
+                    this.userModalStep = step;
+                },
+
                 switchTab(tab) {
                     const url = new URL(window.location.href);
                     url.searchParams.set('tab', tab);
@@ -94,6 +174,7 @@
                     this.modalTitle = 'Add New User';
                     this.userModalStep = 1;
                     this.permissionMode = 'role';
+                    this.schoolLevel = 'college';
                     this.currentUser = { id: null, name: '', email: '', role: 'teacher', status: 'active', department: '', employee_id: '', course: '', year_level: '', section: '', password: '', custom_permissions: { granted: [], denied: [] } };
                     this.userModal = true;
                 },
@@ -102,6 +183,20 @@
                     this.modalTitle = 'Edit User Details';
                     this.userModalStep = 1;
                     this.currentUser = { ...user, password: '', custom_permissions: user.custom_permissions || { granted: [], denied: [] } };
+                    
+                    // Determine school level based on department/course/year_level
+                    if (this.allColleges.some(c => c.name === user.department)) {
+                        this.schoolLevel = 'college';
+                    } else if (this.allStrands.some(s => s.name === user.course)) {
+                        this.schoolLevel = 'shs';
+                    } else if (this.allGradeLevels.some(g => g.name === user.year_level)) {
+                        // Further logic to distinguish JHS vs Elementary if needed
+                        const gradeNum = parseInt(user.year_level.replace(/\D/g, ''));
+                        this.schoolLevel = (gradeNum >= 7 && gradeNum <= 10) ? 'jhs' : 'elementary';
+                    } else {
+                        this.schoolLevel = 'college'; // default
+                    }
+
                     const g = this.currentUser.custom_permissions.granted || [];
                     const d = this.currentUser.custom_permissions.denied  || [];
                     this.permissionMode = (g.length > 0 || d.length > 0) ? 'custom' : 'role';
@@ -145,8 +240,8 @@
                     fetch('/admin/users/' + id + '/edit-unlock', { method: 'POST', headers: { 'X-CSRF-TOKEN': window.__csrfToken } });
                 },
 
-                openDeleteModal(id) {
-                    this.currentUser.id = id;
+                openDeleteModal(id, name = '') {
+                    this.currentUser = { ...this.currentUser, id: id, name: name };
                     this.deleteModal = true;
                 },
 
@@ -155,10 +250,24 @@
                         .then(r => r.json()).then(data => { if (data.success) { this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); } });
                 },
 
-                confirmForceDelete(id) {
-                    if (!confirm('Permanently delete this user? This cannot be undone.')) return;
-                    fetch('/admin/users/' + id + '/force', { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.__csrfToken } })
-                        .then(r => r.json()).then(data => { if (data.success) { this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); } });
+                confirmForceDelete(id, name = '') {
+                    this.currentUser = { ...this.currentUser, id: id, name: name };
+                    this.forceDeleteModal = true;
+                },
+
+                submitForceDelete() {
+                    fetch('/admin/users/' + this.currentUser.id + '/force', { 
+                        method: 'DELETE', 
+                        headers: { 'X-CSRF-TOKEN': window.__csrfToken } 
+                    })
+                    .then(r => r.json())
+                    .then(data => { 
+                        if (data.success) { 
+                            this.forceDeleteModal = false;
+                            this.showSuccess(data.message); 
+                            setTimeout(() => window.location.reload(), 1000); 
+                        } 
+                    });
                 },
 
                 openLockModal(user) { this.currentUser = { ...user }; this.lockDays = '0'; this.lockModal = true; },
@@ -172,6 +281,7 @@
                 },
 
                 confirmDelete() {
+                    if (!this.currentUser.id) return;
                     fetch('/admin/users/' + this.currentUser.id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.__csrfToken } })
                         .then(r => r.json())
                         .then(data => { if (data.success) { this.deleteModal = false; this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); } });
@@ -191,6 +301,29 @@
                 },
 
                 saveUser() {
+                    if (!this.currentUser.name || !this.currentUser.email) {
+                        this.showError('Name and Email are required.');
+                        return;
+                    }
+                    if (this.currentUser.role === 'teacher' && !this.currentUser.employee_id) {
+                        this.showError('Employee ID is required for Teachers.');
+                        return;
+                    }
+                    if (this.currentUser.role === 'student') {
+                        if (!this.currentUser.year_level || !this.currentUser.section) {
+                            this.showError('Level and Section are required for Students.');
+                            return;
+                        }
+                        if ((this.schoolLevel === 'college' || this.schoolLevel === 'shs') && !this.currentUser.course) {
+                            this.showError(this.schoolLevel === 'college' ? 'Program / Course is required.' : 'Strand / Track is required.');
+                            return;
+                        }
+                    }
+                    if ((this.schoolLevel === 'college' || this.currentUser.role !== 'student') && !this.currentUser.department) {
+                        this.showError(this.schoolLevel === 'college' ? 'College / Faculty is required.' : 'Department / Office is required.');
+                        return;
+                    }
+
                     if (this.permissionMode === 'role') this.currentUser.custom_permissions = { granted: [], denied: [] };
                     const isEdit = !!this.currentUser.id;
                     const url = isEdit ? window.__usersUrl + '/' + this.currentUser.id : window.__usersStore;
@@ -286,7 +419,7 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">User Management</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage teachers and students of {{ tenant('school_name') ?? 'your school' }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Manage teachers and students of {{ tenant('school_name') ?? 'your school' }}</p>
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('tenant.admin.roles') }}" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all flex items-center gap-2">
@@ -311,37 +444,37 @@
                 {{-- Tabs --}}
                 <div class="flex items-center p-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl w-fit overflow-x-auto custom-scrollbar whitespace-nowrap">
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'teachers' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'teachers' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('teachers')">
                         Teachers <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-medium">{{ $roleCounts->get('teacher', 0) }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'students' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'students' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('students')">
                         Students <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-medium">{{ $roleCounts->get('student', 0) }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeTab === 'admins' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'admins' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('admins')">
                         Admins <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-medium">{{ $roleCounts->get('admin', 0) }}</span>
                     </button>
                     
                     @foreach($roleCounts->except(['admin', 'teacher', 'student']) as $role => $count)
                         <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
-                                :class="activeTab === '{{ $role }}s' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                                :class="activeTab === '{{ $role }}s' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                                 @click="switchTab('{{ $role }}s')">
                             {{ ucfirst($role) }}s <span class="ml-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-medium">{{ $count }}</span>
                         </button>
                     @endforeach
 
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all relative"
-                            :class="activeTab === 'pending' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'pending' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('pending')">
                         Pending Review
                         <span class="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 rounded text-[10px] font-black">{{ $pendingCount }}</span>
                     </button>
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all relative"
-                            :class="activeTab === 'archived' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+                            :class="activeTab === 'archived' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('archived')">
                         Archived
                         <span class="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-600 dark:bg-gray-700 rounded text-[10px] font-black">{{ $archivedCount }}</span>
@@ -368,8 +501,8 @@
         </div>
 
         {{-- Table Container --}}
-        <div x-show="activeTab !== 'roles'" class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden" style="background: var(--bg-card); border-color: var(--border-color);">
-            <table class="w-full text-left border-collapse">
+        <div x-show="activeTab !== 'roles'" class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-x-auto custom-scrollbar" style="background: var(--bg-card); border-color: var(--border-color);">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
                     <tr class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700" style="background: var(--bg-card); border-color: var(--border-color);">
                         <th class="w-12 px-6 py-4">
@@ -377,10 +510,10 @@
                                 <input type="checkbox" x-model="selectAll" @change="toggleAll()" class="rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]">
                             </div>
                         </th>
-                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 dark:text-white uppercase tracking-wider">User Profile</th>
-                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 dark:text-white uppercase tracking-wider">Organization</th>
-                        <th x-show="activeTab === 'students'" class="px-6 py-4 text-[11px] font-bold text-gray-400 dark:text-white uppercase tracking-wider">Academic Info</th>
-                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 dark:text-white uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">User Profile</th>
+                        <th class="px-6 py-4 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Organization</th>
+                        <th x-show="activeTab === 'students'" class="px-6 py-4 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Academic Info</th>
+                        <th class="px-6 py-4 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4"></th>
                     </tr>
                 </thead>
@@ -401,7 +534,7 @@
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm overflow-hidden
                                         {{ $user->role === 'admin' ? 'bg-blue-600 text-white' : '' }}
-                                        {{ $user->role === 'teacher' ? 'bg-[rgba(var(--accent-rgb),0.16)] text-[var(--accent)]' : '' }}
+                                        {{ $user->role === 'teacher' ? 'bg-[var(--accent)] text-white' : '' }}
                                         {{ $user->role === 'student' ? 'bg-blue-100 text-blue-600' : '' }}
                                         {{ !in_array($user->role, ['admin', 'teacher', 'student']) ? 'bg-amber-600 text-white' : '' }}
                                         {{ $user->deleted_at ? 'bg-gray-200 text-gray-500' : '' }}
@@ -413,20 +546,20 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <p class="text-sm font-black text-gray-900 dark:text-white {{ $user->deleted_at ? 'line-through' : '' }}">{{ $user->name }}</p>
-                                        <p class="text-xs text-gray-500 font-medium">{{ $user->email }}</p>
+                                        <p class="text-sm font-black text-slate-950 dark:text-white {{ $user->deleted_at ? 'line-through' : '' }}">{{ $user->name }}</p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">{{ $user->email }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <p class="text-xs text-gray-500 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
+                                <p class="text-xs text-slate-700 dark:text-slate-400 font-bold">{{ $user->school_name ?? (tenant('school_name') ?? 'N/A') }}</p>
                             </td>
                             
                             @if($activeTab === 'students')
                             <td class="px-6 py-4">
                                 <div class="flex flex-col gap-0.5">
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Member Since</span>
-                                    <span class="text-[10px] font-semibold text-gray-500">{{ optional($user->created_at)->format('M Y') }}</span>
+                                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Member Since</span>
+                                    <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400">{{ optional($user->created_at)->format('M Y') }}</span>
                                 </div>
                             </td>
                             @endif
@@ -445,11 +578,11 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     @if($user->deleted_at)
-                                        <button @click="confirmRestore({{ $user->id }})" class="px-3 py-1.5 bg-green-500 text-white text-[10px] font-black rounded-lg hover:bg-green-600 transition-all flex items-center gap-1">
+                                        <button @click.stop="confirmRestore({{ $user->id }})" class="px-3 py-1.5 bg-green-500 text-white text-[10px] font-black rounded-lg hover:bg-green-600 transition-all flex items-center gap-1">
                                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"/></svg>
                                             RESTORE
                                         </button>
-                                        <button @click="confirmForceDelete({{ $user->id }})" class="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black rounded-lg hover:bg-red-600 transition-all">DELETE FOREVER</button>
+                                        <button @click.stop="confirmForceDelete({{ $user->id }}, '{{ addslashes($user->name) }}')" class="px-3 py-1.5 bg-red-500 text-white text-[10px] font-black rounded-lg hover:bg-red-600 transition-all">DELETE FOREVER</button>
                                     @elseif($user->status === 'pending')
                                         <form action="{{ route('tenant.admin.users.approve', $user->id) }}" method="POST">
                                             @csrf
@@ -466,13 +599,13 @@
                                             </button>
                                         </form>
                                     @else
-                                        <button @click="openLockModal({{ json_encode(['id' => $user->id, 'name' => $user->name]) }})" class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="Lock Account">
+                                        <button @click.stop="openLockModal({{ json_encode(['id' => $user->id, 'name' => $user->name]) }})" class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="Lock Account">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                         </button>
-                                        <button @click='openEditModal({{ json_encode($user) }})' class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all">
+                                        <button @click.stop='openEditModal({{ json_encode($user) }})' class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.10)] rounded-lg transition-all">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         </button>
-                                        <button @click="openDeleteModal({{ $user->id }})" class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                                        <button @click.stop="openDeleteModal({{ $user->id }}, '{{ addslashes($user->name) }}')" class="w-8 h-8 inline-flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     @endif
@@ -495,7 +628,7 @@
                         </svg>
                     </div>
                     <h3 class="text-sm font-bold text-gray-900 dark:text-white">No users found</h3>
-                    <p class="text-xs text-gray-500 mt-1">Try adjusting your filters or search query.</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Try adjusting your filters or search query.</p>
                 </div>
             @endif
         </div>
@@ -526,7 +659,7 @@
                     </div>
                     {{-- Clickable Step Tabs --}}
                     <div class="flex gap-2">
-                        <button type="button" @click="userModalStep = 1"
+                        <button type="button" @click="goToStep(1)"
                             class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
                             :class="userModalStep === 1
                                 ? 'bg-[var(--accent)] text-white shadow-md'
@@ -535,7 +668,7 @@
                                   :class="userModalStep === 1 ? 'bg-white/20' : 'bg-gray-300 dark:bg-gray-600 text-gray-600'">1</span>
                             Basic Info
                         </button>
-                        <button type="button" @click="userModalStep = 2"
+                        <button type="button" @click="goToStep(2)"
                             class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all"
                             :class="userModalStep === 2
                                 ? 'bg-amber-500 text-white shadow-md'
@@ -553,35 +686,60 @@
 
                     {{-- Step 1 fields --}}
                     <div x-show="userModalStep === 1" class="space-y-4">
+                        {{-- School Level Selection --}}
+                        <div class="p-4 bg-slate-50 dark:bg-gray-900/50 rounded-2xl border border-slate-100 dark:border-gray-800/50">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Educational Level</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button type="button" @click="schoolLevel = 'elementary'; currentUser.department = ''; currentUser.course = ''; currentUser.year_level = ''"
+                                    class="py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2"
+                                    :class="schoolLevel === 'elementary' ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-md' : 'border-slate-200 dark:border-gray-700 text-slate-500 hover:border-slate-300'">
+                                    Elementary
+                                </button>
+                                <button type="button" @click="schoolLevel = 'jhs'; currentUser.department = ''; currentUser.course = ''; currentUser.year_level = ''"
+                                    class="py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2"
+                                    :class="schoolLevel === 'jhs' ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-md' : 'border-slate-200 dark:border-gray-700 text-slate-500 hover:border-slate-300'">
+                                    J. High
+                                </button>
+                                <button type="button" @click="schoolLevel = 'shs'; currentUser.department = ''; currentUser.course = ''; currentUser.year_level = ''"
+                                    class="py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2"
+                                    :class="schoolLevel === 'shs' ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-md' : 'border-slate-200 dark:border-gray-700 text-slate-500 hover:border-slate-300'">
+                                    S. High
+                                </button>
+                                <button type="button" @click="schoolLevel = 'college'; currentUser.department = ''; currentUser.course = ''; currentUser.year_level = ''"
+                                    class="py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2"
+                                    :class="schoolLevel === 'college' ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-md' : 'border-slate-200 dark:border-gray-700 text-slate-500 hover:border-slate-300'">
+                                    College
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800/50">
                             <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg transition-all duration-300"
-                                 :class="currentUser.role === 'admin' ? 'bg-blue-600 shadow-blue-500/20' : ''"
-                                 :style="currentUser.role === 'admin' ? '' : 'background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.22);'"
+                                 :class="currentUser.role === 'admin' ? 'bg-blue-600 shadow-blue-500/20' : 'bg-[var(--accent)] shadow-[var(--accent)]/20'"
                                  x-text="currentUser.name ? currentUser.name.charAt(0) : 'U'"></div>
                             <div>
                                 <p class="text-base font-bold text-gray-900 dark:text-white tracking-tight" x-text="currentUser.name || 'New User'"></p>
-                                <p class="text-[10px] font-bold uppercase tracking-widest"
-                                   :class="currentUser.role === 'admin' ? 'text-blue-600' : ''"
-                                   :style="currentUser.role === 'admin' ? '' : 'color: var(--accent);'"
+                                <p class="text-[10px] font-black uppercase tracking-widest"
+                                   :class="currentUser.role === 'admin' ? 'text-blue-600' : 'text-[var(--accent)]'"
                                    x-text="currentUser.role"></p>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-500 dark:text-gray-400 ml-1">Full Name</label>
-                                <input type="text" x-model="currentUser.name" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="Juan Dela Cruz">
+                                <label class="text-[11px] font-bold text-gray-600 dark:text-gray-400 ml-1">Full Name <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="currentUser.name" required class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="Juan Dela Cruz">
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-500 dark:text-gray-400 ml-1">Email Address</label>
-                                <input type="email" x-model="currentUser.email" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="juan@school.edu">
+                                <label class="text-[11px] font-bold text-gray-600 dark:text-gray-400 ml-1">Email Address <span class="text-red-500">*</span></label>
+                                <input type="email" x-model="currentUser.email" required class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);" placeholder="juan@school.edu">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-500 dark:text-gray-400 ml-1">Role</label>
-                                <select x-model="currentUser.role" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                <label class="text-[11px] font-bold text-gray-600 dark:text-gray-400 ml-1">Role <span class="text-red-500">*</span></label>
+                                <select x-model="currentUser.role" required class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                     <option value="teacher">Teacher</option>
                                     <option value="student">Student</option>
                                     <option value="admin" :disabled="!currentUser.id && checkLimit('admin')">Administrator (Limit: {{ tenant()->getLimit('admins') }})</option>
@@ -592,8 +750,8 @@
                                 </select>
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-[11px] font-bold text-gray-500 dark:text-gray-400 ml-1">Status</label>
-                                <select x-model="currentUser.status" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                <label class="text-[11px] font-bold text-gray-600 dark:text-gray-400 ml-1">Status <span class="text-red-500">*</span></label>
+                                <select x-model="currentUser.status" required class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-semibold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
@@ -601,39 +759,65 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{{ $schoolType === 'college' ? 'College' : 'Department' }}</label>
-                                <select x-model="currentUser.department" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
-                                    <option value="">Select {{ $schoolType === 'college' ? 'College' : 'Department' }}</option>
-                                    @foreach($colleges as $c)<option value="{{ $c->name }}">{{ $c->name }}</option>@endforeach
+                            <div class="space-y-1.5" x-show="schoolLevel === 'college' || currentUser.role !== 'student'">
+                                <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
+                                    <span x-text="schoolLevel === 'college' ? 'College / Faculty' : (schoolLevel === 'shs' ? 'Department / Office' : 'Grade / Level Group')"></span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <select x-model="currentUser.department" :required="schoolLevel === 'college' || currentUser.role !== 'student'"
+                                        class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                    <option value="">Select Option</option>
+                                    <template x-for="c in filteredColleges" :key="c.id">
+                                        <option :value="c.name" x-text="c.name"></option>
+                                    </template>
                                 </select>
                             </div>
                             <div x-show="currentUser.role === 'teacher'" class="space-y-1.5">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Employee ID</label>
-                                <input type="text" x-model="currentUser.employee_id" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
+                                    Employee ID <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" x-model="currentUser.employee_id" :required="currentUser.role === 'teacher'"
+                                       class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                             </div>
                             <div x-show="currentUser.role === 'student'" class="space-y-1.5">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{{ $schoolType === 'college' ? 'Program' : 'Strand' }}</label>
-                                <select x-model="currentUser.course" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
-                                    <option value="">Select {{ $schoolType === 'college' ? 'Program' : 'Strand' }}</option>
-                                    @foreach($programs as $p)<option value="{{ $p->name }}">{{ $p->name }}</option>@endforeach
+                                <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
+                                    <span x-text="schoolLevel === 'college' ? 'Program / Course' : (schoolLevel === 'shs' ? 'Strand / Track' : 'Academic Group')"></span>
+                                    <span x-show="schoolLevel === 'college' || schoolLevel === 'shs'" class="text-red-500">*</span>
+                                </label>
+                                <select x-model="currentUser.course" :required="currentUser.role === 'student' && (schoolLevel === 'college' || schoolLevel === 'shs')"
+                                        class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                    <option value="">Select Option</option>
+                                    <template x-for="p in filteredPrograms" :key="p.id">
+                                        <option :value="p.name" x-text="p.name"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
 
                         <div x-show="currentUser.role === 'student'" class="grid grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{{ $schoolType === 'college' ? 'Year Level' : 'Grade Level' }}</label>
-                                <select x-model="currentUser.year_level" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
-                                    <option value="">Select {{ $schoolType === 'college' ? 'Year' : 'Grade' }}</option>
-                                    @foreach($levels as $l)<option value="{{ $l->name }}">{{ $l->name }}</option>@endforeach
+                                <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
+                                    <span x-text="schoolLevel === 'college' ? 'Year Level' : 'Grade Level'"></span>
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <select x-model="currentUser.year_level" :required="currentUser.role === 'student'"
+                                        class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                    <option value="">Select Level</option>
+                                    <template x-for="l in filteredLevels" :key="l.id">
+                                        <option :value="l.name" x-text="l.name"></option>
+                                    </template>
                                 </select>
                             </div>
                             <div class="space-y-1.5">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Section</label>
-                                <select x-model="currentUser.section" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
+                                <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
+                                    Section <span class="text-red-500">*</span>
+                                </label>
+                                <select x-model="currentUser.section" :required="currentUser.role === 'student'"
+                                        class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 transition-all appearance-none" style="--tw-ring-color: rgba(var(--accent-rgb), 0.20);">
                                     <option value="">Select Section</option>
-                                    @foreach($sections as $s)<option value="{{ $s->name }}">{{ $s->name }}</option>@endforeach
+                                    <template x-for="s in filteredSections" :key="s.id">
+                                        <option :value="s.name" x-text="s.name"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
@@ -729,42 +913,59 @@
                             <p x-show="permissionMode === 'custom'" class="text-[11px] font-black text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-xl px-4 py-3 leading-relaxed">
                                 Toggles pre-loaded from the <strong class="uppercase" x-text="currentUser.role"></strong> role. Flip to override.
                             </p>
-                            <template x-for="(permissions, group) in filteredPermissionsSchema" :key="group">
-                                <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-4 border border-gray-100 dark:border-gray-800"
-                                     :class="permissionMode === 'role' ? 'opacity-80' : ''">
-                                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-gray-200 dark:border-gray-700">
-                                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest" x-text="group"></h4>
-                                        <button type="button" x-show="permissionMode === 'custom'"
-                                            @click="toggleAllInGroup(permissions)"
-                                            class="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg transition-all"
-                                            :class="isGroupAllAllowed(permissions)
-                                                ? 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200'
-                                                : 'bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.2)]'">
-                                            <span x-text="isGroupAllAllowed(permissions) ? 'Deselect All' : 'Select All'"></span>
-                                        </button>
+                                <template x-for="(permissions, group) in filteredPermissionsSchema" :key="group">
+                                    <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm"
+                                         :class="permissionMode === 'role' ? 'opacity-80' : ''">
+                                        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700">
+                                            <h4 class="text-[11px] font-black text-gray-900 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2" x-text="group"></h4>
+                                            <button type="button" x-show="permissionMode === 'custom'"
+                                                @click="toggleAllInGroup(permissions)"
+                                                class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all"
+                                                :class="isGroupAllAllowed(permissions)
+                                                    ? 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-200'
+                                                    : 'bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20'">
+                                                <span x-text="isGroupAllAllowed(permissions) ? 'Deselect Section' : 'Select Section'"></span>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <template x-for="(label, code) in permissions" :key="code">
+                                                <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border transition-all group/item"
+                                                     :class="isCustomAllowed(code) ? 'border-[var(--accent)]/30 ring-2 ring-[var(--accent)]/5' : 'border-gray-100 dark:border-gray-800'">
+                                                    <div class="flex flex-col gap-0.5">
+                                                        <span class="text-sm font-black text-gray-800 dark:text-gray-200" x-text="label"></span>
+                                                        <span class="text-[9px] font-mono text-gray-400 uppercase tracking-tight" x-text="code"></span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <template x-if="permissionMode === 'custom'">
+                                                            <div class="flex items-center gap-2">
+                                                                <button type="button" @click="toggleCustomStatus(code, true)"
+                                                                        class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all"
+                                                                        :class="currentUser.custom_permissions.granted.includes(code) 
+                                                                            ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' 
+                                                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-green-500'">
+                                                                    ALLOW
+                                                                </button>
+                                                                <button type="button" @click="toggleCustomStatus(code, false)"
+                                                                        class="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all"
+                                                                        :class="currentUser.custom_permissions.denied.includes(code) 
+                                                                            ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' 
+                                                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-red-500'">
+                                                                    DENY
+                                                                </button>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="permissionMode === 'role'">
+                                                            <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                                                                <div class="w-2 h-2 rounded-full" :class="isCustomAllowed(code) ? 'bg-green-500' : 'bg-gray-300'"></div>
+                                                                <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest" x-text="isCustomAllowed(code) ? 'ENABLED' : 'DISABLED'"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
-                                    <div class="divide-y divide-gray-100 dark:divide-gray-800">
-                                        <template x-for="(label, code) in permissions" :key="code">
-                                            <div class="flex items-center justify-between py-2.5" :class="permissionMode === 'role' ? 'cursor-not-allowed' : ''" @click="if(permissionMode === 'custom') toggleCustomStatus(code)">
-                                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 pr-3 select-none" :class="permissionMode === 'role' ? 'cursor-not-allowed' : 'cursor-pointer'" x-text="label"></span>
-                                                <button type="button"
-                                                    class="relative shrink-0 inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none border"
-                                                    :class="{
-                                                        'bg-[var(--accent)] border-transparent': isCustomAllowed(code) && permissionMode === 'custom',
-                                                        'bg-[var(--accent)]/50 border-transparent': isCustomAllowed(code) && permissionMode === 'role',
-                                                        'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600 shadow-inner': !isCustomAllowed(code) && permissionMode === 'custom',
-                                                        'bg-gray-100 border-gray-200 dark:bg-gray-800 dark:border-gray-700 shadow-inner': !isCustomAllowed(code) && permissionMode === 'role',
-                                                        'cursor-not-allowed': permissionMode === 'role',
-                                                        'cursor-pointer': permissionMode === 'custom'
-                                                    }">
-                                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-                                                          :class="isCustomAllowed(code) ? 'translate-x-5' : 'translate-x-0.5'"></span>
-                                                </button>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
+                                </template>
                         </div>
                     </div>
                 </form>
@@ -772,14 +973,14 @@
                 {{-- Modal Footer (ALWAYS VISIBLE, outside scrollable form) --}}
                 <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700/50 bg-white dark:bg-gray-800 shrink-0">
                     <div x-show="userModalStep === 1">
-                        <button type="button" @click="userModalStep = 2"
+                        <button type="button" @click="goToStep(2)"
                             class="w-full py-3.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl text-xs font-black shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 uppercase tracking-wider">
                             Next: Configure Access Rules
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
                         </button>
                     </div>
                     <div x-show="userModalStep === 2" class="flex gap-3">
-                        <button type="button" @click="userModalStep = 1"
+                        <button type="button" @click="goToStep(1)"
                             class="px-6 py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-black hover:bg-gray-200 transition-all uppercase tracking-wider">
                             Back
                         </button>
@@ -814,15 +1015,27 @@
                     <h2 class="text-2xl font-black mb-2 dark:text-white">User Created!</h2>
                     <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">The user was successfully created. Here is the auto-generated password. Make sure to copy it!</p>
                     
-                    <div class="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl text-left border border-gray-200 dark:border-gray-700 mb-6 flex justify-between items-center break-all shadow-inner relative group">
-                        <span class="font-mono text-lg font-bold text-gray-900 dark:text-white" x-text="generatedPasswordAlert?.password"></span>
-                        <button type="button" 
-                                @click="navigator.clipboard.writeText(generatedPasswordAlert?.password); showSuccess('Password copied!')" 
-                                class="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm text-gray-500 hover:text-[var(--accent)] hover:bg-gray-50 transition-all border border-gray-200 dark:border-gray-700">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-                        </button>
+                    <div class="bg-indigo-50/50 dark:bg-indigo-900/20 p-5 rounded-2xl text-left border border-indigo-100 dark:border-indigo-900/30 mb-6 flex justify-between items-center break-all shadow-inner relative group">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-indigo-400 dark:text-indigo-500 uppercase tracking-widest mb-1">Generated Password</span>
+                            <span class="font-mono text-lg font-bold text-indigo-600 dark:text-indigo-400" 
+                                  x-text="showGeneratedPassword ? generatedPasswordAlert?.password : '••••••••••••'"></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" 
+                                    @click="showGeneratedPassword = !showGeneratedPassword" 
+                                    class="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm text-gray-500 hover:text-indigo-600 transition-all border border-gray-200 dark:border-gray-700">
+                                <svg x-show="!showGeneratedPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <svg x-show="showGeneratedPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                            </button>
+                            <button type="button" 
+                                    @click="navigator.clipboard.writeText(generatedPasswordAlert?.password); showSuccess('Password copied!')" 
+                                    class="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm text-gray-500 hover:text-indigo-600 transition-all border border-gray-200 dark:border-gray-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                            </button>
+                        </div>
                     </div>
-                    <button type="button" @click="generatedPasswordAlert = null; window.location.reload();" class="w-full py-4 bg-[var(--accent)] text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg hover:bg-[var(--accent-dark)] transition-all flex justify-center items-center gap-2">
+                    <button type="button" @click="generatedPasswordAlert = null; showGeneratedPassword = false; window.location.reload();" class="w-full py-4 bg-[var(--accent)] text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg hover:bg-[var(--accent-dark)] transition-all flex justify-center items-center gap-2">
                         Done & Close
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </button>
@@ -830,7 +1043,7 @@
             </div>
         </template>
 
-        {{-- Delete Modal --}}
+        {{-- Delete Modal (Soft Delete) --}}
         <template x-teleport="body">
             <div x-show="deleteModal" 
                  class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" 
@@ -849,11 +1062,41 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2">Delete User?</h3>
-                        <p class="text-sm text-gray-500 font-medium mb-8">Are you sure you want to remove this user? This action cannot be undone.</p>
+                        <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2 uppercase">Archive User?</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 font-medium mb-8">Are you sure you want to archive <span class="font-bold text-gray-900 dark:text-white" x-text="currentUser.name"></span>? They will no longer be able to log in.</p>
                         <div class="grid grid-cols-2 gap-4">
-                            <button @click="deleteModal = false" class="py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-[1.25rem] text-sm font-black hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">CANCEL</button>
-                            <button @click="confirmDelete()" class="py-4 bg-red-500 text-white rounded-[1.25rem] text-sm font-black hover:bg-red-600 transition-all shadow-xl shadow-red-500/20">DELETE</button>
+                            <button @click="deleteModal = false" class="py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-[1.25rem] text-sm font-black hover:bg-gray-200 dark:hover:bg-gray-600 transition-all uppercase tracking-widest">Cancel</button>
+                            <button @click="confirmDelete()" class="py-4 bg-red-500 text-white rounded-[1.25rem] text-sm font-black hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 uppercase tracking-widest">Archive</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        {{-- Force Delete Modal --}}
+        <template x-teleport="body">
+            <div x-show="forceDeleteModal" 
+                 class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 x-cloak>
+                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="forceDeleteModal = false"></div>
+                <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 animate-modal-enter">
+                    <div class="p-8 text-center">
+                        <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2 uppercase">Delete Forever?</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 font-medium mb-8">Are you sure you want to permanently delete <span class="font-bold text-gray-900 dark:text-white" x-text="currentUser.name"></span>? This action cannot be reversed.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button @click="forceDeleteModal = false" class="py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-[1.25rem] text-sm font-black hover:bg-gray-200 dark:hover:bg-gray-600 transition-all uppercase tracking-widest">Wait, Cancel</button>
+                            <button @click="submitForceDelete()" class="py-4 bg-red-600 text-white rounded-[1.25rem] text-sm font-black hover:bg-red-700 transition-all shadow-xl shadow-red-500/20 uppercase tracking-widest">Yes, Delete</button>
                         </div>
                     </div>
                 </div>
@@ -877,7 +1120,7 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                         <h3 class="text-xl font-bold dark:text-white tracking-tight mb-2">Lock Account</h3>
-                        <p class="text-sm text-gray-500 font-medium mb-6">Temporarily suspend access for <span class="font-bold text-gray-900 dark:text-white" x-text="currentUser.name"></span>.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 font-medium mb-6">Temporarily suspend access for <span class="font-bold text-gray-900 dark:text-white" x-text="currentUser.name"></span>.</p>
                         
                         <select x-model="lockDays" class="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl p-3 mb-6 focus:ring-[var(--accent)] text-sm font-bold text-gray-700 dark:text-gray-200">
                             <option value="0">Unlock (Active)</option>
@@ -1020,11 +1263,11 @@
                                     <option value="">Choose Value...</option>
                                     
                                     <template x-if="bulkField === 'course'">
-                                        @foreach($programs as $p) <option value="{{ $p->name }}">{{ $p->name }}</option> @endforeach
+                                        @foreach($programs->merge($strands) as $p) <option value="{{ $p->name }}">{{ $p->name }}</option> @endforeach
                                     </template>
 
                                     <template x-if="bulkField === 'year_level'">
-                                        @foreach($levels as $l) <option value="{{ $l->name }}">{{ $l->name }}</option> @endforeach
+                                        @foreach($yearLevels->merge($gradeLevels) as $l) <option value="{{ $l->name }}">{{ $l->name }}</option> @endforeach
                                     </template>
 
                                     <template x-if="bulkField === 'section'">

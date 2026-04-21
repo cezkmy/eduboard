@@ -48,6 +48,20 @@ class CheckGitHubRelease extends Command
         if ($latestTagName !== $lastNotifiedVersion) {
             $this->info("New version detected! Preparing to broadcast {$latestTagName}...");
 
+            // Check if Auto-Update is enabled in central settings or config
+            $autoUpdate = CentralSetting::get('github_auto_update', config('services.github.auto_update', false));
+
+            if ($autoUpdate) {
+                $this->info("Auto-Update is enabled. Triggering system update...");
+                try {
+                    $updateId = \Illuminate\Support\Str::uuid()->toString();
+                    \App\Jobs\SystemUpdateJob::dispatch($updateId, $latestRelease['zipball_url'], $latestRelease['tag_name']);
+                    $this->info("Update job dispatched: {$updateId}");
+                } catch (\Exception $e) {
+                    Log::error("Auto-Update trigger failed: " . $e->getMessage());
+                }
+            }
+
             // Trigger the actual broadcast to all active tenants
             try {
                 Artisan::call('eduboard:release', [

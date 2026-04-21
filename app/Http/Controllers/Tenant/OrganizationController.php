@@ -10,7 +10,7 @@ class OrganizationController extends Controller
 {
     public function index()
     {
-        if (!auth()->user()->hasPermission('manage_categories')) {
+        if (!auth()->user()->hasPermission('page_admin_categories')) {
             abort(403, 'Unauthorized. Only administrators can manage categories.');
         }
 
@@ -31,7 +31,7 @@ class OrganizationController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasPermission('create_categories')) {
+        if (!auth()->user()->hasPermission('page_admin_categories')) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Unauthorized. You do not have permission to create categories.'], 403);
             }
@@ -42,7 +42,8 @@ class OrganizationController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|string',
             'color' => 'nullable|string',
-            'parent_id' => 'nullable|exists:categories,id'
+            'parent_id' => 'nullable|exists:categories,id',
+            'educational_level' => 'nullable|in:elementary,secondary,tertiary'
         ]);
 
         Category::create($request->all());
@@ -56,7 +57,7 @@ class OrganizationController extends Controller
 
     public function updateType(Request $request)
     {
-        if (!auth()->user()->hasPermission('manage_general_settings')) {
+        if (!auth()->user()->hasPermission('page_admin_settings')) {
             abort(403, 'Unauthorized.');
         }
 
@@ -69,7 +70,7 @@ class OrganizationController extends Controller
 
     public function generatePresets(Request $request)
     {
-        if (!auth()->user()->hasPermission('use_category_presets')) {
+        if (!auth()->user()->hasPermission('page_admin_categories')) {
             abort(403, 'Unauthorized.');
         }
 
@@ -79,20 +80,20 @@ class OrganizationController extends Controller
 
         if ($type === 'elementary') {
             for ($i = 1; $i <= 6; $i++) {
-                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level']); $created++;
+                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level', 'educational_level' => 'elementary']); $created++;
             }
         } elseif ($type === 'jhs') {
             for ($i = 7; $i <= 10; $i++) {
-                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level']); $created++;
+                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level', 'educational_level' => 'secondary']); $created++;
             }
         } elseif ($type === 'shs') {
-            Category::firstOrCreate(['name' => "Grade 11", 'type' => 'grade_level']);
-            Category::firstOrCreate(['name' => "Grade 12", 'type' => 'grade_level']);
+            Category::firstOrCreate(['name' => "Grade 11", 'type' => 'grade_level', 'educational_level' => 'secondary']);
+            Category::firstOrCreate(['name' => "Grade 12", 'type' => 'grade_level', 'educational_level' => 'secondary']);
             $created += 2;
         } elseif ($type === 'college') {
             $levels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
             foreach ($levels as $level) {
-                Category::firstOrCreate(['name' => $level, 'type' => 'level']); $created++;
+                Category::firstOrCreate(['name' => $level, 'type' => 'level', 'educational_level' => 'tertiary']); $created++;
             }
         }
 
@@ -101,7 +102,7 @@ class OrganizationController extends Controller
 
     public function destroy(Category $category)
     {
-        if (!auth()->user()->hasPermission('delete_categories')) {
+        if (!auth()->user()->hasPermission('page_admin_categories')) {
             if (request()->expectsJson()) {
                 return response()->json(['error' => 'Unauthorized. You do not have permission to delete categories.'], 403);
             }

@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        if (!auth()->user()->hasPermission('view_users_list')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             abort(403, 'Unauthorized.');
         }
 
@@ -65,81 +65,45 @@ class UserController extends Controller
                 ->withQueryString();
         }
 
-        // Build permissionsSchema identical to RoleController so both pages are in sync
+        // Strictly Page-Based Permissions Schema
         $permissionsSchema = [
-            'Dashboard'      => [
-                'view_admin_dashboard'        => 'View Admin Dashboard',
-                'view_recent_announcements'   => 'View Recent Announcements Feed',
-                'view_pending_approvals_stats'=> 'View Pending Approvals Count',
-                'view_engagement_overview'    => 'View Total Engagement Stats',
+            'Admin Pages' => [
+                'page_admin_dashboard'          => 'Dashboard & Analytics Page',
+                'page_admin_announcements'      => 'All Announcements Feed',
+                'page_admin_categories'         => 'Organization Categories Page',
+                'page_admin_my_announcements'   => 'My Announcements Manager',
+                'page_admin_edit_announcement'  => 'Edit Announcement Page',
+                'page_admin_users'              => 'User Management Directory',
+                'page_admin_roles'              => 'Roles & Permissions Page',
+                'page_admin_reports'            => 'System Reports Page',
+                'page_admin_reports_pdf'        => 'PDF Export Reports',
+                'page_admin_settings'           => 'System Settings & Branding',
+                'page_admin_subscription'       => 'Subscription & Billing Page',
+                'page_admin_templates'          => 'Announcement Templates',
             ],
-            'Category'       => [
-                'manage_categories'    => 'Manage Organization Categories',
-                'use_category_presets' => 'Use Category Presets',
-                'create_categories'    => 'Create New Categories',
-                'delete_categories'    => 'Delete Categories',
+            'Teacher Pages' => [
+                'page_teacher_dashboard'     => 'Teacher Dashboard',
+                'page_teacher_announcements' => 'Teacher Feed Page',
+                'page_teacher_my_announcements' => 'My Announcements Manager',
+                'page_teacher_edit_announcement' => 'Edit Announcement Page',
             ],
-            'Users'          => [
-                'view_users_list' => 'View All Users List',
-                'approve_users'   => 'Approve/Reject Pending Users',
-                'edit_users'      => 'Edit User Information',
-                'delete_users'    => 'Delete/Archive Users',
-                'lock_users'      => 'Lock/Unlock User Accounts',
-                'restore_users'   => 'Restore Archived Users',
+            'Student Pages' => [
+                'page_student_studentpage'   => 'Student Portal Feed',
             ],
-            'Reports'        => [
-                'view_admin_reports'     => 'Access System Reports',
-                'generate_pdf_reports'   => 'Generate & Export PDF Reports',
-                'filter_reports_by_date' => 'Filter Reports by Date',
-            ],
-            'Settings'       => [
-                'manage_general_settings' => 'Manage General System Settings',
-                'manage_branding'         => 'Branding Settings',
-                'manage_appearance'       => 'Appearance Settings',
-                'manage_templates'        => 'Manage Templates',
-                'manage_danger_zone'      => 'Access Critical/Danger Zone Actions',
-            ],
-            'Subscription'   => [
-                'view_subscription_plan' => 'View Subscription Plan',
-                'manage_billing'         => 'Manage Billing & Payments',
-                'upgrade_plan'           => 'Upgrade/Downgrade Subscription',
-            ],
-            'Profile'        => [
-                'view_profile'        => 'View Own Profile',
-                'update_profile'      => 'Update Personal Info',
-                'update_security'     => 'Update Account Security',
-                'update_profile_photo'=> 'Change Profile Photo',
-            ],
-            'Teacher Portal' => [
-                'access_teacher_dashboard' => 'View Teacher Dashboard',
-                'manage_announcements'     => 'Create & Manage Announcements',
-                'view_my_announcements'    => 'View My Announcements',
-                'edit_announcements'       => 'Edit Announcements',
-            ],
-            'Student Portal' => [
-                'access_student_page'  => 'View Student Feed',
-                'filter_by_category'   => 'Filter by Category',
-                'filter_by_date'       => 'Filter by Date',
-                'interact_with_posts'  => 'React & Comment on Posts',
-            ],
+            'General Access' => [
+                'page_profile'               => 'User Profile & Security Settings',
+            ]
         ];
 
-        // Merge any custom permissions saved in the database
-        foreach (\App\Models\TenantPermission::all() as $cp) {
-            $group = $cp->group ?: 'Custom Capabilities';
-            if (!isset($permissionsSchema[$group])) $permissionsSchema[$group] = [];
-            $permissionsSchema[$group][$cp->code] = $cp->label;
-        }
-
-        // Strict mapping of groups to roles
+        // Strict mapping of groups to roles for UI organization
         $roleGroupMapping = [
-            'admin' => ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Custom Capabilities'],
-            'teacher' => ['Teacher Portal', 'Profile', 'Custom Capabilities'],
-            'student' => ['Student Portal', 'Profile', 'Custom Capabilities']
+            'admin'   => ['Admin Pages', 'Teacher Pages', 'Student Pages', 'General Access'],
+            'teacher' => ['Teacher Pages', 'General Access'],
+            'student' => ['Student Pages', 'General Access']
         ];
         
         // Only dynamically append CUSTOM groups (not base system ones) to roles that don't have them
-        $baseGroups = ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Teacher Portal', 'Student Portal'];
+        $baseGroups = ['Admin Pages', 'Teacher Pages', 'Student Pages', 'General Access'];
         foreach ($permissionsSchema as $groupName => $perms) {
             if (!in_array($groupName, $baseGroups)) {
                 foreach ($roleGroupMapping as $role => &$mapping) {
@@ -156,8 +120,12 @@ class UserController extends Controller
         ])->toArray();
 
         $schoolType = tenant('school_type') ?? 'college';
-        $levels = Category::where('type', $schoolType === 'college' ? 'level' : 'grade_level')->get();
-        $programs = Category::where('type', $schoolType === 'college' ? 'program' : 'strand')->get();
+        
+        // Fetch all categories for flexible modal
+        $yearLevels = Category::where('type', 'level')->get();
+        $gradeLevels = Category::where('type', 'grade_level')->get();
+        $programs = Category::where('type', 'program')->get();
+        $strands = Category::where('type', 'strand')->get();
         $colleges = Category::where('type', 'college')->get();
         $sections = Category::where('type', 'section')->get();
 
@@ -167,8 +135,10 @@ class UserController extends Controller
             'pendingCount',
             'archivedCount',
             'activeTab',
-            'levels',
+            'yearLevels',
+            'gradeLevels',
             'programs',
+            'strands',
             'colleges',
             'sections',
             'schoolType',
@@ -180,7 +150,7 @@ class UserController extends Controller
 
     public function bulkUpdate(Request $request)
     {
-        if (!auth()->user()->hasPermission('edit_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to edit users.'], 403);
         }
 
@@ -200,7 +170,7 @@ class UserController extends Controller
 
     public function bulkUpdatePermissions(Request $request)
     {
-        if (!auth()->user()->hasPermission('edit_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to modify user permissions.'], 403);
         }
 
@@ -243,7 +213,7 @@ class UserController extends Controller
 
     public function approveUser(User $user)
     {
-        if (!auth()->user()->hasPermission('approve_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             abort(403, 'Unauthorized.');
         }
 
@@ -267,7 +237,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasPermission('edit_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to create users.'], 403);
         }
 
@@ -312,7 +282,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (!auth()->user()->hasPermission('edit_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to edit users.'], 403);
         }
 
@@ -340,7 +310,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if (!auth()->user()->hasPermission('delete_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to delete users.'], 403);
         }
 
@@ -350,7 +320,7 @@ class UserController extends Controller
 
     public function restore($id)
     {
-        if (!auth()->user()->hasPermission('restore_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to restore users.'], 403);
         }
 
@@ -361,7 +331,7 @@ class UserController extends Controller
 
     public function forceDelete($id)
     {
-        if (!auth()->user()->hasPermission('delete_users')) {
+        if (!auth()->user()->hasPermission('page_admin_users')) {
             return response()->json(['error' => 'Unauthorized. You do not have permission to delete users.'], 403);
         }
 
@@ -372,8 +342,8 @@ class UserController extends Controller
 
     public function lockAccount(Request $request, User $user)
     {
-        if (!auth()->user()->hasPermission('lock_users')) {
-            return response()->json(['error' => 'Unauthorized. You do not have permission to lock/unlock user accounts.'], 403);
+        if (!auth()->user()->hasPermission('page_admin_users')) {
+            return response()->json(['error' => 'Unauthorized. You do not have permission to lock accounts.'], 403);
         }
 
         $request->validate([

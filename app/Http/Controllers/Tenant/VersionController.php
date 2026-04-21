@@ -14,7 +14,7 @@ class VersionController extends Controller
      */
     public function applyUpdate(Request $request)
     {
-        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+        if (!auth()->user()->hasPermission('page_admin_settings')) {
             abort(403, 'Unauthorized.');
         }
 
@@ -39,7 +39,7 @@ class VersionController extends Controller
      */
     public function rollback(Request $request)
     {
-        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+        if (!auth()->user()->hasPermission('page_admin_settings')) {
             abort(403, 'Unauthorized.');
         }
 

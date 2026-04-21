@@ -97,34 +97,37 @@
                     <div class="space-y-10">
                         <template x-for="(permissions, group) in filteredPermissionsSchema" :key="group">
                             <div class="animate-fade-in">
-                                <div class="flex items-center gap-3 mb-4">
-                                    <h4 class="text-[10px] font-black text-gray-900 dark:text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap" x-text="group"></h4>
-                                    <div class="h-[1px] w-full bg-gray-100 dark:bg-gray-700"></div>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                                    <template x-for="(label, code) in permissions" :key="code">
-                                        <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-2xl border-2 transition-all cursor-pointer group/item"
-                                             :class="rolesTabState.permissions.includes(code)
-                                                ? 'border-blue-400 bg-blue-50/30 dark:border-blue-500/40'
-                                                : 'border-gray-100 dark:border-gray-800 hover:border-gray-200'"
-                                             @click="rolesTabState.permissions.includes(code)
-                                                ? (rolesTabState.permissions = rolesTabState.permissions.filter(p => p !== code))
-                                                : rolesTabState.permissions.push(code)">
-                                            <div class="flex flex-col gap-0.5 min-w-0 pr-3">
-                                                <span class="text-[12px] font-black text-gray-900 dark:text-white leading-tight" x-text="label"></span>
-                                                <span class="text-[9px] font-bold text-gray-400 font-mono tracking-tight uppercase" x-text="code"></span>
-                                            </div>
-                                            <div class="shrink-0">
-                                                <div class="relative inline-flex h-5 w-10 items-center rounded-full transition-colors shadow-inner border"
-                                                     :class="rolesTabState.permissions.includes(code) ? 'bg-blue-500 border-blue-500' : 'bg-gray-200 border-gray-300 dark:bg-gray-700 dark:border-gray-600'">
-                                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
-                                                          :class="rolesTabState.permissions.includes(code) ? 'translate-x-5' : 'translate-x-0.5'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
+                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
+                                    <span x-text="group"></span>
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <template x-for="(label, code) in permissions" :key="code">
+                                         <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-[1.5rem] border-2 transition-all cursor-pointer group/item shadow-sm"
+                                              :class="rolesTabState.permissions.includes(code)
+                                                 ? 'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.02)] ring-4 ring-[var(--accent)]/5'
+                                                 : 'border-gray-100 dark:border-gray-800 hover:border-gray-200'"
+                                              @click="rolesTabState.permissions.includes(code)
+                                                 ? (rolesTabState.permissions = rolesTabState.permissions.filter(p => p !== code))
+                                                 : rolesTabState.permissions.push(code)">
+                                             <div class="flex flex-col gap-1 min-w-0 pr-4">
+                                                 <span class="text-sm font-black text-gray-900 dark:text-white leading-tight flex items-center gap-2">
+                                                     <div class="w-1.5 h-1.5 rounded-full" :class="rolesTabState.permissions.includes(code) ? 'bg-[var(--accent)]' : 'bg-gray-300'"></div>
+                                                     <span x-text="label"></span>
+                                                 </span>
+                                                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-3.5" x-text="'Allow access to this page/feature'"></p>
+                                             </div>
+                                             <div class="shrink-0">
+                                                 <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                                                      :class="rolesTabState.permissions.includes(code) ? 'bg-[var(--accent)] text-white' : 'bg-gray-100 text-gray-300 dark:bg-gray-800'">
+                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                     </svg>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </template>
+                                 </div>
                             </div>
                         </template>
 

@@ -37,6 +37,8 @@ return [
 
     'github' => [
         'token' => env('GITHUB_TOKEN'),
+        'repo' => env('GITHUB_REPO', 'cezkmy/eduboard'),
+        'auto_update' => env('GITHUB_AUTO_UPDATE', false),
     ],
 
 ];

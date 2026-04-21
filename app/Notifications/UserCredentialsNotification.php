@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserCredentialsNotification extends Notification implements ShouldQueue
+class UserCredentialsNotification extends Notification
 {
     use Queueable;
 

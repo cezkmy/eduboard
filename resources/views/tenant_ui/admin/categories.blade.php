@@ -92,9 +92,17 @@
                             </div>
 
                             <h3 class="text-lg font-black text-gray-900 dark:text-gray-100 mb-1">{{ $item->name }}</h3>
-                            <p class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">
-                                {{ ucfirst(str_replace('_', ' ', $type)) }}
-                            </p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-widest">
+                                    {{ ucfirst(str_replace('_', ' ', $type)) }}
+                                </p>
+                                @if($item->educational_level)
+                                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <p class="text-[11px] text-[var(--accent)] font-black uppercase tracking-widest">
+                                        {{ $item->educational_level }}
+                                    </p>
+                                @endif
+                            </div>
                         </div>
                     @empty
                         <div class="col-span-full py-20 text-center bg-gray-50/50 dark:bg-gray-800/30 rounded-[3rem] border-2 border-dashed border-gray-100 dark:border-gray-700/50">
@@ -130,6 +138,18 @@
                     <form class="px-8 pb-10 space-y-6" action="{{ route('tenant.admin.categories.store') }}" method="POST" @submit.prevent="submitCategoryForm">
                         @csrf
                         <input type="hidden" name="type" :value="activeTab">
+
+                        <template x-if="activeTab !== 'announcement_category'">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Educational Level</label>
+                                <select name="educational_level" x-model="selectedEducationalLevel"
+                                        class="w-full bg-gray-50 dark:bg-gray-900 px-6 py-4 border-none rounded-2xl text-sm font-bold focus:ring-4 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.10);">
+                                    <option value="elementary">Elementary</option>
+                                    <option value="secondary">Secondary / High School</option>
+                                    <option value="tertiary">Tertiary / College</option>
+                                </select>
+                            </div>
+                        </template>
                         
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Name / Label</label>
@@ -232,6 +252,7 @@
                 activeTab: 'announcement_category',
                 modalTitle: 'Add Category',
                 categoryName: '',
+                selectedEducationalLevel: 'tertiary',
                 selectedType: 'announcement_category',
                 selectedColor: 'blue',
                 deleteTargetName: '',

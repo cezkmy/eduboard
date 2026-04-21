@@ -12,7 +12,7 @@ class SettingsController extends Controller
     {
         // Handle Branding & General
         if ($request->hasAny(['school_name', 'school_short_name', 'site_description', 'primary_email', 'logo'])) {
-            if (!auth()->user()->hasPermission('manage_branding')) {
+            if (!auth()->user()->hasPermission('page_admin_settings')) {
                 abort(403, 'Unauthorized.');
             }
             
@@ -77,7 +77,7 @@ class SettingsController extends Controller
 
         // Handle Appearance
         if ($request->has('theme') || $request->has('theme_color')) {
-            if (!auth()->user()->hasPermission('manage_appearance')) {
+            if (!auth()->user()->hasPermission('page_admin_settings')) {
                 abort(403, 'Unauthorized.');
             }
 
@@ -100,7 +100,7 @@ class SettingsController extends Controller
 
     public function updateSystemVersion(Request $request)
     {
-        if (!auth()->user()->hasPermission('manage_danger_zone')) {
+        if (!auth()->user()->hasPermission('page_admin_settings')) {
             abort(403, 'Unauthorized.');
         }
 

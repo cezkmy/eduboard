@@ -16,76 +16,42 @@ class RoleController extends Controller
     public function index()
     {
         // Strictly mapped to Admin page structure as requested
+        // Strictly Page-Based Permissions Schema
         $permissionsSchema = [
-            'Dashboard' => [
-                'view_admin_dashboard' => 'View Admin Dashboard (Stats & Recent Activity)',
-                'view_recent_announcements' => 'View Recent Announcements Feed',
-                'view_pending_approvals_stats' => 'View Pending Approvals Count',
-                'view_engagement_overview' => 'View Total Engagement Stats'
+            'Admin Pages' => [
+                'page_admin_dashboard'       => 'Dashboard & Analytics Page',
+                'page_admin_announcements'   => 'All Announcements Feed',
+                'page_admin_categories'      => 'Organization Categories Page',
+                'page_admin_my_announcements'=> 'My Announcements Manager',
+                'page_admin_users'           => 'User Management Directory',
+                'page_admin_roles'           => 'Roles & Permissions Page',
+                'page_admin_reports'         => 'System Reports Page',
+                'page_admin_reports_pdf'     => 'PDF Export Reports',
+                'page_admin_settings'        => 'System Settings & Branding',
+                'page_admin_subscription'    => 'Subscription & Billing Page',
+                'page_admin_templates'       => 'Announcement Templates',
             ],
-            'Category' => [
-                'manage_categories' => 'Manage Organization Categories (Colleges/Levels/Sections)',
-                'use_category_presets' => 'Use Category Presets (SHS/JHS/College)',
-                'create_categories' => 'Create New Category Entries',
-                'delete_categories' => 'Delete Category Entries'
+            'Teacher Pages' => [
+                'page_teacher_dashboard'     => 'Teacher Dashboard',
+                'page_teacher_announcements' => 'Teacher Feed Page',
+                'page_teacher_my_announcements' => 'My Announcements Manager',
+                'page_teacher_edit_announcement' => 'Edit Announcement Page',
             ],
-            'Users' => [
-                'view_users_list' => 'View All Users List (Teachers/Students/Admins)',
-                'approve_users' => 'Approve/Reject Pending User Registrations',
-                'edit_users' => 'Edit User Information & Roles',
-                'delete_users' => 'Delete/Archive User Accounts',
-                'lock_users' => 'Lock/Unlock User Accounts',
-                'restore_users' => 'Restore Archived Users'
+            'Student Pages' => [
+                'page_student_studentpage'   => 'Student Portal Feed',
             ],
-            'Reports' => [
-                'view_admin_reports' => 'Access System Reports & Analytics',
-                'generate_pdf_reports' => 'Generate & Export PDF Reports',
-                'filter_reports_by_date' => 'Filter Reports by Date/Period'
-            ],
-            'Settings' => [
-                'manage_general_settings' => 'Manage General System Settings',
-                'manage_branding' => 'Branding Settings (Logo/School Names)',
-                'manage_appearance' => 'Appearance Settings (Theme Colors)',
-                'manage_templates' => 'Manage Announcement Templates',
-                'manage_danger_zone' => 'Access Critical/Danger Zone Actions'
-            ],
-            'Subscription' => [
-                'view_subscription_plan' => 'View Current Subscription Plan',
-                'manage_billing' => 'Manage Billing & Payments',
-                'upgrade_plan' => 'Upgrade/Downgrade Subscription'
-            ],
-            'Profile' => [
-                'view_profile' => 'View Own Profile',
-                'update_profile' => 'Update Personal Info (Name/Email/Language)',
-                'update_security' => 'Update Account Security (Password)',
-                'update_profile_photo' => 'Change Profile Photo'
-            ],
-            'Teacher Portal' => [
-                'access_teacher_dashboard' => 'View Teacher Dashboard & Stats',
-                'manage_announcements' => 'Create & Manage Announcements',
-                'view_my_announcements' => 'View My Announcements List',
-                'edit_announcements' => 'Edit/Update Announcements'
-            ],
-            'Student Portal' => [
-                'access_student_page' => 'View Student Announcement Feed',
-                'filter_by_category' => 'Filter by Category',
-                'filter_by_date' => 'Filter by Date Range',
-                'interact_with_posts' => 'React & Comment on Posts'
+            'General Access' => [
+                'page_profile'               => 'User Profile & Security Settings', 
             ]
         ];
 
-        // Fetch custom permissions from database
-        $customDbPermissions = TenantPermission::all();
+        // Merge any custom permissions saved in the database
         $customPermissionsList = [];
-        if ($customDbPermissions->count() > 0) {
-            foreach ($customDbPermissions as $cp) {
-                $group = $cp->group ?: 'Custom Capabilities';
-                if (!isset($permissionsSchema[$group])) {
-                    $permissionsSchema[$group] = [];
-                }
-                $permissionsSchema[$group][$cp->code] = $cp->label;
-                $customPermissionsList[$cp->code] = ['label' => $cp->label, 'group' => $group];
-            }
+        foreach (TenantPermission::all() as $cp) {
+            $group = $cp->group ?: 'Custom Capabilities';
+            if (!isset($permissionsSchema[$group])) $permissionsSchema[$group] = [];
+            $permissionsSchema[$group][$cp->code] = $cp->label;
+            $customPermissionsList[$cp->code] = ['label' => $cp->label, 'group' => $group];
         }
 
         // Base roles configuration
@@ -101,11 +67,12 @@ class RoleController extends Controller
             if (!in_array($name, $existingRoleNames)) {
                 $permissions = [];
                 if ($name === 'admin') {
+                    // Admin gets everything by default
                     $permissions = array_keys(array_merge(...array_values($permissionsSchema)));
-                } elseif ($name === 'teacher') {
-                    $permissions = ['view_profile', 'update_profile', 'update_security', 'update_profile_photo', 'access_teacher_dashboard', 'manage_announcements', 'view_my_announcements', 'edit_announcements'];
-                } elseif ($name === 'student') {
-                    $permissions = ['view_profile', 'update_profile', 'update_security', 'update_profile_photo', 'access_student_page', 'filter_by_category', 'filter_by_date', 'interact_with_posts'];
+                } else {
+                    // Teacher, Student, and others start with NO page access by default (Black/Empty)
+                    // As requested: "if naay bag oh na user then black pa iyang mga permissions"
+                    $permissions = []; 
                 }
 
                 TenantRole::create([
@@ -116,11 +83,11 @@ class RoleController extends Controller
             }
         }
 
-        // Strict mapping of groups to roles
+        // Strict mapping of groups to roles for UI organization
         $roleGroupMapping = [
-            'admin' => ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Custom Capabilities'],
-            'teacher' => ['Teacher Portal', 'Profile', 'Custom Capabilities'],
-            'student' => ['Student Portal', 'Profile', 'Custom Capabilities']
+            'admin'   => ['Admin Pages', 'Teacher Pages', 'Student Pages', 'General Access'],
+            'teacher' => ['Teacher Pages', 'General Access'],
+            'student' => ['Student Pages', 'General Access']
         ];
 
         // Get existing tenant roles and sort them (Admin first, then Teacher, Student, then others)
@@ -141,7 +108,7 @@ class RoleController extends Controller
         }
 
         // Only dynamically append CUSTOM groups (not base system ones) to roles that don't have them
-        $baseGroups = ['Dashboard', 'Category', 'Users', 'Reports', 'Settings', 'Subscription', 'Profile', 'Teacher Portal', 'Student Portal'];
+        $baseGroups = ['Admin Pages', 'Teacher Pages', 'Student Pages', 'General Access'];
         foreach ($permissionsSchema as $groupName => $perms) {
             if (!in_array($groupName, $baseGroups)) {
                 foreach ($roleGroupMapping as $role => &$mapping) {

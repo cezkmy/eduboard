@@ -42,9 +42,12 @@ class SystemUpdateJob implements ShouldQueue
         $base = base_path();
         $storageUpdater = storage_path('app/updater');
         
-        $backupZip = $storageUpdater . '/backup_before_' . $this->version . '_' . time() . '.zip';
-        $downloadZip = $storageUpdater . '/release_' . $this->version . '.zip';
-        $extractDir = $storageUpdater . '/extracted_' . $this->version;
+        // Normalize version for file naming (remove 'v' prefix)
+        $cleanVersion = ltrim($this->version, 'vV');
+        
+        $backupZip = $storageUpdater . '/backup_before_' . $cleanVersion . '_' . time() . '.zip';
+        $downloadZip = $storageUpdater . '/release_' . $cleanVersion . '.zip';
+        $extractDir = $storageUpdater . '/extracted_' . $cleanVersion;
 
         if (!File::exists($storageUpdater)) {
             File::makeDirectory($storageUpdater, 0755, true);
@@ -56,6 +59,11 @@ class SystemUpdateJob implements ShouldQueue
             // 1. Create Backup
             $this->log("Creating system backup before update...");
             $this->createBackup($base, $backupZip);
+            
+            // Save this backup path as the latest stable rollback point
+            \App\Models\CentralSetting::set('latest_stable_backup', $backupZip);
+            \App\Models\CentralSetting::set('latest_stable_version', config('app.version', 'v1.0.0'));
+            
             $this->log("Backup created successfully at {$backupZip}", 'success');
 
             // 2. Download Release
@@ -161,10 +169,15 @@ class SystemUpdateJob implements ShouldQueue
             ->get($url);
 
         if ($response->failed()) {
-            throw new Exception("Download failed with HTTP status: " . $response->status());
+            throw new Exception("Download failed with HTTP status: " . $response->status() . " (URL: " . $url . ")");
         }
 
-        file_put_contents($destination, $response->body());
+        $body = $response->body();
+        if (empty($body)) {
+            throw new Exception("Downloaded release zip is empty.");
+        }
+
+        file_put_contents($destination, $body);
     }
 
     protected function extractRelease($zipPath, $extractDir)
@@ -188,7 +201,28 @@ class SystemUpdateJob implements ShouldQueue
         // GitHub release zips wrap contents in a root folder (e.g. cezkmy-eduboard-ab12cd)
         $wrapper = count($directories) == 1 ? $directories[0] : $extractDir;
 
-        File::copyDirectory($wrapper, $basePath);
+        // Ensure we don't overwrite certain critical files if they exist
+        $preserve = ['.env', 'storage', 'public/storage'];
+        
+        $files = File::allFiles($wrapper, true);
+        foreach ($files as $file) {
+            $relativePath = str_replace($wrapper . DIRECTORY_SEPARATOR, '', $file->getRealPath());
+            
+            // Skip preserved files
+            $isPreserved = false;
+            foreach ($preserve as $p) {
+                if ($relativePath === $p || str_starts_with($relativePath, $p . DIRECTORY_SEPARATOR)) {
+                    $isPreserved = true;
+                    break;
+                }
+            }
+
+            if (!$isPreserved) {
+                $destPath = $basePath . DIRECTORY_SEPARATOR . $relativePath;
+                File::ensureDirectoryExists(dirname($destPath));
+                File::copy($file->getRealPath(), $destPath);
+            }
+        }
     }
 
     protected function runProcess(array $command, $cwd)

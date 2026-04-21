@@ -63,7 +63,9 @@ html:not([data-theme="dark"]) .dark\:bg-gray-700\/80,
 html:not([data-theme="dark"]) .dark\:border-gray-700,
 html:not([data-theme="dark"]) .dark\:border-gray-800,
 html:not([data-theme="dark"]) .dark\:text-gray-400,
-html:not([data-theme="dark"]) .dark\:text-gray-300 {
+html:not([data-theme="dark"]) .dark\:text-gray-300,
+html:not([data-theme="dark"]) .dark\:text-white,
+html:not([data-theme="dark"]) .dark\:text-gray-200 {
     background-color: #ffffff !important;
     color: #1a202c !important;
     border-color: #cbd5e1 !important;

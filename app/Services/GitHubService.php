@@ -16,20 +16,23 @@ class GitHubService
      */
     public static function getLatestRelease($force = false)
     {
-        $fetch = function () use ($force) {
-            $cacheKey = 'github_latest_release';
-            if ($force) {
-                Cache::forget($cacheKey);
-            }
+        $cacheKey = 'github_latest_release';
+        
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
 
-            return Cache::remember($cacheKey, now()->addHours(1), function () {
+        $fetch = function () use ($cacheKey) {
+            return Cache::remember($cacheKey, now()->addMinutes(30), function () {
                 try {
-                    $owner = 'cezkmy';
-                    $repo = 'eduboard';
-                    $url = "https://api.github.com/repos/{$owner}/{$repo}/releases/latest";
+                    $repo = config('services.github.repo', 'cezkmy/eduboard');
+                    // We use /releases instead of /releases/latest to include all releases 
+                    // and manually pick the one with the highest version number
+                    $url = "https://api.github.com/repos/{$repo}/releases";
 
                     $headers = [
-                        'User-Agent' => 'EduBoard-Version-Tracker'
+                        'User-Agent' => 'EduBoard-Version-Tracker',
+                        'Accept' => 'application/vnd.github.v3+json'
                     ];
 
                     if ($token = config('services.github.token')) {
@@ -39,18 +42,36 @@ class GitHubService
                     $response = Http::withHeaders($headers)->get($url);
 
                     if ($response->successful()) {
-                        $data = $response->json();
+                        $releases = $response->json();
+                        
+                        if (empty($releases)) {
+                            return null;
+                        }
+
+                        // Filter out drafts and sort by version number
+                        $latest = collect($releases)
+                            ->filter(fn($r) => !($r['draft'] ?? false))
+                            ->sort(function($a, $b) {
+                                $v1 = ltrim($a['tag_name'] ?? '0.0.0', 'vV');
+                                $v2 = ltrim($b['tag_name'] ?? '0.0.0', 'vV');
+                                return version_compare($v2, $v1); // Descending (highest version first)
+                            })
+                            ->first();
+
+                        if (!$latest) return null;
+
                         return [
-                            'tag_name' => $data['tag_name'] ?? 'v1.0.0',
-                            'name' => $data['name'] ?? 'Initial Release',
-                            'body' => $data['body'] ?? 'No release notes available.',
-                            'published_at' => $data['published_at'] ?? now()->toDateTimeString(),
-                            'html_url' => $data['html_url'] ?? "https://github.com/{$owner}/{$repo}",
-                            'zipball_url' => $data['zipball_url'] ?? null,
+                            'tag_name' => $latest['tag_name'] ?? null,
+                            'name' => $latest['name'] ?? 'Release',
+                            'body' => $latest['body'] ?? 'No release notes available.',
+                            'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
+                            'html_url' => $latest['html_url'] ?? "https://github.com/" . config('services.github.repo', 'cezkmy/eduboard'),
+                            'zipball_url' => $latest['zipball_url'] ?? null,
+                            'is_prerelease' => $latest['prerelease'] ?? false
                         ];
                     }
 
-                    Log::warning('GitHub API call failed: ' . $response->status());
+                    Log::warning('GitHub API call failed: ' . $response->status() . ' - URL: ' . $url);
                     return null;
                 } catch (\Exception $e) {
                     Log::error('GitHubService Error: ' . $e->getMessage());
@@ -75,6 +96,6 @@ class GitHubService
     public static function getLatestVersion()
     {
         $release = self::getLatestRelease();
-        return $release['tag_name'] ?? 'v2.0.0-stable';
+        return $release['tag_name'] ?? config('app.version', 'v1.0.0');
     }
 }

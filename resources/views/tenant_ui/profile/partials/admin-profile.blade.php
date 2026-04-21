@@ -114,7 +114,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-600/20">SAVE CHANGES</button>
+                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20">SAVE CHANGES</button>
                 </div>
             </form>
         </div>
@@ -156,7 +156,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit" class="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl text-xs font-bold hover:bg-gray-800 dark:hover:bg-white transition-all shadow-md">UPDATE PASSWORD</button>
+                    <button type="submit" class="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 dark:hover:bg-white transition-all shadow-md">UPDATE PASSWORD</button>
                 </div>
             </form>
         </div>

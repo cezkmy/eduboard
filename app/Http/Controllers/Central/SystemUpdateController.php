@@ -18,9 +18,47 @@ class SystemUpdateController extends Controller
         $release = GitHubService::getLatestRelease(true);
         $latestVersion = $release['tag_name'] ?? $currentVersion;
 
-        $hasUpdate = version_compare($latestVersion, $currentVersion, '>');
+        // Normalize versions by removing 'v' prefix for comparison
+        $v1 = ltrim($latestVersion, 'vV');
+        $v2 = ltrim($currentVersion, 'vV');
 
-        return view('central.admin.system-updater', compact('currentVersion', 'latestVersion', 'hasUpdate', 'release'));
+        $hasUpdate = version_compare($v1, $v2, '>');
+        $autoUpdate = \App\Models\CentralSetting::get('github_auto_update', config('services.github.auto_update', false));
+        
+        $rollbackAvailable = false;
+        $rollbackVersion = \App\Models\CentralSetting::get('latest_stable_version');
+        $backupPath = \App\Models\CentralSetting::get('latest_stable_backup');
+        
+        if ($backupPath && File::exists($backupPath)) {
+            $rollbackAvailable = true;
+        }
+
+        return view('central.admin.system-updater', compact('currentVersion', 'latestVersion', 'hasUpdate', 'release', 'autoUpdate', 'rollbackAvailable', 'rollbackVersion'));
+    }
+
+    public function rollback(Request $request)
+    {
+        $backupPath = \App\Models\CentralSetting::get('latest_stable_backup');
+        if (!$backupPath || !File::exists($backupPath)) {
+            return response()->json(['success' => false, 'message' => 'No rollback point available.']);
+        }
+
+        $updateId = Str::uuid()->toString();
+        \App\Jobs\ManualRollbackJob::dispatch($updateId, $backupPath);
+
+        return response()->json([
+            'success' => true,
+            'update_id' => $updateId,
+            'message' => 'Rollback job initiated. Please wait...'
+        ]);
+    }
+
+    public function toggleAutoUpdate(Request $request)
+    {
+        $enabled = $request->boolean('enabled');
+        \App\Models\CentralSetting::set('github_auto_update', $enabled);
+
+        return response()->json(['success' => true, 'enabled' => $enabled]);
     }
 
     public function trigger(Request $request)

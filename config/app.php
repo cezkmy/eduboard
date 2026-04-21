@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | System Version
+    |--------------------------------------------------------------------------
+    |
+    | This value is the current version of the application. It is used
+    | by the system updater to check for available updates on GitHub.
+    |
+    */
+    'version' => env('APP_VERSION', 'v1.0.0'),
+
 ];
