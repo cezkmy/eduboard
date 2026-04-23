@@ -264,8 +264,75 @@
                     dropdown.classList.toggle('show');
                 }
             };
+
+            // SweetAlert2 Global Helpers
+            window.confirmAction = function(event, message) {
+                event.preventDefault();
+                const target = event.currentTarget;
+                const form = target.closest('form');
+                const link = target.closest('a');
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, proceed!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (form) form.submit();
+                        else if (link) window.location.href = link.href;
+                    }
+                });
+                return false;
+            };
+
+            window.showAlert = function(title, text, icon = 'info') {
+                return Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    confirmButtonText: 'OK'
+                });
+            };
         })();
     </script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup {
+            font-family: 'Sora', sans-serif !important;
+            border-radius: 20px !important;
+            padding: 2rem !important;
+        }
+        [data-theme="dark"] .swal2-popup {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        [data-theme="dark"] .swal2-title, 
+        [data-theme="dark"] .swal2-html-container {
+            color: #f1f5f9 !important;
+        }
+        .swal2-confirm {
+            background-color: var(--accent) !important;
+            border-radius: 12px !important;
+            padding: 12px 28px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            font-size: 0.75rem !important;
+        }
+        .swal2-cancel {
+            border-radius: 12px !important;
+            padding: 12px 28px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            font-size: 0.75rem !important;
+        }
+    </style>
     @stack('scripts')
 
     {{-- Floating Support Chat (all authenticated users) --}}

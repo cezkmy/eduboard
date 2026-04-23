@@ -251,16 +251,15 @@ function supportChat() {
             if (this.open && this.view === 'conversations') {
                 this.loadConversations();
             }
-            if (this.open && !IS_ADMIN && this.conversations.length === 0) {
-                // If user has no conversations, auto-open new
-                // Actually they might just wait to see it
+            if (!this.open) {
+                this.fetchUnread();
             }
         },
 
         fetchUnread() {
-            fetch('/support/unread', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            fetch(`/support/unread?t=${Date.now()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
-                .then(d => { this.unreadCount = d.count; })
+                .then(d => { this.unreadCount = parseInt(d.count); })
                 .catch(() => {});
         },
 
@@ -278,8 +277,12 @@ function supportChat() {
             this.activeConv = conv;
             this.view = 'chat';
             this.loadMessages(conv.id, false);
-            conv.unread_count = 0;
-            this.fetchUnread();
+            
+            // Immediate UI feedback
+            if (conv.unread_count > 0) {
+                this.unreadCount = Math.max(0, this.unreadCount - conv.unread_count);
+                conv.unread_count = 0;
+            }
         },
 
         backToConversations() {
@@ -304,6 +307,8 @@ function supportChat() {
                     if (!silent || this.messages.length > prevLen) {
                         this.$nextTick(() => this.scrollToBottom());
                     }
+                    // Always refresh unread count after loading messages, as some may have been marked read
+                    this.fetchUnread();
                 });
         },
 

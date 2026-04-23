@@ -266,7 +266,7 @@
                     }, 3000);
                 },
                 showError(msg) {
-                    alert(msg);
+                    showAlert('Error', msg, 'error');
                 },
                 async submitCategoryForm(event) {
                     const form = event.target;

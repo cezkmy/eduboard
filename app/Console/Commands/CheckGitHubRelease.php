@@ -42,6 +42,11 @@ class CheckGitHubRelease extends Command
         $latestTagName = $latestRelease['tag_name'];
         $lastNotifiedVersion = CentralSetting::get('last_notified_version');
 
+        // Always ensure the latest release is in the browseable list for tenants
+        $releases = CentralSetting::getJson('github_releases', []);
+        $releases = collect($releases)->keyBy('tag_name')->put($latestTagName, $latestRelease)->values()->all();
+        CentralSetting::setJson('github_releases', $releases);
+
         $this->line("Latest version on GitHub: " . $latestTagName);
         $this->line("Last notified version: " . ($lastNotifiedVersion ?? 'None'));
 

@@ -493,6 +493,27 @@
             }
         }
     </style>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup {
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 16px !important;
+        }
+        .swal2-confirm {
+            background-color: var(--primary) !important;
+            border-radius: 8px !important;
+            padding: 10px 24px !important;
+            font-weight: 600 !important;
+        }
+        .swal2-cancel {
+            border-radius: 8px !important;
+            padding: 10px 24px !important;
+            font-weight: 600 !important;
+        }
+    </style>
+    @stack('styles')
 </head>
 <body>
     @include('central.components.navbar')

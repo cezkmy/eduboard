@@ -9,6 +9,14 @@ class CentralSupportConversation extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mysql';
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->connection = config('tenancy.database.central_connection', 'mysql');
+    }
+
     protected $table = 'central_support_conversations';
     protected $guarded = [];
 

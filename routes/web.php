@@ -35,7 +35,6 @@ foreach (config('tenancy.central_domains') as $domain) {
         });
 
         Route::post('logout', [AuthController::class, 'logout'])->name('logout')->withoutMiddleware('guest');
-
         // Dashboard and Central User Routes
         Route::middleware(['auth'])->group(function () {
             // Redirect to central user dashboard or admin dashboard based on role
@@ -108,12 +107,6 @@ foreach (config('tenancy.central_domains') as $domain) {
                         'latestRelease'
                     ));
                 })->name('dashboard');
-
-                Route::get('system/update', [\App\Http\Controllers\Central\SystemUpdateController::class, 'index'])->name('system.update');
-                Route::post('system/update/trigger', [\App\Http\Controllers\Central\SystemUpdateController::class, 'trigger'])->name('system.update.trigger');
-                Route::post('system/update/rollback', [\App\Http\Controllers\Central\SystemUpdateController::class, 'rollback'])->name('system.update.rollback');
-                Route::get('system/update/logs/{id}', [\App\Http\Controllers\Central\SystemUpdateController::class, 'logs'])->name('system.update.logs');
-                Route::post('system/update/auto-toggle', [\App\Http\Controllers\Central\SystemUpdateController::class, 'toggleAutoUpdate'])->name('system.update.auto_toggle');
 
                 Route::get('users', function () {
                     if (!auth()->user()->is_admin) {

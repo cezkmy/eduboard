@@ -211,7 +211,7 @@
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary px-4 fw-bold" onclick="return confirm('WARNING: This will instantly send an email blast to every single active school in your database! Are you absolutely sure you want to broadcast this release?')">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold" onclick="return confirmAction(event, 'WARNING: This will instantly send an email blast to every single active school in your database! Are you absolutely sure you want to broadcast this release?')">
                             <i class="bi bi-send-fill me-2"></i> Broadcast Update to All Tenants
                         </button>
                     </form>
@@ -222,7 +222,7 @@
                         <p class="text-muted small mb-3">If the last broadcasted version had issues, you can rollback the central system version to the previous one ({{ \App\Models\CentralSetting::get('previous_system_version') }}).</p>
                         <form method="POST" action="{{ route('central.admin.settings.release.rollback') }}">
                             @csrf
-                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to rollback to version {{ \App\Models\CentralSetting::get('previous_system_version') }}?')">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirmAction(event, 'Are you sure you want to rollback to version {{ \App\Models\CentralSetting::get('previous_system_version') }}?')">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i> Rollback to {{ \App\Models\CentralSetting::get('previous_system_version') }}
                             </button>
                         </form>

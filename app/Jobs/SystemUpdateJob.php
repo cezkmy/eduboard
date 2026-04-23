@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\Process\Process;
+use App\Models\CentralSetting;
 use App\Models\UpdateLog;
 use ZipArchive;
 use Exception;
@@ -61,8 +62,9 @@ class SystemUpdateJob implements ShouldQueue
             $this->createBackup($base, $backupZip);
             
             // Save this backup path as the latest stable rollback point
-            \App\Models\CentralSetting::set('latest_stable_backup', $backupZip);
-            \App\Models\CentralSetting::set('latest_stable_version', config('app.version', 'v1.0.0'));
+            $currentVersion = CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
+            CentralSetting::set('latest_stable_backup', $backupZip);
+            CentralSetting::set('latest_stable_version', $currentVersion);
             
             $this->log("Backup created successfully at {$backupZip}", 'success');
 
@@ -99,14 +101,18 @@ class SystemUpdateJob implements ShouldQueue
             $this->log("Running system migrations...", 'info');
             $this->runProcess(['php', 'artisan', 'migrate', '--force'], $base);
             
-            $this->log("Running tenant migrations...", 'info');
-            $this->runProcess(['php', 'artisan', 'tenants:migrate', '--force'], $base);
-            $this->log("Migrations completed.", 'success');
+            // $this->log("Running tenant migrations...", 'info');
+            // $this->runProcess(['php', 'artisan', 'tenants:migrate', '--force'], $base);
+            // $this->log("Migrations completed.", 'success');
+            $this->log("Central system migrations completed. Tenants must manually apply updates to their own instances.", 'info');
 
             // 8. Optimize Cache
             $this->log("Clearing and optimizing caches...", 'info');
             $this->runProcess(['php', 'artisan', 'optimize:clear'], $base);
             
+            CentralSetting::set('system_version', $this->version);
+            CentralSetting::set('last_notified_version', $this->version);
+
             $this->log("Update to {$this->version} has been completed successfully!", 'success');
 
             // Cleanup

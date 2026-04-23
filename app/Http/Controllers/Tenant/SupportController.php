@@ -23,6 +23,7 @@ class SupportController extends Controller
             $tickets = SupportTicket::with(['creator'])
                 ->withCount(['messages as unread_count' => function ($query) use ($me) {
                     $query->where('is_read', false)
+                          ->where('from_user_id', '!=', $me->id)
                           ->where(function($q) use ($me) {
                               $q->whereNull('to_user_id')->orWhere('to_user_id', $me->id);
                           });
@@ -43,7 +44,8 @@ class SupportController extends Controller
             // Users see their own tickets
             $tickets = SupportTicket::where('creator_id', $me->id)
                 ->withCount(['messages as unread_count' => function ($query) use ($me) {
-                    $query->where('is_read', false)->where('to_user_id', $me->id);
+                    $query->where('is_read', false)
+                          ->where('to_user_id', $me->id);
                 }])
                 ->orderByDesc('updated_at')
                 ->get()
@@ -197,11 +199,24 @@ class SupportController extends Controller
     {
         $me = Auth::user();
 
+        // Local Support Unread Messages
         if ($me->role === 'admin') {
-            $count = SupportMessage::whereNull('to_user_id')
+            $count = SupportMessage::where(function($q) use ($me) {
+                    $q->whereNull('to_user_id')->orWhere('to_user_id', $me->id);
+                })
                 ->where('from_user_id', '!=', $me->id)
                 ->where('is_read', false)
                 ->count();
+                
+            // Include Central Support Unread Messages for Admins
+             $centralCount = tenancy()->central(function () {
+                 return \App\Models\CentralSupportMessage::whereHas('conversation', function($q) {
+                     $q->where('tenant_id', tenant('id'));
+                 })->where('from_role', 'central_admin') // Messages from Central Support
+                   ->where('is_read', false)
+                   ->count();
+             });
+             $count += $centralCount;
         } else {
             $count = SupportMessage::where('to_user_id', $me->id)
                 ->where('is_read', false)
@@ -235,12 +250,10 @@ class SupportController extends Controller
         });
 
         // Let's refine the unread logic inside central.
-        $tickets = tenancy()->central(function () use ($tenantId, $me) {
+        $tickets = tenancy()->central(function () use ($tenantId) {
             return \App\Models\CentralSupportConversation::where('tenant_id', $tenantId)
-                ->withCount(['messages as unread_count' => function ($query) use ($me) {
-                    $query->where('is_read', false)->whereNotNull('from_role')->where('from_role', '!=', 'admin');
-                    // Wait, central admin is 'admin'. So any message NOT from 'admin' is unread... no, if Central Admin sends it, they are role='central_admin' or just to_user_id.
-                    // Actually, if we just check is_read=false AND from != me.id ... wait, central DB doesn't know $me->id exactly? Yes it does, but it's a different table.
+                ->withCount(['messages as unread_count' => function ($query) {
+                    $query->where('is_read', false)->where('from_role', 'central_admin');
                 }])
                 ->orderByDesc('updated_at')
                 ->get()
@@ -250,10 +263,7 @@ class SupportController extends Controller
                     'from_role'    => '',
                     'subject'      => $t->subject,
                     'status'       => $t->status,
-                    'unread_count' => \App\Models\CentralSupportMessage::where('conversation_id', $t->id)
-                                        ->where('is_read', false)
-                                        ->where('from_user_id', '!=', $me->id)
-                                        ->count(),
+                    'unread_count' => $t->unread_count,
                     'time'         => $t->updated_at->diffForHumans(),
                 ])->values();
         });
@@ -309,9 +319,9 @@ class SupportController extends Controller
             $ticket = \App\Models\CentralSupportConversation::where('tenant_id', $tenantId)->find($ticketId);
             if (!$ticket) return [];
 
-            // mark as read
+            // mark messages from Central Support as read
             \App\Models\CentralSupportMessage::where('conversation_id', $ticketId)
-                ->where('from_user_id', '!=', $me->id)
+                ->where('from_role', 'central_admin')
                 ->where('is_read', false)
                 ->update(['is_read' => true]);
 
@@ -325,7 +335,7 @@ class SupportController extends Controller
                     'from_role'    => $m->from_role,
                     'message'      => $m->message,
                     'is_read'      => $m->is_read,
-                    'mine'         => $m->from_user_id === $me->id,
+                    'mine'         => $m->from_role === 'tenant_admin',
                     'time'         => $m->created_at->diffForHumans(),
                     'time_full'    => $m->created_at->format('M d, g:i a'),
                 ]);

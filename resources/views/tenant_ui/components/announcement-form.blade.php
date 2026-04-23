@@ -168,7 +168,7 @@
 
         const form = this.$refs.annForm || this.$el.querySelector('form');
         if (!form) {
-            alert('Form not found. Please refresh the page.');
+            showAlert('Error', 'Form not found. Please refresh the page.', 'error');
             return;
         }
 

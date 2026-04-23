@@ -2,15 +2,58 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use BadMethodCallException;
 
 class GitHubService
 {
+    protected static function fetchLatestReleaseFromApi(): ?array
+    {
+        try {
+            $repo = config('services.github.repo', 'cezkmy/eduboard');
+            $url = "https://api.github.com/repos/{$repo}/releases/latest";
+
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App"); // REQUIRED
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // for localhost only
+
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                Log::error("Curl Error: " . curl_error($ch));
+                return null;
+            }
+
+            curl_close($ch);
+
+            $latest = json_decode($response, true);
+
+            if (!empty($latest['tag_name'])) {
+                return [
+                    'tag_name' => $latest['tag_name'] ?? null,
+                    'name' => $latest['name'] ?? 'Release',
+                    'body' => $latest['body'] ?? 'No release notes available.',
+                    'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
+                    'html_url' => $latest['html_url'] ?? "https://github.com/" . $repo,
+                    'zipball_url' => $latest['zipball_url'] ?? null,
+                    'is_prerelease' => $latest['prerelease'] ?? false,
+                ];
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('GitHubService Error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     /**
      * Fetch the latest release tag from the GitHub repository.
-     * Caches the result for 24 hours to avoid rate limiting.
+     * Caches the result for 30 minutes to avoid rate limiting.
      *
      * @return array|null
      */
@@ -18,72 +61,30 @@ class GitHubService
     {
         $cacheKey = 'github_latest_release';
         
+        // In tenant context, Stancl Tenancy may enforce cache tags even when the
+        // underlying store doesn't support them. To avoid hard failures, we
+        // bypass Cache entirely and fetch directly.
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            return self::fetchLatestReleaseFromApi();
+        }
+
         if ($force) {
             Cache::forget($cacheKey);
         }
 
         $fetch = function () use ($cacheKey) {
-            return Cache::remember($cacheKey, now()->addMinutes(30), function () {
-                try {
-                    $repo = config('services.github.repo', 'cezkmy/eduboard');
-                    // We use /releases instead of /releases/latest to include all releases 
-                    // and manually pick the one with the highest version number
-                    $url = "https://api.github.com/repos/{$repo}/releases";
-
-                    $headers = [
-                        'User-Agent' => 'EduBoard-Version-Tracker',
-                        'Accept' => 'application/vnd.github.v3+json'
-                    ];
-
-                    if ($token = config('services.github.token')) {
-                        $headers['Authorization'] = "token {$token}";
-                    }
-
-                    $response = Http::withHeaders($headers)->get($url);
-
-                    if ($response->successful()) {
-                        $releases = $response->json();
-                        
-                        if (empty($releases)) {
-                            return null;
-                        }
-
-                        // Filter out drafts and sort by version number
-                        $latest = collect($releases)
-                            ->filter(fn($r) => !($r['draft'] ?? false))
-                            ->sort(function($a, $b) {
-                                $v1 = ltrim($a['tag_name'] ?? '0.0.0', 'vV');
-                                $v2 = ltrim($b['tag_name'] ?? '0.0.0', 'vV');
-                                return version_compare($v2, $v1); // Descending (highest version first)
-                            })
-                            ->first();
-
-                        if (!$latest) return null;
-
-                        return [
-                            'tag_name' => $latest['tag_name'] ?? null,
-                            'name' => $latest['name'] ?? 'Release',
-                            'body' => $latest['body'] ?? 'No release notes available.',
-                            'published_at' => $latest['published_at'] ?? now()->toDateTimeString(),
-                            'html_url' => $latest['html_url'] ?? "https://github.com/" . config('services.github.repo', 'cezkmy/eduboard'),
-                            'zipball_url' => $latest['zipball_url'] ?? null,
-                            'is_prerelease' => $latest['prerelease'] ?? false
-                        ];
-                    }
-
-                    Log::warning('GitHub API call failed: ' . $response->status() . ' - URL: ' . $url);
-                    return null;
-                } catch (\Exception $e) {
-                    Log::error('GitHubService Error: ' . $e->getMessage());
-                    return null;
+            try {
+                return Cache::remember($cacheKey, now()->addMinutes(30), function () {
+                    return self::fetchLatestReleaseFromApi();
+                });
+            } catch (BadMethodCallException $e) {
+                if (str_contains($e->getMessage(), 'does not support tagging')) {
+                    // Tenancy cache wrapper may require tags on stores that don't support them.
+                    return self::fetchLatestReleaseFromApi();
                 }
-            });
+                throw $e;
+            }
         };
-
-        // If we are in a tenant context, we run this in central to avoid cache tagging issues
-        if (function_exists('tenancy') && tenancy()->initialized) {
-            return tenancy()->central($fetch);
-        }
 
         return $fetch();
     }

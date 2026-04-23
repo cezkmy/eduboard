@@ -315,6 +315,33 @@
             .top-bar { padding: 0 1rem; }
         }
     </style>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .swal2-popup {
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 16px !important;
+        }
+        [data-bs-theme="dark"] .swal2-popup {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+        [data-bs-theme="dark"] .swal2-title, 
+        [data-bs-theme="dark"] .swal2-html-container {
+            color: #f1f5f9 !important;
+        }
+        .swal2-confirm {
+            background-color: var(--primary) !important;
+            border-radius: 8px !important;
+            padding: 10px 24px !important;
+            font-weight: 600 !important;
+        }
+        .swal2-cancel {
+            border-radius: 8px !important;
+            padding: 10px 24px !important;
+            font-weight: 600 !important;
+        }
+    </style>
     @stack('styles')
 </head>
 <body>
@@ -369,18 +396,16 @@
                         Templates
                     </a>
                 </div>
-                <div class="nav-item mt-3 pt-3 border-top border-opacity-10" style="border-color: var(--border-color) !important;">
-                    <a href="{{ route('central.admin.system.update') }}" class="nav-link {{ request()->routeIs('central.admin.system.update') ? 'active' : '' }}" style="color: var(--primary);">
-                        <i class="bi bi-cloud-arrow-down-fill"></i>
-                        System Updater
-                    </a>
-                </div>
             </nav>
 
             <div class="sidebar-footer">
                 <a href="{{ route('central.admin.profile') }}" class="sidebar-user">
-                    <div class="avatar">
-                        {{ substr(auth()->user()->name, 0, 1) }}
+                    <div class="avatar overflow-hidden" id="sidebar-avatar" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                        @if(auth()->user()->profile_photo)
+                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
+                        @else
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        @endif
                     </div>
                     <div class="info">
                         <div class="name">{{ auth()->user()->name }}</div>
@@ -465,18 +490,22 @@
                     </div>
 
                     <!-- User Dropdown -->
-                    <div class="user-dropdown">
-                        <button class="user-dropdown-btn" onclick="toggleDropdown()">
+                    <div class="user-dropdown" x-data="{ open: false }" @click.away="open = false">
+                        <button class="user-dropdown-btn" @click="open = !open">
                             <div class="user-info">
                                 <div class="user-name">{{ auth()->user()->name }}</div>
-                                <div class="user-role">{{ ucfirst(auth()->user()->role) }}</div>
+                                <div class="user-role">{{ auth()->user()->is_admin ? 'Admin' : 'User' }}</div>
                             </div>
-                            <div class="user-avatar">
-                                {{ substr(auth()->user()->name, 0, 1) }}
+                            <div class="user-avatar overflow-hidden" id="topbar-avatar" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                @if(auth()->user()->profile_photo)
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
+                                @else
+                                    {{ substr(auth()->user()->name, 0, 1) }}
+                                @endif
                             </div>
                         </button>
                         
-                        <div class="dropdown-menu" id="userDropdown">
+                        <div class="dropdown-menu" :class="{ 'show': open }" id="userDropdown">
                             <a href="{{ route('central.admin.profile') }}" class="dropdown-item">
                                 <i class="bi bi-person"></i>
                                 My Profile
@@ -590,6 +619,39 @@
                 }
             }
         }
+
+        // SweetAlert2 Global Helpers
+        window.confirmAction = function(event, message) {
+            event.preventDefault();
+            const target = event.currentTarget;
+            const form = target.closest('form');
+            const link = target.closest('a');
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, proceed!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (form) form.submit();
+                    else if (link) window.location.href = link.href;
+                }
+            });
+            return false;
+        };
+
+        window.showAlert = function(title, text, icon = 'info') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonText: 'OK'
+            });
+        };
     </script>
     
     <!-- Alpine.js -->

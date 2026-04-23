@@ -355,11 +355,7 @@
                 },
 
                 showError(msg) {
-                    const el = document.createElement('div');
-                    el.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3.5 rounded-xl shadow-2xl z-[999] flex items-center gap-3 font-bold text-sm';
-                    el.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg><span>' + msg + '</span>';
-                    document.body.appendChild(el);
-                    setTimeout(() => el.remove(), 4000);
+                    showAlert('Error', msg, 'error');
                 },
 
                 toggleAll() {

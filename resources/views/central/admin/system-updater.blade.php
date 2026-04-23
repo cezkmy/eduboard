@@ -11,15 +11,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </div>
-                System Updater
+                System Core Updater
             </h1>
-            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Keep your core SaaS environment up to date with the latest features and patches.</p>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Update the base system files and core environment. <strong>Note:</strong> Updating here does not automatically update individual schools; they must manually apply the update from their own dashboards.</p>
         </div>
 
         <div class="flex flex-col items-end gap-2 text-right">
             <div class="flex items-center gap-4 bg-gray-50 dark:bg-gray-800/50 p-2 pl-4 rounded-2xl border border-gray-100 dark:border-gray-700">
                 <div class="flex flex-col items-center pr-4 border-r border-gray-200 dark:border-gray-700">
-                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Auto-Update</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Global Auto-Update</span>
                     <button @click="toggleAutoUpdate()" 
                             class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
                             :class="autoUpdate ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'">
@@ -28,7 +28,7 @@
                     </button>
                 </div>
                 <div class="flex flex-col items-end pr-4 border-r border-gray-200 dark:border-gray-700">
-                    <div class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Current</div>
+                    <div class="text-[10px] uppercase font-black text-gray-400 tracking-widest">Base Core</div>
                     <div class="text-lg font-black text-gray-700 dark:text-gray-200">
                         {{ $currentVersion }}
                     </div>
@@ -203,71 +203,87 @@ function systemUpdater() {
         },
 
         async triggerUpdate() {
-            if (!confirm("Are you sure you want to begin the update? This will extract new files and could cause momentary downtime. A rollback zip will be created automatically.")) {
-                return;
-            }
+            Swal.fire({
+                title: 'Confirm Update',
+                text: "Are you sure you want to begin the update? This will extract new files and could cause momentary downtime. A rollback zip will be created automatically.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, update now',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    this.isUpdating = true;
+                    this.logs = ['Initializing update protocol...'];
 
-            this.isUpdating = true;
-            this.logs = ['Initializing update protocol...'];
-
-            try {
-                const response = await fetch("{{ route('central.admin.system.update.trigger') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                    try {
+                        const response = await fetch("{{ route('central.admin.system.update.trigger') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.updateId = data.update_id;
+                            this.logs.push(data.message);
+                            this.startPolling();
+                        } else {
+                            this.logs.push(`ERROR: ${data.message}`);
+                            this.isUpdating = false;
+                        }
+                    } catch (error) {
+                        this.logs.push(`FATAL ERROR: Could not dispatch update job.`);
+                        this.isUpdating = false;
                     }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.updateId = data.update_id;
-                    this.logs.push(data.message);
-                    this.startPolling();
-                } else {
-                    this.logs.push(`ERROR: ${data.message}`);
-                    this.isUpdating = false;
                 }
-            } catch (error) {
-                this.logs.push(`FATAL ERROR: Could not dispatch update job.`);
-                this.isUpdating = false;
-            }
+            });
         },
 
         async triggerRollback() {
-            if (!confirm("Are you sure you want to rollback? This will restore files from the backup created before the last update. Database changes will not be undone automatically.")) {
-                return;
-            }
+            Swal.fire({
+                title: 'Confirm Rollback',
+                text: "Are you sure you want to rollback? This will restore files from the backup created before the last update. Database changes will not be undone automatically.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, rollback now',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    this.isUpdating = true;
+                    this.logs = ['Initializing rollback protocol...'];
 
-            this.isUpdating = true;
-            this.logs = ['Initializing rollback protocol...'];
-
-            try {
-                const response = await fetch("{{ route('central.admin.system.update.rollback') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                    try {
+                        const response = await fetch("{{ route('central.admin.system.update.rollback') }}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.updateId = data.update_id;
+                            this.logs.push(data.message);
+                            this.startPolling();
+                        } else {
+                            this.logs.push(`ERROR: ${data.message}`);
+                            this.isUpdating = false;
+                        }
+                    } catch (error) {
+                        this.logs.push(`FATAL ERROR: Could not dispatch rollback job.`);
+                        this.isUpdating = false;
                     }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.updateId = data.update_id;
-                    this.logs.push(data.message);
-                    this.startPolling();
-                } else {
-                    this.logs.push(`ERROR: ${data.message}`);
-                    this.isUpdating = false;
                 }
-            } catch (error) {
-                this.logs.push(`FATAL ERROR: Could not dispatch rollback job.`);
-                this.isUpdating = false;
-            }
+            });
         },
 
         startPolling() {

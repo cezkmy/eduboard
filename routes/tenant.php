@@ -97,6 +97,12 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::post('/users/{user}/edit-lock', [\App\Http\Controllers\Tenant\UserController::class, 'editLock'])->name('admin.users.edit_lock');
         Route::post('/users/{user}/edit-unlock', [\App\Http\Controllers\Tenant\UserController::class, 'editUnlock'])->name('admin.users.edit_unlock');
         
+        // Notifications
+        Route::get('/notifications/read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return back();
+        })->name('notifications.read');
+        
         // Roles & Permissions
         Route::get('/roles', [\App\Http\Controllers\Tenant\RoleController::class, 'index'])->name('admin.roles');
         Route::post('/roles', [\App\Http\Controllers\Tenant\RoleController::class, 'store'])->name('admin.roles.store');
@@ -340,6 +346,12 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             return response()->json(['success' => true]);
         })->name('admin.bandwidth.purchase');
 
+        // Tenant System Updates (GitHub release integration)
+        Route::get('/system-update', [\App\Http\Controllers\Tenant\SystemUpdateController::class, 'index'])
+            ->name('admin.system.update');
+        Route::post('/system-update/auto-toggle', [\App\Http\Controllers\Tenant\SystemUpdateController::class, 'toggleAutoUpdate'])
+            ->name('admin.system.update.auto_toggle');
+
         Route::get('/templates', function () { 
             if (!auth()->user()->hasPermission('page_admin_templates')) {
                 abort(403, 'Unauthorized.');
@@ -503,6 +515,12 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             if (!auth()->user()->hasPermission('page_profile')) abort(403, 'Unauthorized.');
             return app(App\Http\Controllers\AuthController::class)->updateSecurity($request);
         })->name('profile.security');
+
+        // Backward-compatible password update route used by profile partials.
+        Route::put('/password', function (\Illuminate\Http\Request $request) {
+            if (!auth()->user()->hasPermission('page_profile')) abort(403, 'Unauthorized.');
+            return app(App\Http\Controllers\AuthController::class)->updateSecurity($request);
+        })->name('password.update');
     });
 
     // Tenant Login/Logout

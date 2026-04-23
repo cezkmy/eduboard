@@ -32,16 +32,21 @@ class UserController extends Controller
             }
             
             $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $validated['profile_photo'] = $path;
+            $user->profile_photo = $path;
         }
 
         $oldEmail = $user->email;
-        $user->update($validated);
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->school_name = $validated['school_name'] ?? $user->school_name;
+        $user->phone = $validated['phone'] ?? $user->phone;
+        $user->address = $validated['address'] ?? $user->address;
+        $user->save();
 
         // Sync to tenant if email or other details changed
         $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
         if ($tenant) {
-            $tenant->run(function () use ($user, $oldEmail, $validated) {
+            $tenant->run(function () use ($user, $oldEmail) {
                 $tenantUser = \App\Models\User::where('email', $oldEmail)->first();
                 if ($tenantUser) {
                     $syncData = [
@@ -51,15 +56,18 @@ class UserController extends Controller
                         'address' => $user->address,
                         'profile_photo' => $user->profile_photo,
                     ];
-
-                    // Only sync password if it was changed (though updateProfile doesn't usually take password, good for consistency)
-                    if (!empty($validated['password'])) {
-                        $syncData['password'] = $user->password;
-                    }
-
                     $tenantUser->update($syncData);
                 }
             });
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully!',
+                'profile_photo_url' => $user->profile_photo ? asset('storage/' . $user->profile_photo) : null,
+                'user' => $user
+            ]);
         }
 
         return back()->with('success', 'Profile updated successfully!');

@@ -57,7 +57,7 @@
                 }
             } catch (error) {
                 console.error('Delete error:', error);
-                alert('Failed to delete announcement');
+                showAlert('Error', 'Failed to delete announcement', 'error');
             } finally {
                 this.isDeleting = false;
             }

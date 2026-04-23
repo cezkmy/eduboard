@@ -115,7 +115,25 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-secondary small">{{ $tenant->domains->first() ? $tenant->domains->first()->domain : 'N/A' }}</td>
+                            <td class="text-secondary small">
+                                @php
+                                    $domainRecord = $tenant->domains->first();
+                                    $domainName = $domainRecord ? $domainRecord->domain : 'N/A';
+                                    if ($domainName !== 'N/A') {
+                                        // If it's just a subdomain (no dots), append the local suffix
+                                        if (strpos($domainName, '.') === false) {
+                                            $domainName .= '.localhost:8000';
+                                        }
+                                    }
+                                @endphp
+                                @if($domainName !== 'N/A')
+                                    <a href="http://{{ $domainName }}" target="_blank" class="text-secondary text-decoration-none hover-primary">
+                                        {{ $domainName }} <i class="bi bi-box-arrow-up-right x-small ms-1"></i>
+                                    </a>
+                                @else
+                                    N/A
+                                @endif
+                            </td>
                             <td>
                                 @php
                                     $plan = $tenant->plan ?? 'Basic';

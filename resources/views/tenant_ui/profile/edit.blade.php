@@ -43,6 +43,13 @@
 
                 // Store original content for cancel
                 const originalPreviewContent = previewContainer.innerHTML;
+                const topbarAvatar = document.querySelector('.topbar-btn.user .user-avatar');
+                const sidebarAvatar = document.getElementById('sidebar-avatar');
+                const sidebarV2Avatar = document.getElementById('sidebar-v2-avatar');
+                
+                let originalTopbarContent = topbarAvatar ? topbarAvatar.innerHTML : '';
+                let originalSidebarContent = sidebarAvatar ? sidebarAvatar.innerHTML : '';
+                let originalSidebarV2Content = sidebarV2Avatar ? sidebarV2Avatar.innerHTML : '';
 
                 // File input change - preview before upload
                 photoInput.addEventListener('change', function(e) {
@@ -51,29 +58,28 @@
 
                     // Validate file is an image
                     if (!file.type.startsWith('image/')) {
-                        alert('Please select a valid image file');
+                        showAlert('Error', 'Please select a valid image file', 'error');
                         photoInput.value = '';
                         return;
                     }
 
-                    // Show Preview
+                    // Show Preview in all locations immediately
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        const img = new Image();
-                        img.onload = function() {
-                            previewContainer.innerHTML = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
-                            photoActions.classList.remove('hidden');
-                            statusIndicator.classList.add('hidden');
-                        };
-                        img.onerror = function() {
-                            alert('Invalid image file');
-                            photoInput.value = '';
-                        };
-                        img.src = event.target.result;
-                    };
-                    reader.onerror = function(e) {
-                        console.error('FileReader error:', e);
-                        alert('Error reading file');
+                        const avatarHtml = `<img src="${event.target.result}" class="w-full h-full object-cover">`;
+                        
+                        // 1. Update Preview in form
+                        previewContainer.innerHTML = avatarHtml;
+                        
+                        // 2. Update Topbar
+                        if (topbarAvatar) topbarAvatar.innerHTML = avatarHtml;
+                        
+                        // 3. Update Sidebars
+                        if (sidebarAvatar) sidebarAvatar.innerHTML = avatarHtml;
+                        if (sidebarV2Avatar) sidebarV2Avatar.innerHTML = avatarHtml;
+
+                        photoActions.classList.remove('hidden');
+                        statusIndicator.classList.add('hidden');
                     };
                     reader.readAsDataURL(file);
                 });
@@ -83,8 +89,12 @@
                     cancelBtn.addEventListener('click', function() {
                         // Reset file input
                         photoInput.value = '';
-                        // Restore original preview
+                        // Restore originals
                         previewContainer.innerHTML = originalPreviewContent;
+                        if (topbarAvatar) topbarAvatar.innerHTML = originalTopbarContent;
+                        if (sidebarAvatar) sidebarAvatar.innerHTML = originalSidebarContent;
+                        if (sidebarV2Avatar) sidebarV2Avatar.innerHTML = originalSidebarV2Content;
+
                         // Hide action buttons
                         photoActions.classList.add('hidden');
                         statusIndicator.classList.add('hidden');
@@ -96,7 +106,7 @@
                     saveBtn.addEventListener('click', async function() {
                         const file = photoInput.files[0];
                         if (!file) {
-                            alert('No file selected');
+                            showAlert('Warning', 'No file selected', 'warning');
                             return;
                         }
 
@@ -114,6 +124,7 @@
                         formData.append('profile_photo', file);
                         formData.append('name', nameInput.value);
                         formData.append('email', emailInput.value);
+                        formData.append('_method', 'PATCH'); // Use POST with _method for reliable file upload
 
                         // UI Updates
                         saveBtn.disabled = true;
@@ -124,7 +135,7 @@
 
                         try {
                             const response = await fetch('{{ route("tenant.profile.update") }}', {
-                                method: 'PATCH',
+                                method: 'POST', // Use POST for FormData with files
                                 headers: {
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -138,24 +149,41 @@
                                 statusIndicator.textContent = 'PHOTO SAVED SUCCESSFULLY';
                                 statusIndicator.style.color = '#22c55e';
                                 
+                                // Update all avatars immediately
+                                if (data.profile_photo_url) {
+                                    const cacheUrl = data.profile_photo_url + (data.profile_photo_url.includes('?') ? '&' : '?') + 't=' + Date.now();
+                                    const avatarHtml = `<img src="${cacheUrl}" class="w-full h-full object-cover">`;
+                                    
+                                    // 1. Update Preview
+                                    previewContainer.innerHTML = avatarHtml;
+                                    
+                                    // 2. Update Topbar
+                                    const topbarAvatar = document.querySelector('.topbar-btn.user .user-avatar');
+                                    if (topbarAvatar) {
+                                        topbarAvatar.innerHTML = avatarHtml;
+                                    }
+                                    
+                                    // 3. Update Sidebar Bottom (V1 & V2)
+                                    const sidebarAvatar = document.getElementById('sidebar-avatar');
+                                    if (sidebarAvatar) {
+                                        sidebarAvatar.innerHTML = avatarHtml;
+                                    }
+                                    const sidebarV2Avatar = document.getElementById('sidebar-v2-avatar');
+                                    if (sidebarV2Avatar) {
+                                        sidebarV2Avatar.innerHTML = avatarHtml;
+                                    }
+
+                                    // Update original contents for next preview/cancel cycle
+                                    originalTopbarContent = avatarHtml;
+                                    originalSidebarContent = avatarHtml;
+                                    originalSidebarV2Content = avatarHtml;
+                                }
+
                                 // Delay before resetting to let user see success message
                                 setTimeout(() => {
                                     // Reset input and hide actions
                                     photoInput.value = '';
                                     photoActions.classList.add('hidden');
-                                    
-                                    // Update preview with new photo URL (add cache buster)
-                                    if (data.profile_photo_url) {
-                                        const cacheUrl = data.profile_photo_url + (data.profile_photo_url.includes('?') ? '&' : '?') + 't=' + Date.now();
-                                        previewContainer.innerHTML = `<img src="${cacheUrl}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '<div style=\\"color: var(--accent); font-weight: bold;\\">' + String.fromCharCode(65) + '</div>'">`;
-                                        
-                                        // Update topbar if it exists
-                                        const topbarAvatar = document.querySelector('.topbar-btn.user .user-avatar');
-                                        if (topbarAvatar) {
-                                            topbarAvatar.innerHTML = `<img src="${cacheUrl}" class="w-full h-full object-cover">`;
-                                        }
-                                    }
-                                    
                                     statusIndicator.classList.add('hidden');
                                 }, 1500);
                             } else {

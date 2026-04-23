@@ -156,7 +156,7 @@
 
     <div class="p-6 mt-auto border-t" style="border-color: var(--sidebar-border); background: rgba(0, 0, 0, 0.12);">
         <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full shadow-md flex items-center justify-center text-white font-black overflow-hidden"
+            <div class="w-10 h-10 rounded-full shadow-md flex items-center justify-center text-white font-black overflow-hidden" id="sidebar-v2-avatar"
                  style="background: linear-gradient(135deg, var(--accent), rgba(var(--accent-rgb), 0.55));">
                 @if(auth()->user()->profile_photo)
                     <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">

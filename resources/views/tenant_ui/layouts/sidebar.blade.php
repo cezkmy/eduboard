@@ -181,6 +181,22 @@
 
             <div class="sidebar-label">System</div>
 
+            @if(auth()->user()->hasPermission('page_admin_settings'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.system.update') }}"
+                class="sidebar-item {{ request()->routeIs('tenant.admin.system.update') ? 'active' : '' }}" @if($isLocked)
+                style="opacity: 0.5; pointer-events: none;" tabindex="-1" @endif>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
+                    style="width: 20px; height: 20px;">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                System Update
+                @if(tenant('previous_version'))
+                    <span style="display: inline-flex; height: 10px; width: 10px; border-radius: 9999px; background-color: #f59e0b; margin-left: auto;"></span>
+                @endif
+            </a>
+            @endif
+
             <a href="{{ route('tenant.admin.subscription') }}"
                 class="sidebar-item {{ request()->routeIs('tenant.admin.subscription') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
@@ -275,15 +291,19 @@
     </nav>
 
     <div class="sidebar-footer">
-        <div class="sidebar-user">
-            <div class="user-avatar">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+        <a href="{{ route('tenant.profile.edit') }}" class="sidebar-user">
+            <div class="user-avatar overflow-hidden" id="sidebar-avatar" style="background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                @if(auth()->user()->profile_photo)
+                    <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
+                @else
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                @endif
             </div>
             <div class="user-info">
                 <span class="name">{{ auth()->user()->name }}</span>
                 <span class="role">{{ ucfirst(auth()->user()->role) }}</span>
             </div>
-        </div>
+        </a>
     </div>
 </aside>
 @endif

@@ -91,12 +91,16 @@
                         @foreach($users as $user)
                         <tr class="user-row" data-role="{{ $user->is_admin ? 'Admin' : 'User' }}">
                             <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded">
-                                        <i class="bi bi-person text-primary"></i>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="user-avatar overflow-hidden" style="width: 38px; height: 38px; background: var(--primary); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                                        @if($user->profile_photo)
+                                            <img src="{{ asset('storage/' . $user->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr($user->name, 0, 1) }}'">
+                                        @else
+                                            {{ substr($user->name, 0, 1) }}
+                                        @endif
                                     </div>
                                     <div>
-                                        <span class="fw-medium d-block">{{ $user->name }}</span>
+                                        <span class="fw-medium d-block text-dark">{{ $user->name }}</span>
                                         <small class="text-secondary">{{ $user->email }}</small>
                                     </div>
                                 </div>

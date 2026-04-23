@@ -30,6 +30,25 @@ class CheckTenantStatus
         $isDeactivated = ($tenant->status === 'Deactivated');
         $expiresAt = $tenant->expires_at ? Carbon::parse($tenant->expires_at) : null;
         $isExpired = $expiresAt && $expiresAt->isPast();
+        $isUpdating = (bool) ($tenant->getAttribute('is_updating') ?? false);
+
+        if ($isUpdating) {
+            $allowedDuringUpdate = [
+                'admin/version/apply',
+                'admin/version/rollback',
+                'logout',
+            ];
+
+            foreach ($allowedDuringUpdate as $path) {
+                if ($request->is($path) || $request->is(trim($path, '/') . '/*')) {
+                    return $next($request);
+                }
+            }
+
+            return response()->view('errors.tenant-unavailable', [
+                'message' => $tenant->getAttribute('updating_message') ?: 'This tenant is currently updating. Please try again in a few moments.',
+            ]);
+        }
 
         // If Tenant is in a Problematic State (Deactivated OR Expired)
         if ($isDeactivated || $isExpired) {

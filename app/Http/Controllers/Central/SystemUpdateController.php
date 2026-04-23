@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ManualRollbackJob;
 use Illuminate\Http\Request;
 use App\Services\GitHubService;
 use App\Jobs\SystemUpdateJob;
+use App\Models\CentralSetting;
 use App\Models\UpdateLog;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
@@ -14,7 +16,7 @@ class SystemUpdateController extends Controller
 {
     public function index()
     {
-        $currentVersion = config('app.version', 'v1.0.0');
+        $currentVersion = CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
         $release = GitHubService::getLatestRelease(true);
         $latestVersion = $release['tag_name'] ?? $currentVersion;
 
@@ -23,11 +25,11 @@ class SystemUpdateController extends Controller
         $v2 = ltrim($currentVersion, 'vV');
 
         $hasUpdate = version_compare($v1, $v2, '>');
-        $autoUpdate = \App\Models\CentralSetting::get('github_auto_update', config('services.github.auto_update', false));
+        $autoUpdate = CentralSetting::get('github_auto_update', config('services.github.auto_update', false));
         
         $rollbackAvailable = false;
-        $rollbackVersion = \App\Models\CentralSetting::get('latest_stable_version');
-        $backupPath = \App\Models\CentralSetting::get('latest_stable_backup');
+        $rollbackVersion = CentralSetting::get('latest_stable_version');
+        $backupPath = CentralSetting::get('latest_stable_backup');
         
         if ($backupPath && File::exists($backupPath)) {
             $rollbackAvailable = true;
@@ -38,13 +40,13 @@ class SystemUpdateController extends Controller
 
     public function rollback(Request $request)
     {
-        $backupPath = \App\Models\CentralSetting::get('latest_stable_backup');
+        $backupPath = CentralSetting::get('latest_stable_backup');
         if (!$backupPath || !File::exists($backupPath)) {
             return response()->json(['success' => false, 'message' => 'No rollback point available.']);
         }
 
         $updateId = Str::uuid()->toString();
-        \App\Jobs\ManualRollbackJob::dispatch($updateId, $backupPath);
+        ManualRollbackJob::dispatch($updateId, $backupPath);
 
         return response()->json([
             'success' => true,
@@ -56,14 +58,14 @@ class SystemUpdateController extends Controller
     public function toggleAutoUpdate(Request $request)
     {
         $enabled = $request->boolean('enabled');
-        \App\Models\CentralSetting::set('github_auto_update', $enabled);
+        CentralSetting::set('github_auto_update', $enabled);
 
         return response()->json(['success' => true, 'enabled' => $enabled]);
     }
 
     public function trigger(Request $request)
     {
-        $release = GitHubService::getLatestRelease();
+        $release = GitHubService::getLatestRelease(true);
         if (!$release || empty($release['zipball_url'])) {
             return response()->json(['success' => false, 'message' => 'Unable to fetch the latest release zipball URL.']);
         }
@@ -85,7 +87,14 @@ class SystemUpdateController extends Controller
         $logs = UpdateLog::where('update_id', $updateId)->orderBy('created_at', 'asc')->orderBy('id', 'asc')->get();
         // Check if there's a finalized message indicating completion or error
         $isFinished = $logs->contains(function ($log) {
-            return str_contains(strtolower($log->message), 'has been completed successfully') || str_contains(strtolower($log->message), 'rollback completed');
+            $message = strtolower($log->message);
+
+            return str_contains($message, 'has been completed successfully')
+                || str_contains($message, 'rollback completed')
+                || str_contains($message, 'rollback has been completed successfully')
+                || str_contains($message, 'fatal update error')
+                || str_contains($message, 'critical: rollback failed')
+                || str_contains($message, 'rollback error');
         });
 
         return response()->json([

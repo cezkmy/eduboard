@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use App\Models\CentralSetting;
 use App\Models\UpdateLog;
 use ZipArchive;
 use Exception;
@@ -48,6 +49,12 @@ class ManualRollbackJob implements ShouldQueue
                 $zip->close();
             } else {
                 throw new Exception("Failed to open backup zip for rollback.");
+            }
+
+            $rollbackVersion = CentralSetting::get('latest_stable_version');
+            if ($rollbackVersion) {
+                CentralSetting::set('system_version', $rollbackVersion);
+                CentralSetting::set('last_notified_version', $rollbackVersion);
             }
 
             // Run Migrations/Cleanup after restoration

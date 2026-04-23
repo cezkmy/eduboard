@@ -53,8 +53,7 @@
         </div>
         <h2 class="fw-bold mb-3">Site Unavailable</h2>
         <p class="text-secondary mb-4">
-            This site is currently unavailable. Please contact your administrator or school representative for more
-            information.
+            {{ $message ?? 'This site is currently unavailable. Please contact your administrator or school representative for more information.' }}
         </p>
 
         @auth

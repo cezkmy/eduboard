@@ -17,15 +17,15 @@
         <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
             <div class="card-body text-white">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="text-white-50 small fw-medium text-uppercase tracking-wider">Installed Version</span>
+                    <span class="text-white-50 small fw-medium text-uppercase tracking-wider">Core Base Version</span>
                     <i class="bi bi-motherboard text-white-50"></i>
                 </div>
-                <div class="h3 fw-bold mb-1">{{ config('app.version', 'v1.0.0') }}</div>
+                <div class="h3 fw-bold mb-1">{{ \App\Models\CentralSetting::get('system_version', config('app.version', 'v1.0.0')) }}</div>
                 <div class="d-flex align-items-center gap-1 small text-white-50">
-                    @if(version_compare($latestRelease['tag_name'] ?? config('app.version', 'v1.0.0'), config('app.version', 'v1.0.0'), '>'))
+                    @if(version_compare($latestRelease['tag_name'] ?? \App\Models\CentralSetting::get('system_version', config('app.version', 'v1.0.0')), \App\Models\CentralSetting::get('system_version', config('app.version', 'v1.0.0')), '>'))
                         <span class="text-warning"><i class="bi bi-exclamation-circle-fill me-1"></i> Update Available: {{ $latestRelease['tag_name'] }}</span>
                     @else
-                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> System Up to Date</span>
+                        <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Base Core Up to Date</span>
                     @endif
                 </div>
                 <div class="mt-2 pt-2 border-top border-white-10 text-white-50 d-flex justify-content-between align-items-center" style="font-size: 0.65rem;">
