@@ -513,13 +513,13 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
 
         Route::post('/profile/security', function (\Illuminate\Http\Request $request) {
             if (!auth()->user()->hasPermission('page_profile')) abort(403, 'Unauthorized.');
-            return app(App\Http\Controllers\AuthController::class)->updateSecurity($request);
+            return app(App\Http\Controllers\AuthController::class)->updatePassword($request);
         })->name('profile.security');
 
         // Backward-compatible password update route used by profile partials.
         Route::put('/password', function (\Illuminate\Http\Request $request) {
             if (!auth()->user()->hasPermission('page_profile')) abort(403, 'Unauthorized.');
-            return app(App\Http\Controllers\AuthController::class)->updateSecurity($request);
+            return app(App\Http\Controllers\AuthController::class)->updatePassword($request);
         })->name('password.update');
     });
 

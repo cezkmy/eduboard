@@ -251,31 +251,43 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
-    // Enable delete button only when DELETE is typed
-    document.getElementById('confirmDelete').addEventListener('input', function(e) {
-        document.getElementById('deleteBtn').disabled = e.target.value !== 'DELETE';
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable delete button only when DELETE is typed
+        const confirmDelete = document.getElementById('confirmDelete');
+        if (confirmDelete) {
+            confirmDelete.addEventListener('input', function(e) {
+                document.getElementById('deleteBtn').disabled = e.target.value !== 'DELETE';
+            });
+        }
 
-    // Profile Photo Preview
-    document.getElementById('profile_photo_input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            const previewImage = document.getElementById('profile_preview_image');
-            const placeholder = document.getElementById('profile_placeholder');
-            
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                previewImage.classList.remove('d-none');
-                if (placeholder) {
-                    placeholder.classList.add('d-none');
+        // Profile Photo Preview
+        const photoInput = document.getElementById('profile_photo_input');
+        const previewImage = document.getElementById('profile_preview_image');
+        const placeholder = document.getElementById('profile_placeholder');
+
+        if (photoInput) {
+            photoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (previewImage) {
+                            previewImage.src = e.target.result;
+                            previewImage.classList.remove('d-none');
+                        }
+                        if (placeholder) {
+                            placeholder.classList.add('d-none');
+                        }
+                    }
+                    reader.readAsDataURL(file);
                 }
-            }
-            reader.readAsDataURL(file);
+            });
         }
     });
 </script>
+@endpush
 @endsection
 
 

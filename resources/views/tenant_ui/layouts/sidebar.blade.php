@@ -191,7 +191,18 @@
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 System Update
-                @if(tenant('previous_version'))
+                @php
+                    $tenantVersion = tenant('system_version') ?? config('app.version', 'v1.0.0');
+                    $latestVersion = \App\Models\CentralSetting::get('system_version', $tenantVersion);
+                    $hasUpdate = version_compare(ltrim($latestVersion, 'vV'), ltrim($tenantVersion, 'vV'), '>');
+                @endphp
+                @if($hasUpdate)
+                    <span style="display: flex; height: 10px; width: 10px; position: relative; margin-left: auto;">
+                        <span style="animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; position: absolute; display: inline-flex; height: 100%; width: 100%; border-radius: 9999px; background-color: #f87171; opacity: 0.75;"></span>
+                        <span style="position: relative; display: inline-flex; border-radius: 9999px; height: 10px; width: 10px; background-color: #ef4444;"></span>
+                    </span>
+                    <style>@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }</style>
+                @elseif(tenant('previous_version'))
                     <span style="display: inline-flex; height: 10px; width: 10px; border-radius: 9999px; background-color: #f59e0b; margin-left: auto;"></span>
                 @endif
             </a>
@@ -217,13 +228,7 @@
                         d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
                 </svg>
                 Settings
-                @if(tenant('system_version') === 'v1.0')
-                    <span style="display: flex; height: 10px; width: 10px; position: relative; margin-left: auto;">
-                        <span style="animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; position: absolute; display: inline-flex; height: 100%; width: 100%; border-radius: 9999px; background-color: #f87171; opacity: 0.75;"></span>
-                        <span style="position: relative; display: inline-flex; border-radius: 9999px; height: 10px; width: 10px; background-color: #ef4444;"></span>
-                    </span>
-                    <style>@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }</style>
-                @endif
+
                 @if($isLocked)
                     <svg class="w-4 h-4 ml-auto" style="margin-left: auto;" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"

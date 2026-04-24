@@ -31,77 +31,110 @@ class CategorySeeder extends Seeder
             );
         }
 
-        // Higher Education Structures (Colleges)
+        // College Structures
         $colleges = [
-            ['name' => 'COT', 'type' => 'college'],
-            ['name' => 'COB', 'type' => 'college'],
-            ['name' => 'CON', 'type' => 'college'],
-            ['name' => 'COE', 'type' => 'college'],
-            ['name' => 'CAS', 'type' => 'college'],
+            ['name' => 'COT', 'type' => 'college', 'educational_level' => 'college'],
+            ['name' => 'COB', 'type' => 'college', 'educational_level' => 'college'],
+            ['name' => 'CON', 'type' => 'college', 'educational_level' => 'college'],
+            ['name' => 'COE', 'type' => 'college', 'educational_level' => 'college'],
+            ['name' => 'CAS', 'type' => 'college', 'educational_level' => 'college'],
+            // K-12 Departments (reusing the 'college' type which represents the top-level organization/department)
+            ['name' => 'Elementary Department', 'type' => 'college', 'educational_level' => 'elementary'],
+            ['name' => 'Junior High Department', 'type' => 'college', 'educational_level' => 'junior_high'],
+            ['name' => 'Senior High Department', 'type' => 'college', 'educational_level' => 'senior_high'],
         ];
 
         foreach ($colleges as $college) {
-            Category::updateOrCreate(['name' => $college['name'], 'type' => $college['type']]);
+            Category::updateOrCreate(
+                ['name' => $college['name'], 'type' => $college['type']],
+                ['educational_level' => $college['educational_level']]
+            );
         }
 
-        // Year Levels (College)
-        $yearLevels = [
-            ['name' => '1st Year', 'type' => 'level'],
-            ['name' => '2nd Year', 'type' => 'level'],
-            ['name' => '3rd Year', 'type' => 'level'],
-            ['name' => '4th Year', 'type' => 'level'],
-            ['name' => '5th Year', 'type' => 'level'],
-        ];
-
-        foreach ($yearLevels as $level) {
-            Category::updateOrCreate(['name' => $level['name'], 'type' => $level['type']]);
-        }
-
-        // Grade Levels (High School)
-        $gradeLevels = [
-            ['name' => 'Grade 11', 'type' => 'grade_level'],
-            ['name' => 'Grade 12', 'type' => 'grade_level'],
-        ];
-
-        foreach ($gradeLevels as $level) {
-            Category::updateOrCreate(['name' => $level['name'], 'type' => $level['type']]);
-        }
-
-        // Strands (High School)
-        $strands = [
-            ['name' => 'STEM', 'type' => 'strand'],
-            ['name' => 'ABM', 'type' => 'strand'],
-            ['name' => 'HUMSS', 'type' => 'strand'],
-            ['name' => 'GAS', 'type' => 'strand'],
-            ['name' => 'TVL', 'type' => 'strand'],
-        ];
-
-        foreach ($strands as $strand) {
-            Category::updateOrCreate(['name' => $strand['name'], 'type' => $strand['type']]);
-        }
-
-        // Programs (College)
+        // College Programs
         $programs = [
-            ['name' => 'BSIT', 'type' => 'program'],
-            ['name' => 'BSCS', 'type' => 'program'],
-            ['name' => 'BSBA', 'type' => 'program'],
-            ['name' => 'BSN', 'type' => 'program'],
-            ['name' => 'BSED', 'type' => 'program'],
+            ['name' => 'BSIT', 'type' => 'program', 'educational_level' => 'college'],
+            ['name' => 'BSCS', 'type' => 'program', 'educational_level' => 'college'],
+            ['name' => 'BSBA', 'type' => 'program', 'educational_level' => 'college'],
+            ['name' => 'BSN', 'type' => 'program', 'educational_level' => 'college'],
+            ['name' => 'BSED', 'type' => 'program', 'educational_level' => 'college'],
         ];
 
         foreach ($programs as $program) {
-            Category::updateOrCreate(['name' => $program['name'], 'type' => $program['type']]);
+            Category::updateOrCreate(
+                ['name' => $program['name'], 'type' => $program['type']],
+                ['educational_level' => $program['educational_level']]
+            );
         }
 
-        // Sections
+        // College Year Levels
+        $yearLevels = [
+            ['name' => '1st Year', 'type' => 'level', 'educational_level' => 'college'],
+            ['name' => '2nd Year', 'type' => 'level', 'educational_level' => 'college'],
+            ['name' => '3rd Year', 'type' => 'level', 'educational_level' => 'college'],
+            ['name' => '4th Year', 'type' => 'level', 'educational_level' => 'college'],
+            ['name' => '5th Year', 'type' => 'level', 'educational_level' => 'college'],
+        ];
+
+        foreach ($yearLevels as $level) {
+            Category::updateOrCreate(
+                ['name' => $level['name'], 'type' => $level['type']],
+                ['educational_level' => $level['educational_level']]
+            );
+        }
+
+        // College Sections
         $sections = [
-            ['name' => 'Section A', 'type' => 'section'],
-            ['name' => 'Section B', 'type' => 'section'],
-            ['name' => 'Section C', 'type' => 'section'],
+            ['name' => 'Section A', 'type' => 'section', 'educational_level' => 'college'],
+            ['name' => 'Section B', 'type' => 'section', 'educational_level' => 'college'],
+            ['name' => 'Section C', 'type' => 'section', 'educational_level' => 'college'],
         ];
 
         foreach ($sections as $section) {
-            Category::updateOrCreate(['name' => $section['name'], 'type' => $section['type']]);
+            Category::updateOrCreate(
+                ['name' => $section['name'], 'type' => $section['type']],
+                ['educational_level' => $section['educational_level']]
+            );
+        }
+
+        // Elementary (Grade 1-6)
+        for ($i = 1; $i <= 6; $i++) {
+            Category::updateOrCreate(
+                ['name' => "Grade $i", 'type' => 'grade_level'],
+                ['educational_level' => 'elementary']
+            );
+        }
+
+        // Junior High (Grade 7-10)
+        for ($i = 7; $i <= 10; $i++) {
+            Category::updateOrCreate(
+                ['name' => "Grade $i", 'type' => 'grade_level'],
+                ['educational_level' => 'junior_high']
+            );
+        }
+
+        // Senior High (Grade 11-12)
+        for ($i = 11; $i <= 12; $i++) {
+            Category::updateOrCreate(
+                ['name' => "Grade $i", 'type' => 'grade_level'],
+                ['educational_level' => 'senior_high']
+            );
+        }
+
+        // Senior High Strands
+        $strands = [
+            ['name' => 'STEM', 'type' => 'strand', 'educational_level' => 'senior_high'],
+            ['name' => 'ABM', 'type' => 'strand', 'educational_level' => 'senior_high'],
+            ['name' => 'HUMSS', 'type' => 'strand', 'educational_level' => 'senior_high'],
+            ['name' => 'GAS', 'type' => 'strand', 'educational_level' => 'senior_high'],
+            ['name' => 'TVL', 'type' => 'strand', 'educational_level' => 'senior_high'],
+        ];
+
+        foreach ($strands as $strand) {
+            Category::updateOrCreate(
+                ['name' => $strand['name'], 'type' => $strand['type']],
+                ['educational_level' => $strand['educational_level']]
+            );
         }
     }
 }

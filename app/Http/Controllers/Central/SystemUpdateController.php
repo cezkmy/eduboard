@@ -20,6 +20,17 @@ class SystemUpdateController extends Controller
         $release = GitHubService::getLatestRelease(true);
         $latestVersion = $release['tag_name'] ?? $currentVersion;
 
+        if ($release && !empty($release['tag_name'])) {
+            $releaseList = CentralSetting::getJson('github_releases', []);
+            $releaseCollection = collect($releaseList)->keyBy('tag_name');
+            
+            if (!$releaseCollection->has($release['tag_name'])) {
+                $releaseCollection->put($release['tag_name'], $release);
+                CentralSetting::setJson('github_releases', $releaseCollection->values()->all());
+                CentralSetting::set('system_version', $release['tag_name']);
+            }
+        }
+
         // Normalize versions by removing 'v' prefix for comparison
         $v1 = ltrim($latestVersion, 'vV');
         $v2 = ltrim($currentVersion, 'vV');

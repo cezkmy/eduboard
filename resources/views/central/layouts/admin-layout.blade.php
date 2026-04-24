@@ -402,7 +402,7 @@
                 <a href="{{ route('central.admin.profile') }}" class="sidebar-user">
                     <div class="avatar overflow-hidden" id="sidebar-avatar" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                         @if(auth()->user()->profile_photo)
-                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
+                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-100 h-100 object-fit-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
                         @else
                             {{ substr(auth()->user()->name, 0, 1) }}
                         @endif
@@ -498,7 +498,7 @@
                             </div>
                             <div class="user-avatar overflow-hidden" id="topbar-avatar" style="background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                                 @if(auth()->user()->profile_photo)
-                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-100 h-100 object-fit-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ substr(auth()->user()->name, 0, 1) }}'">
                                 @else
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 @endif

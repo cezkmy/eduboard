@@ -38,12 +38,19 @@ class OrganizationController extends Controller
             abort(403, 'Unauthorized.');
         }
 
+        if (!tenant()->hasFeature('categories')) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Categories feature is not available on your current plan.'], 403);
+            }
+            abort(403, 'Upgrade your plan to access Categories.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string',
             'color' => 'nullable|string',
             'parent_id' => 'nullable|exists:categories,id',
-            'educational_level' => 'nullable|in:elementary,secondary,tertiary'
+            'educational_level' => 'nullable|in:elementary,junior_high,senior_high,college'
         ]);
 
         Category::create($request->all());
@@ -84,16 +91,16 @@ class OrganizationController extends Controller
             }
         } elseif ($type === 'jhs') {
             for ($i = 7; $i <= 10; $i++) {
-                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level', 'educational_level' => 'secondary']); $created++;
+                Category::firstOrCreate(['name' => "Grade $i", 'type' => 'grade_level', 'educational_level' => 'junior_high']); $created++;
             }
         } elseif ($type === 'shs') {
-            Category::firstOrCreate(['name' => "Grade 11", 'type' => 'grade_level', 'educational_level' => 'secondary']);
-            Category::firstOrCreate(['name' => "Grade 12", 'type' => 'grade_level', 'educational_level' => 'secondary']);
+            Category::firstOrCreate(['name' => "Grade 11", 'type' => 'grade_level', 'educational_level' => 'senior_high']);
+            Category::firstOrCreate(['name' => "Grade 12", 'type' => 'grade_level', 'educational_level' => 'senior_high']);
             $created += 2;
         } elseif ($type === 'college') {
-            $levels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+            $levels = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'];
             foreach ($levels as $level) {
-                Category::firstOrCreate(['name' => $level, 'type' => 'level', 'educational_level' => 'tertiary']); $created++;
+                Category::firstOrCreate(['name' => $level, 'type' => 'level', 'educational_level' => 'college']); $created++;
             }
         }
 
@@ -107,6 +114,13 @@ class OrganizationController extends Controller
                 return response()->json(['error' => 'Unauthorized. You do not have permission to delete categories.'], 403);
             }
             abort(403, 'Unauthorized.');
+        }
+
+        if (!tenant()->hasFeature('categories')) {
+            if (request()->expectsJson()) {
+                return response()->json(['error' => 'Categories feature is not available on your current plan.'], 403);
+            }
+            abort(403, 'Upgrade your plan to access Categories.');
         }
 
         $category->delete();

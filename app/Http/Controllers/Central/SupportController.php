@@ -110,7 +110,9 @@ class SupportController extends Controller
         if ($me->is_admin) {
             CentralSupportMessage::where('conversation_id', $ticketId)
                 ->where('from_user_id', '!=', $me->id)
-                ->whereIn('to_user_id', [null, $me->id])
+                ->where(function($q) use ($me) {
+                    $q->whereNull('to_user_id')->orWhere('to_user_id', $me->id);
+                })
                 ->where('is_read', false)
                 ->update(['is_read' => true]);
         } else {

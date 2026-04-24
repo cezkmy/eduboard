@@ -248,6 +248,22 @@ class UserController extends Controller
             'status' => 'required|string|in:active,inactive'
         ]);
 
+        if ($request->role === 'admin') {
+            $limit = tenant()->getLimit('admins');
+            $currentCount = User::where('role', 'admin')->whereNull('deleted_at')->count();
+            if ($limit !== -1 && $currentCount >= $limit) {
+                return response()->json(['error' => "Plan limit reached: You can only have up to {$limit} admins. Please upgrade your plan."], 403);
+            }
+        }
+
+        if ($request->role === 'teacher') {
+            $limit = tenant()->getLimit('teachers');
+            $currentCount = User::where('role', 'teacher')->whereNull('deleted_at')->count();
+            if ($limit !== -1 && $currentCount >= $limit) {
+                return response()->json(['error' => "Plan limit reached: You can only have up to {$limit} teachers. Please upgrade your plan."], 403);
+            }
+        }
+
         // Automatically generate a secure password if not provided
         $plainPassword = $request->password ?: \Illuminate\Support\Str::random(10);
 

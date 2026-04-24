@@ -69,7 +69,6 @@
                         </span>
                         <select class="form-select text-secondary small" id="planFilter" onchange="filterPayments()">
                             <option value="all">All Plans</option>
-                            <option value="Basic">Basic</option>
                             <option value="Pro">Pro</option>
                             <option value="Ultimate">Ultimate</option>
                         </select>

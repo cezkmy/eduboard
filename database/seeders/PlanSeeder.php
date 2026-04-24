@@ -15,52 +15,51 @@ class PlanSeeder extends Seeder
         $plans = [
             [
                 'name' => 'Basic',
-                'price' => '₱999',
-                'period' => '/mo',
+                'price' => 'Free',
+                'period' => '',
                 'is_popular' => false,
                 'features' => [
                     '1 Admin, 5 Teachers',
-                    'Image uploads only',
-                    'Custom logo',
+                    'Teacher upload enabled',
+                    'Image uploads only (JPEG, PNG)',
                     'Light & Dark mode',
                     'Pin announcements',
-                    'Timeline view',
-                    '30 Days Free Trial'
+                    'Timeline view'
                 ]
             ],
             [
                 'name' => 'Pro',
-                'price' => '₱2,499',
+                'price' => '₱199',
                 'period' => '/mo',
                 'is_popular' => true,
                 'features' => [
                     '5 Admins, 15 Teachers',
-                    'Image & Video uploads',
-                    'Categories',
-                    'Theme customization',
+                    'Teacher upload enabled',
+                    'Image & Video uploads (MP4 max 100MB)',
                     'Custom logo',
                     'Light & Dark mode',
                     'Pin announcements',
                     'Timeline view',
-                    'Reports',
+                    'Announcement categories',
+                    'Background theme customization'
                 ]
             ],
             [
                 'name' => 'Ultimate',
-                'price' => '₱4,999',
+                'price' => '₱299',
                 'period' => '/mo',
                 'is_popular' => false,
                 'features' => [
-                    '10 Admins, ∞ Teachers',
-                    'Image & Video uploads',
-                    'Categories',
-                    'Theme customization',
-                    'Pre-built templates',
+                    '10 Admins, Unlimited Teachers',
+                    'Teacher upload enabled',
+                    'Image & Video uploads (MP4 max 100MB)',
                     'Custom logo',
                     'Light & Dark mode',
                     'Pin announcements',
                     'Timeline view',
-                    'Reports',
+                    'Announcement categories',
+                    'Background theme customization',
+                    'Pre-built announcement templates'
                 ]
             ],
         ];

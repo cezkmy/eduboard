@@ -20,6 +20,9 @@ class SettingsController extends Controller
 
             // Validate logo if uploaded
             if ($request->hasFile('logo')) {
+                if (!tenant()->hasFeature('custom_logo')) {
+                    return back()->with('error', 'Custom logo is not available on your current plan. Please upgrade to Pro.');
+                }
                 $request->validate([
                     'logo' => 'file|mimes:png,jpg,jpeg|max:102400', // 100MB max
                 ]);
@@ -83,10 +86,14 @@ class SettingsController extends Controller
 
             $tenant = tenant();
             $appearanceData = [];
+            
             if ($request->has('theme')) {
                 $appearanceData['theme_preference'] = $request->theme;
             }
             if ($request->has('theme_color')) {
+                if (!tenant()->hasFeature('theme_customization')) {
+                    return back()->with('error', 'Background theme customization is not available on your current plan. Please upgrade to Pro.');
+                }
                 $appearanceData['theme_color'] = $request->theme_color;
             }
 

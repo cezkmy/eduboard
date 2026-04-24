@@ -90,20 +90,20 @@
                 },
 
                 get filteredColleges() {
-                    const target = this.schoolLevel === 'college' ? 'tertiary' : (this.schoolLevel === 'elementary' ? 'elementary' : 'secondary');
+                    const target = this.schoolLevel === 'college' ? 'college' : (this.schoolLevel === 'elementary' ? 'elementary' : (this.schoolLevel === 'jhs' ? 'junior_high' : 'senior_high'));
                     return this.allColleges.filter(c => c.educational_level === target);
                 },
 
                 get filteredPrograms() {
-                    if (this.schoolLevel === 'shs') return this.allStrands.filter(s => s.educational_level === 'secondary');
-                    if (this.schoolLevel === 'college') return this.allPrograms.filter(p => p.educational_level === 'tertiary');
+                    if (this.schoolLevel === 'shs') return this.allStrands.filter(s => s.educational_level === 'senior_high');
+                    if (this.schoolLevel === 'college') return this.allPrograms.filter(p => p.educational_level === 'college');
                     return [];
                 },
 
                 get filteredLevels() {
-                    if (this.schoolLevel === 'college') return this.allYearLevels.filter(l => l.educational_level === 'tertiary');
+                    if (this.schoolLevel === 'college') return this.allYearLevels.filter(l => l.educational_level === 'college');
                     
-                    const target = this.schoolLevel === 'elementary' ? 'elementary' : 'secondary';
+                    const target = this.schoolLevel === 'elementary' ? 'elementary' : (this.schoolLevel === 'jhs' ? 'junior_high' : 'senior_high');
                     return this.allGradeLevels.filter(l => {
                         if (l.educational_level !== target) return false;
                         
@@ -120,7 +120,7 @@
                 },
 
                 get filteredSections() {
-                    const target = this.schoolLevel === 'college' ? 'tertiary' : (this.schoolLevel === 'elementary' ? 'elementary' : 'secondary');
+                    const target = this.schoolLevel === 'college' ? 'college' : (this.schoolLevel === 'elementary' ? 'elementary' : (this.schoolLevel === 'jhs' ? 'junior_high' : 'senior_high'));
                     return this.allSections.filter(s => s.educational_level === target);
                 },
 
@@ -292,12 +292,7 @@
                 checkLimit(role) {
                     const limits = { admin: window.__adminLimit, teacher: window.__teacherLimit };
                     const counts = { admin: window.__adminCount, teacher: window.__teacherCount };
-                    if (limits[role] !== -1 && counts[role] >= limits[role]) {
-                        this.limitMessage = 'You have reached the limit of ' + limits[role] + ' ' + role + 's for your current plan.';
-                        this.limitModal = true;
-                        return true;
-                    }
-                    return false;
+                    return (limits[role] !== -1 && counts[role] >= limits[role]);
                 },
 
                 saveUser() {

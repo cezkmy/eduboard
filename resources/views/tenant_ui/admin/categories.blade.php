@@ -11,20 +11,6 @@
                 <p class="content-subtitle text-gray-500 dark:text-gray-400 font-medium">Define your school's audience and category hierarchy</p>
             </div>
             <div class="flex items-center gap-3">
-                {{-- Quick Presets Dropdown/Actions --}}
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 transition-all flex items-center gap-2 border border-gray-200 dark:border-gray-700">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        Quick Presets
-                    </button>
-                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-[50] overflow-hidden p-2" x-cloak>
-                        <p class="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Generate Levels</p>
-                        <form action="{{ route('tenant.admin.categories.presets') }}" method="POST"> @csrf <button type="submit" name="type" value="elementary" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">Elementary (G1-G6)</button> </form>
-                        <form action="{{ route('tenant.admin.categories.presets') }}" method="POST"> @csrf <button type="submit" name="type" value="jhs" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">Junior High (G7-G10)</button> </form>
-                        <form action="{{ route('tenant.admin.categories.presets') }}" method="POST"> @csrf <button type="submit" name="type" value="shs" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">Senior High (G11-G12)</button> </form>
-                        <form action="{{ route('tenant.admin.categories.presets') }}" method="POST"> @csrf <button type="submit" name="type" value="college" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">College (1st-4th Year)</button> </form>
-                    </div>
-                </div>
 
                 <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);"
                         @click="selectedType = activeTab; modalTitle = 'Add ' + activeTab.replace('_', ' '); categoryName = ''; categoryModal = true">
@@ -145,8 +131,9 @@
                                 <select name="educational_level" x-model="selectedEducationalLevel"
                                         class="w-full bg-gray-50 dark:bg-gray-900 px-6 py-4 border-none rounded-2xl text-sm font-bold focus:ring-4 transition-all" style="--tw-ring-color: rgba(var(--accent-rgb), 0.10);">
                                     <option value="elementary">Elementary</option>
-                                    <option value="secondary">Secondary / High School</option>
-                                    <option value="tertiary">Tertiary / College</option>
+                                    <option value="junior_high">Junior High</option>
+                                    <option value="senior_high">Senior High</option>
+                                    <option value="college">College</option>
                                 </select>
                             </div>
                         </template>

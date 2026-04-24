@@ -72,15 +72,24 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function getActivePlan(): string
+    {
+        $plan = $this->plan ?? 'Basic';
+        if ($plan !== 'Basic' && $this->expires_at && \Carbon\Carbon::parse($this->expires_at)->isPast()) {
+            return 'Basic';
+        }
+        return $plan;
+    }
+
     public function hasFeature($feature): bool
     {
         $features = [
-            'Basic' => ['image_upload', 'pin_announcements', 'timeline_view', 'custom_logo', 'light_dark_mode'],
-            'Pro' => ['image_upload', 'video_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'pre_built_templates', 'custom_logo', 'light_dark_mode', 'reports'],
+            'Basic' => ['image_upload', 'pin_announcements', 'timeline_view', 'light_dark_mode'],
+            'Pro' => ['image_upload', 'video_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'custom_logo', 'light_dark_mode', 'reports'],
             'Ultimate' => ['image_upload', 'video_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'pre_built_templates', 'custom_logo', 'light_dark_mode', 'reports'],
         ];
 
-        $plan = $this->plan ?? 'Basic';
+        $plan = $this->getActivePlan();
         return in_array($feature, $features[$plan] ?? []);
     }
 
@@ -92,7 +101,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'Ultimate' => ['admins' => 10, 'teachers' => -1, 'templates' => -1], // -1 for unlimited
         ];
         
-        $plan = $this->plan ?? 'Basic';
+        $plan = $this->getActivePlan();
         return $limits[$plan][$type] ?? 0;
     }
 

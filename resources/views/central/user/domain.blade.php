@@ -65,8 +65,13 @@
                                         <h4 class="mb-0 fw-bold text-success text-break w-100" style="word-break: break-all;">
                                             @php
                                                 $displayDomain = auth()->user()->school_domain;
-                                                if ($displayDomain && str_contains($displayDomain, '.localhost') && str_contains($displayDomain, '_')) {
-                                                    $displayDomain = str_replace('_', '-', $displayDomain);
+                                                if ($displayDomain) {
+                                                    if (str_contains($displayDomain, '.localhost') && str_contains($displayDomain, '_')) {
+                                                        $displayDomain = str_replace('_', '-', $displayDomain);
+                                                    }
+                                                    if (str_contains($displayDomain, 'localhost') && !str_contains($displayDomain, ':')) {
+                                                        $displayDomain .= ':8000';
+                                                    }
                                                 }
                                             @endphp
                                             {{ $displayDomain }}

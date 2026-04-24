@@ -271,7 +271,8 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8',
+            'current_password' => 'nullable|required_with:new_password',
+            'new_password' => 'nullable|string|min:8|confirmed',
             'profile_photo' => 'nullable|image|max:2048',
             'employee_id' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
@@ -330,8 +331,12 @@ class AuthController extends Controller
             $user->settings = $settings;
         }
 
-        if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+        // Custom check for current password if new password is provided
+        if (!empty($validated['new_password'])) {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return back()->withErrors(['current_password' => 'The provided password does not match your current password.'])->withInput();
+            }
+            $user->password = Hash::make($validated['new_password']);
         }
         
         $user->save();
@@ -370,7 +375,7 @@ class AuthController extends Controller
                             ];
                             
                             // Only sync password if it was actually changed in the request
-                            if (!empty($validated['password'])) {
+                            if (!empty($validated['new_password'])) {
                                 $syncData['password'] = $user->password;
                             }
 
@@ -393,7 +398,7 @@ class AuthController extends Controller
                         ];
 
                         // Only sync password if it was actually changed in the request
-                        if (!empty($validated['password'])) {
+                        if (!empty($validated['new_password'])) {
                             $syncData['password'] = $user->password;
                         }
 

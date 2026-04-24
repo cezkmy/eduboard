@@ -97,14 +97,18 @@
                     <div class="mt-auto pt-3">
                         @if($isCurrent)
                             @if(auth()->user()->status === 'trial')
-                                <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">
-                                    <i class="bi bi-credit-card me-2"></i>ACTIVATE PLAN (₱999)
+                                <button class="btn btn-success w-100 fw-bold btn-action-plan" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}" data-bs-price="{{ $plan->price }}">
+                                    <i class="bi bi-credit-card me-2"></i>ACTIVATE PLAN
                                 </button>
                             @else
-                                <button class="btn btn-outline-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">MANAGE PLAN</button>
+                                <button class="btn btn-outline-success w-100 fw-bold disabled">CURRENT PLAN</button>
                             @endif
                         @else
-                            <button class="btn btn-success w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}">UPGRADE NOW</button>
+                            @if($plan->name === 'Basic')
+                                <button class="btn btn-outline-secondary w-100 fw-bold btn-action-plan" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}" data-bs-price="0">DOWNGRADE TO FREE</button>
+                            @else
+                                <button class="btn btn-success w-100 fw-bold btn-action-plan" data-bs-toggle="modal" data-bs-target="#upgradeModal" data-bs-plan="{{ $plan->name }}" data-bs-price="{{ $plan->price }}">UPGRADE NOW</button>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -122,12 +126,12 @@
             <!-- Step 1: Confirm -->
             <div id="modalStepConfirm">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Confirm Upgrade</h5>
+                    <h5 class="modal-title fw-bold" id="modalConfirmTitle">Confirm Upgrade</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body py-4">
-                    <p class="fs-5">Are you sure you want to upgrade to the <strong id="selectedPlanName" class="text-success"></strong> Plan?</p>
-                    <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 mt-3">
+                    <p class="fs-5" id="modalConfirmText">Are you sure you want to switch to the <strong id="selectedPlanName" class="text-success"></strong> Plan?</p>
+                    <div id="paymentNotice" class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 mt-3">
                         <i class="bi bi-info-circle-fill text-info me-2"></i>
                         You will be billed immediately and new features will unlock.
                     </div>
@@ -172,7 +176,18 @@
                 const button = event.relatedTarget;
                 if (button) {
                     selectedPlan = button.getAttribute('data-bs-plan');
+                    const planPrice = button.getAttribute('data-bs-price');
                     document.getElementById('selectedPlanName').textContent = selectedPlan;
+                    
+                    if (selectedPlan === 'Basic' || planPrice === '0' || planPrice === 'Free') {
+                        document.getElementById('modalConfirmTitle').textContent = 'Confirm Downgrade';
+                        document.getElementById('paymentNotice').classList.add('d-none');
+                        document.getElementById('btnConfirmPay').textContent = 'Confirm Downgrade';
+                    } else {
+                        document.getElementById('modalConfirmTitle').textContent = 'Confirm Upgrade';
+                        document.getElementById('paymentNotice').classList.remove('d-none');
+                        document.getElementById('btnConfirmPay').textContent = 'Pay & Upgrade';
+                    }
                 }
                 
                 // Reset states

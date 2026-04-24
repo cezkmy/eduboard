@@ -28,7 +28,7 @@
     x-data="supportChat()"
     x-init="init()"
     class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3 select-none"
-    style="font-family: 'Sora', sans-serif;"
+    style="font-family: 'Inter', sans-serif;"
 >
     {{-- ━━━━━ Chat Panel ━━━━━ --}}
     <div
@@ -263,7 +263,6 @@ function supportChat() {
             this.view = 'chat';
             this.loadMessages(conv.id, false);
             conv.unread_count = 0;
-            this.fetchUnread();
         },
 
         backToConversations() {
@@ -284,6 +283,7 @@ function supportChat() {
                     if (!silent || this.messages.length > prevLen) {
                         this.$nextTick(() => this.scrollToBottom());
                     }
+                    if (!silent) this.fetchUnread(); // Update unread count after messages are marked as read
                 });
         },
 

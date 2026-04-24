@@ -297,9 +297,9 @@ foreach (config('tenancy.central_domains') as $domain) {
                         $domain = \App\Models\Domain::where('domain', $host)->first();
                         if ($domain && $domain->tenant) {
                             $planPrice = match($request->plan) {
-                                'Pro' => 2499,
-                                'Ultimate' => 4999,
-                                'Basic' => 999,
+                                'Pro' => 199,
+                                'Ultimate' => 299,
+                                'Basic' => 0,
                                 default => 0
                             };
 

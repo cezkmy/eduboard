@@ -35,7 +35,14 @@ class AnnouncementController extends Controller
             'target_strand' => 'nullable|array',
             'target_section' => 'nullable|array',
             'target_roles' => 'nullable|array',
-            'media.*' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400',
+        ]);
+
+        $mediaRule = tenant()->hasFeature('video_upload') 
+            ? 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400' 
+            : 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240';
+
+        $request->validate([
+            'media.*' => $mediaRule,
         ]);
 
         if ($request->hasFile('media')) {

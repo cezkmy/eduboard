@@ -4,13 +4,10 @@
     <div class="admin-content" x-data="{ 
         upgradeModal: false, 
         storageModal: false,
-        bandwidthModal: false,
         step: 'select', 
         selectedPlan: 'Pro',
         selectedStorage: 0,
         selectedStoragePrice: 0,
-        selectedBandwidth: 0,
-        selectedBandwidthPrice: 0,
         isProcessing: false,
         processUpgrade() {
             this.step = 'confirm';
@@ -53,25 +50,7 @@
                 });
             }, 2500);
         },
-        confirmBandwidthPayment() {
-            this.step = 'processing';
-            this.isProcessing = true;
-            
-            setTimeout(() => {
-                fetch('{{ route('tenant.admin.bandwidth.purchase') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ gb: this.selectedBandwidth, price: this.selectedBandwidthPrice })
-                }).then(res => res.json())
-                .then(data => {
-                    this.step = 'success';
-                    this.isProcessing = false;
-                });
-            }, 2500);
-        },
+
         finishUpgrade() {
             window.location.reload();
         }
@@ -211,14 +190,9 @@
                         $limitGB = tenant()->storage_limit_gb ?? 5.0;
                         $percent = $limitGB > 0 ? min(100, ($usedGB / $limitGB) * 100) : 0;
                         $progressColor = $percent > 90 ? 'bg-red-500' : ($percent > 75 ? 'bg-yellow-400' : 'bg-[var(--accent)]');
-                        
-                        $limitBandwidth = tenant()->bandwidth_limit_gb ?? ($limitGB * 10);
-                        $usedBandwidth = tenant()->bandwidth_used_gb ?? ($usedGB * 1.5);
-                        $percentBandwidth = $limitBandwidth > 0 ? min(100, ($usedBandwidth / $limitBandwidth) * 100) : 0;
-                        $progressColorBandwidth = $percentBandwidth > 90 ? 'bg-red-500' : ($percentBandwidth > 75 ? 'bg-yellow-400' : 'bg-blue-500');
                     @endphp
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                    <div class="mt-6">
                         <div class="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col justify-between h-full">
                             <div>
                                 <div class="flex items-center justify-between mb-2">
@@ -234,22 +208,7 @@
                             </div>
                             <p class="text-xs font-bold text-gray-500 mt-1"><span class="text-gray-900 dark:text-white">{{ number_format($usedGB, 2) }} GB</span> / {{ number_format($limitGB, 2) }} GB Limit</p>
                         </div>
-                        
-                        <div class="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col justify-between h-full">
-                            <div>
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                                        Bandwidth
-                                    </h4>
-                                    <span class="text-[10px] font-bold text-gray-500">{{ number_format($percentBandwidth, 1) }}% Consumed</span>
-                                </div>
-                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2 overflow-hidden">
-                                    <div class="{{ $progressColorBandwidth }} h-2 rounded-full transition-all duration-1000" style="width: {{ $percentBandwidth }}%"></div>
-                                </div>
-                            </div>
-                            <p class="text-xs font-bold text-gray-500 mt-1"><span class="text-gray-900 dark:text-white">{{ number_format($usedBandwidth, 2) }} GB</span> / {{ number_format($limitBandwidth, 2) }} GB Limit</p>
-                        </div>
+
                     </div>
                 </div>
 
@@ -361,56 +320,7 @@
             </div>
         </div>
 
-        {{-- Bandwidth Add-ons --}}
-        <div class="mt-16 mb-8">
-            <h3 class="text-lg font-black text-gray-900 dark:text-white mb-2">Bandwidth Add-ons</h3>
-            <p class="text-sm text-gray-500 mb-6">Need more traffic allowance for active students? Get instant bandwidth expansion.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- +50GB -->
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                        </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 50GB Traffic</h4>
-                        <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱299</span>
-                            <span class="text-xs font-bold text-gray-500">/one-time</span>
-                        </div>
-                    </div>
-                    <button @click="bandwidthModal = true; selectedBandwidth = 50; selectedBandwidthPrice = 299; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +50GB NOW</button>
-                </div>
-                <!-- +150GB -->
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                    <div class="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-3 py-1 rounded-bl-xl">POPULAR</div>
-                    <div>
-                        <div class="w-12 h-12 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] border border-[rgba(var(--accent-rgb),0.2)] rounded-2xl flex items-center justify-center mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                        </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 150GB Traffic</h4>
-                        <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱599</span>
-                            <span class="text-xs font-bold text-gray-500">/one-time</span>
-                        </div>
-                    </div>
-                    <button @click="bandwidthModal = true; selectedBandwidth = 150; selectedBandwidthPrice = 599; step = 'confirm';" class="mt-8 w-full py-3 bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)] font-black shadow-lg rounded-xl text-xs transition-all active:scale-95" style="box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.2);">BUY +150GB NOW</button>
-                </div>
-                <!-- +300GB -->
-                <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div class="w-12 h-12 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center mb-4">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                        </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 300GB Traffic</h4>
-                        <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱999</span>
-                            <span class="text-xs font-bold text-gray-500">/one-time</span>
-                        </div>
-                    </div>
-                    <button @click="bandwidthModal = true; selectedBandwidth = 300; selectedBandwidthPrice = 999; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +300GB NOW</button>
-                </div>
-            </div>
-        </div>
+
 
         {{-- Upgrade Modal --}}
         <div x-show="upgradeModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4" x-cloak>
@@ -527,43 +437,6 @@
             </div>
         </div>
 
-        {{-- Bandwidth Modal --}}
-        <div x-show="bandwidthModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4" x-cloak>
-            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="if(!isProcessing) bandwidthModal = false"></div>
-            <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-lg w-full space-y-6 transform transition-all"
-                 x-show="bandwidthModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0">
-                 
-                {{-- Step 2: Confirm --}}
-                <div x-show="step === 'confirm'" class="space-y-6 text-center py-4">
-                    <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
-                    </div>
-                    <h3 class="text-3xl font-black text-gray-900 dark:text-white">+<span x-text="selectedBandwidth"></span>GB bandwidth limit Expansion</h3>
-                    <p class="text-gray-500">Please confirm your payment of <strong class="text-gray-900 dark:text-white">₱<span x-text="selectedBandwidthPrice"></span></strong> to permanently upgrade your school traffic capacity.</p>
-                    
-                    <div class="flex gap-4 mt-8">
-                        <button @click="bandwidthModal = false" class="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">Cancel</button>
-                        <button @click="confirmBandwidthPayment()" class="flex-1 py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all w-full hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">Pay & Expand</button>
-                    </div>
-                </div>
 
-                {{-- Step 3: Processing --}}
-                <div x-show="step === 'processing'" class="space-y-6 text-center py-12" style="display: none;">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: var(--accent); border-top-color: transparent;"></div>
-                    <h3 class="text-xl font-black text-gray-900 dark:text-white">Processing Secure Payment...</h3>
-                    <p class="text-gray-500 text-sm">Please do not refresh this page.</p>
-                </div>
-
-                {{-- Step 4: Success --}}
-                <div x-show="step === 'success'" class="space-y-6 text-center py-6" style="display: none;">
-                    <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <h3 class="text-2xl font-black text-gray-900 dark:text-white">Bandwidth Expanded!</h3>
-                    <p class="text-gray-500">Success! You have added <strong class="text-gray-900 dark:text-white">+<span x-text="selectedBandwidth"></span>GB</strong> bandwidth to your capacity. Your invoice has been saved.</p>
-                    <button @click="finishUpgrade()" class="w-full mt-8 py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">RETURN TO DASHBOARD</button>
-                </div>
-            </div>
-        </div>
     </div>
 </x-app-layout>

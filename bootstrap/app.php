@@ -22,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'student' => \App\Http\Middleware\StudentMiddleware::class,
         ]);
+        
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->append(\App\Http\Middleware\PreventCRLFInjection::class);
+        $middleware->append(\App\Http\Middleware\XssSanitization::class);
+
         $middleware->priority([
             \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
             \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
