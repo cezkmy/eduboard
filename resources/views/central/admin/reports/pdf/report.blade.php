@@ -10,6 +10,11 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
             color: #111827;
+            counter-reset: page;
+        }
+
+        .page-info:after {
+            content: counter(page);
         }
 
         .muted { color: #6b7280; font-size: 11px; }
@@ -73,9 +78,6 @@
         .footer table { border: none; }
         .footer td { border: none; padding: 0; }
 
-        .page-number:before { content: counter(page); }
-        .page-count:before { content: counter(pages); }
-
         .text-right { text-align: right; }
         .text-center { text-align: center; }
 
@@ -90,8 +92,16 @@
         <table width="100%">
             <tr>
                 <td style="width: 50%;">
-                    @if(file_exists(public_path('board.png')))
-                        <img src="{{ public_path('board.png') }}" style="height: 24px; vertical-align: middle;">
+                    @php
+                        $logoPath = public_path('logo.png');
+                        $logoBase64 = '';
+                        if (file_exists($logoPath)) {
+                            $logoData = file_get_contents($logoPath);
+                            $logoBase64 = 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION) . ';base64,' . base64_encode($logoData);
+                        }
+                    @endphp
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" style="height: 24px; vertical-align: middle;">
                     @endif
                     <span class="logo-text">EduBoard</span>
                 </td>
@@ -209,14 +219,19 @@
                     {{ config('app.name', 'EduBoard') }}
                 </td>
                 <td style="width: 34%;" class="text-center">
-                    Page <span class="page-number"></span> | <span class="page-count"></span>
+                    Page <span class="page-info"></span>
                 </td>
                 <td style="width: 33%;" class="text-right">
                     @php
-                        $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
-                        $barcode = base64_encode($generator->getBarcode(now()->format('YmdHi'), $generator::TYPE_CODE_128));
+                        try {
+                            $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+                            $barcodeData = now()->format('YmdHi');
+                            $barcode = base64_encode($generator->getBarcode($barcodeData, $generator::TYPE_CODE_128));
+                            echo '<img src="data:image/png;base64,' . $barcode . '" style="height: 18px; vertical-align: middle;" alt="barcode">';
+                        } catch (\Exception $e) {
+                            echo '<span class="muted">' . now()->format('YmdHi') . '</span>';
+                        }
                     @endphp
-                    <img src="data:image/png;base64,{{ $barcode }}" style="height: 18px; vertical-align: middle;" alt="barcode">
                 </td>
             </tr>
         </table>

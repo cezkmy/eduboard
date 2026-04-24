@@ -35,12 +35,20 @@
                     <h1 class="content-title">Announcements</h1>
                     <p class="content-subtitle">Manage and monitor all school announcements</p>
                 </div>
-                <button @click="showingCreateModal = true" class="px-4 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-md" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 18px; height: 18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    New Announcement
-                </button>
+                <div class="flex items-center gap-4">
+                    <form action="{{ url()->current() }}" method="GET" class="relative flex-1 max-w-md">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search announcements..." class="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-[var(--accent-rgb)]/10 focus:border-[var(--accent)] transition-all text-sm">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </form>
+                    <button @click="showingCreateModal = true" class="px-4 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-md" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        New Announcement
+                    </button>
+                </div>
             </div>
 
             <div id="announcements-list" class="space-y-6">
@@ -57,6 +65,10 @@
                         <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto">There are no announcements to display at the moment.</p>
                     </div>
                 @endforelse
+
+                <div class="mt-8">
+                    {{ $announcements->links() }}
+                </div>
             </div>
         </div>
 
@@ -66,6 +78,7 @@
             <div x-show="showingCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" x-cloak>
                 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" @click="closeModal()"></div>
                 <div class="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 max-h-[95vh] flex flex-col"
+                     style="resize: both; min-width: 800px; min-height: 600px;"
                      x-show="showingCreateModal"
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 scale-95 translate-y-4"

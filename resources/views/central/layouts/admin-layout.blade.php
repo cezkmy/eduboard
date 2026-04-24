@@ -553,6 +553,29 @@
                     });
                 </script>
                 @endif
+
+                @if(session('error'))
+                <div class="position-absolute top-0 end-0 p-4" style="z-index: 1060; margin-top: -1rem;">
+                    <div class="toast align-items-center text-bg-danger border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true" id="errorToast">
+                        <div class="d-flex">
+                            <div class="toast-body fs-6 py-3">
+                                <i class="bi bi-exclamation-circle-fill me-2 fs-5 align-middle"></i> 
+                                <span class="align-middle">{{ session('error') }}</span>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var toastEl = document.getElementById('errorToast');
+                        if (toastEl) {
+                            var toast = new bootstrap.Toast(toastEl, { delay: 6000 });
+                            toast.show();
+                        }
+                    });
+                </script>
+                @endif
                 
                 @yield('content')
             </div>

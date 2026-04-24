@@ -68,6 +68,32 @@
                 $gracePeriodEnd = $expiresAt->copy()->addDays(3);
                 $daysLeft = max(0, ceil(now()->diffInDays($gracePeriodEnd, false)));
             }
+
+            // Moved from below to fix "Undefined variable $currentRank"
+            $currentPlanName = $tenant->plan;
+            $currentPlanData = \App\Models\Plan::where('name', $currentPlanName)->first();
+            
+            $hierarchy = ['Basic' => 0, 'Free' => 0, 'Pro' => 1, 'Premium' => 1, 'Ultimate' => 2];
+            $currentRank = $hierarchy[$currentPlanName] ?? 0;
+            
+            $adminLimit = $tenant->getLimit('admins') ?? 1;
+            $teacherLimit = $tenant->getLimit('teachers') ?? 5;
+            $isUnlimitedAdmin = $adminLimit == -1;
+            $isUnlimitedTeacher = $teacherLimit == -1;
+
+            // Usage calculation
+            $currentAdmins = \App\Models\User::where('role', 'admin')->count();
+            $currentTeachers = \App\Models\User::where('role', 'teacher')->count();
+            
+            $adminsLeft = $isUnlimitedAdmin ? 'Unlimited' : max(0, $adminLimit - $currentAdmins);
+            $teachersLeft = $isUnlimitedTeacher ? 'Unlimited' : max(0, $teacherLimit - $currentTeachers);
+
+            // Plan limits for modal display
+            $allPlanLimits = [
+                'Basic' => ['admins' => 1, 'teachers' => 5],
+                'Pro' => ['admins' => 5, 'teachers' => 15],
+                'Ultimate' => ['admins' => 10, 'teachers' => 'Unlimited'],
+            ];
         @endphp
 
         @if($isDeactivated)
@@ -126,23 +152,10 @@
                     Billing History
                 </button>
                 <button @click="upgradeModal = true" class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
-                    Upgrade Plan
+                    {{ $currentRank >= 2 ? 'Manage Plan' : 'Upgrade Plan' }}
                 </button>
             </div>
         </div>
-
-        @php
-            $currentPlanName = tenant()->plan;
-            $currentPlanData = \App\Models\Plan::where('name', $currentPlanName)->first();
-            
-            $hierarchy = ['Basic' => 0, 'Free' => 0, 'Pro' => 1, 'Premium' => 1, 'Ultimate' => 2];
-            $currentRank = $hierarchy[$currentPlanName] ?? 0;
-            
-            $adminLimit = tenant()->getLimit('admins_count') ?? '1';
-            $teacherLimit = tenant()->getLimit('teachers_count') ?? '5';
-            $isUnlimitedAdmin = $adminLimit == -1;
-            $isUnlimitedTeacher = $teacherLimit == -1;
-        @endphp
 
         {{-- Main Plan Card --}}
         <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm p-8 md:p-12">
@@ -164,22 +177,36 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                        <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.16);">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <div class="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-[2rem] border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--accent)] shadow-inner" style="background: rgba(var(--accent-rgb), 0.16);">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Admins</p>
-                                <p class="text-lg font-black text-gray-900 dark:text-white">{{ $isUnlimitedAdmin ? 'Unlimited' : $adminLimit . ' Slots' }}</p>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Admin Slots Available</p>
+                                <div class="flex items-baseline gap-2">
+                                    <p class="text-2xl font-black text-gray-900 dark:text-white">{{ $adminsLeft }}</p>
+                                    <p class="text-[10px] font-bold text-gray-500">Available</p>
+                                </div>
+                                <div class="w-24 bg-gray-200 dark:bg-gray-700 h-1 rounded-full mt-2 overflow-hidden">
+                                    <div class="bg-[var(--accent)] h-full rounded-full" style="width: {{ $isUnlimitedAdmin ? 0 : ($currentAdmins / $adminLimit) * 100 }}%"></div>
+                                </div>
+                                <p class="text-[9px] font-medium text-gray-400 mt-1">{{ $currentAdmins }} used of {{ $isUnlimitedAdmin ? '∞' : $adminLimit }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        <div class="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-[2rem] border border-gray-100 dark:border-gray-800 transition-all hover:shadow-md">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Teachers</p>
-                                <p class="text-lg font-black text-gray-900 dark:text-white">{{ $isUnlimitedTeacher ? 'Unlimited' : $teacherLimit . ' Slots' }}</p>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Teacher Slots Available</p>
+                                <div class="flex items-baseline gap-2">
+                                    <p class="text-2xl font-black text-gray-900 dark:text-white">{{ $teachersLeft }}</p>
+                                    <p class="text-[10px] font-bold text-gray-500">Available</p>
+                                </div>
+                                <div class="w-24 bg-gray-200 dark:bg-gray-700 h-1 rounded-full mt-2 overflow-hidden">
+                                    <div class="bg-blue-500 h-full rounded-full" style="width: {{ $isUnlimitedTeacher ? 0 : ($currentTeachers / $teacherLimit) * 100 }}%"></div>
+                                </div>
+                                <p class="text-[9px] font-medium text-gray-400 mt-1">{{ $currentTeachers }} used of {{ $isUnlimitedTeacher ? '∞' : $teacherLimit }}</p>
                             </div>
                         </div>
                     </div>
@@ -274,48 +301,48 @@
             <h3 class="text-lg font-black text-gray-900 dark:text-white mb-2">Storage Add-ons</h3>
             <p class="text-sm text-gray-500 mb-6">Need more space for your announcements and media? Get instant expansion.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- +5GB -->
+                <!-- +3GB -->
                 <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6h16v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path fill-rule="evenodd" d="M10 2a2 2 0 00-2 2h4a2 2 0 00-2-2z" clip-rule="evenodd" /></svg>
                         </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 5GB Storage</h4>
+                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+3GB Storage</h4>
                         <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱299</span>
+                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱49</span>
                             <span class="text-xs font-bold text-gray-500">/one-time</span>
                         </div>
                     </div>
-                    <button @click="storageModal = true; selectedStorage = 5; selectedStoragePrice = 299; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +5GB NOW</button>
+                    <button @click="storageModal = true; selectedStorage = 3; selectedStoragePrice = 49; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +3GB NOW</button>
                 </div>
-                <!-- +15GB -->
+                <!-- +6GB -->
                 <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between relative overflow-hidden">
                     <div class="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-3 py-1 rounded-bl-xl">POPULAR</div>
                     <div>
                         <div class="w-12 h-12 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] border border-[rgba(var(--accent-rgb),0.2)] rounded-2xl flex items-center justify-center mb-4">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6h16v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path fill-rule="evenodd" d="M10 2a2 2 0 00-2 2h4a2 2 0 00-2-2z" clip-rule="evenodd" /></svg>
                         </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 15GB Storage</h4>
+                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+6GB Storage</h4>
                         <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱599</span>
+                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱99</span>
                             <span class="text-xs font-bold text-gray-500">/one-time</span>
                         </div>
                     </div>
-                    <button @click="storageModal = true; selectedStorage = 15; selectedStoragePrice = 599; step = 'confirm';" class="mt-8 w-full py-3 bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)] font-black shadow-lg rounded-xl text-xs transition-all active:scale-95" style="box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.2);">BUY +15GB NOW</button>
+                    <button @click="storageModal = true; selectedStorage = 6; selectedStoragePrice = 99; step = 'confirm';" class="mt-8 w-full py-3 bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)] font-black shadow-lg rounded-xl text-xs transition-all active:scale-95" style="box-shadow: 0 10px 20px rgba(var(--accent-rgb), 0.2);">BUY +6GB NOW</button>
                 </div>
-                <!-- +30GB -->
+                <!-- +9GB -->
                 <div class="p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
                     <div>
                         <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6h16v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path fill-rule="evenodd" d="M10 2a2 2 0 00-2 2h4a2 2 0 00-2-2z" clip-rule="evenodd" /></svg>
                         </div>
-                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+ 30GB Storage</h4>
+                        <h4 class="text-xl font-black text-gray-900 dark:text-white">+9GB Storage</h4>
                         <div class="mt-2 flex items-baseline gap-1">
-                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱999</span>
+                            <span class="text-2xl font-black text-gray-900 dark:text-white">₱149</span>
                             <span class="text-xs font-bold text-gray-500">/one-time</span>
                         </div>
                     </div>
-                    <button @click="storageModal = true; selectedStorage = 30; selectedStoragePrice = 999; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +30GB NOW</button>
+                    <button @click="storageModal = true; selectedStorage = 9; selectedStoragePrice = 149; step = 'confirm';" class="mt-8 w-full py-3 bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)] font-black hover:bg-[var(--accent)] hover:text-white rounded-xl text-xs transition-all active:scale-95">BUY +9GB NOW</button>
                 </div>
             </div>
         </div>
@@ -331,41 +358,62 @@
                 {{-- Step 1: Select Plan --}}
                 <div x-show="step === 'select'" class="space-y-6">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-xl font-black text-gray-900 dark:text-white">Upgrade Your Experience</h3>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white">Manage Subscription</h3>
+                            <p class="text-xs text-gray-500 mt-1">You are currently on the <span class="font-black text-[var(--accent)]">{{ $currentPlanName }} Plan</span></p>
+                        </div>
                         <button @click="upgradeModal = false; step = 'select';" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
+                    
+                    @if($currentRank < 2)
                     <div class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl flex gap-3">
                         <div class="text-amber-500 shrink-0">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         </div>
-                        <p class="text-sm text-amber-700 dark:text-amber-500 font-medium">Upgrading will take effect immediately. Your next billing statement will be prorated.</p>
+                        <p class="text-sm text-amber-700 dark:text-amber-500 font-medium">Upgrading will take effect immediately. Your next billing statement will be adjusted to reflect your new capabilities.</p>
                     </div>
+
                     <div class="space-y-4">
-                        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Select Plan</p>
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Select Your New Plan</p>
                         <div class="space-y-2">
-                            <button @click="selectedPlan = 'Pro'" :class="{'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.10)]': selectedPlan === 'Pro', 'border-gray-100 dark:border-gray-700': selectedPlan !== 'Pro'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left" :style="selectedPlan !== 'Pro' ? 'cursor:pointer;' : ''">
-                                <div>
-                                    <p class="font-black text-gray-900 dark:text-white">Pro Plan</p>
-                                    <p class="text-xs text-gray-500">Perfect for medium schools</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-black" :class="{'text-[var(--accent)]': selectedPlan === 'Pro', 'text-gray-900 dark:text-white': selectedPlan !== 'Pro'}">₱2,499</p>
-                                </div>
-                            </button>
-                            <button @click="selectedPlan = 'Ultimate'" :class="{'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.10)]': selectedPlan === 'Ultimate', 'border-gray-100 dark:border-gray-700': selectedPlan !== 'Ultimate'}" class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left" :style="selectedPlan !== 'Ultimate' ? 'cursor:pointer;' : ''">
-                                <div>
-                                    <p class="font-black text-gray-900 dark:text-white">Ultimate Plan</p>
-                                    <p class="text-xs text-gray-500">For large universities</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-black" :class="{'text-[var(--accent)]': selectedPlan === 'Ultimate', 'text-gray-900 dark:text-white': selectedPlan !== 'Ultimate'}">₱4,999</p>
-                                </div>
-                            </button>
+                            @foreach($plans as $plan)
+                                @php $planRank = $hierarchy[$plan->name] ?? 0; @endphp
+                                @if($planRank > $currentRank)
+                                    <button @click="selectedPlan = '{{ $plan->name }}'" 
+                                            :class="{'border-[var(--accent)] bg-[rgba(var(--accent-rgb),0.10)]': selectedPlan === '{{ $plan->name }}', 'border-gray-100 dark:border-gray-700': selectedPlan !== '{{ $plan->name }}'}" 
+                                            class="w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between text-left">
+                                        <div>
+                                            <p class="font-black text-gray-900 dark:text-white">{{ $plan->name }} Plan</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-md font-bold text-gray-600 dark:text-gray-400">
+                                                    {{ $allPlanLimits[$plan->name]['admins'] }} Admins
+                                                </span>
+                                                <span class="text-[10px] px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-md font-bold text-gray-600 dark:text-gray-400">
+                                                    {{ $allPlanLimits[$plan->name]['teachers'] }} Teachers
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-black" :class="{'text-[var(--accent)]': selectedPlan === '{{ $plan->name }}', 'text-gray-900 dark:text-white': selectedPlan !== '{{ $plan->name }}'}">{{ $plan->price }}</p>
+                                        </div>
+                                    </button>
+                                @endif
+                            @endforeach
                         </div>
                     </div>
-                    <button @click="processUpgrade()" class="w-full py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">PROCEED TO CHECKOUT</button>
+                    <button @click="processUpgrade()" class="w-full py-4 bg-[var(--accent)] text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-[var(--accent-dark)]" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.25);">CONFIRM SELECTION</button>
+                    @else
+                    <div class="py-8 text-center space-y-4">
+                        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h4 class="text-lg font-black text-gray-900 dark:text-white">You're on the Top Tier!</h4>
+                        <p class="text-sm text-gray-500">You are already subscribed to our Ultimate plan. You have access to all features and maximum limits.</p>
+                        <button @click="upgradeModal = false" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-bold">Close</button>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Step 2: Confirm --}}

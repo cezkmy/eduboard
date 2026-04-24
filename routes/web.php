@@ -187,6 +187,9 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::get('payments/download/{type}', [\App\Http\Controllers\Central\ReportController::class, 'downloadPaymentsReport'])
                     ->name('payments.download');
 
+                Route::get('payments/{id}/download', [\App\Http\Controllers\Central\ReportController::class, 'downloadInvoice'])
+                    ->name('payments.invoice.download');
+
                 Route::get('templates', [\App\Http\Controllers\Central\TemplateController::class, 'index'])->name('templates');
                 Route::post('templates', [\App\Http\Controllers\Central\TemplateController::class, 'store'])->name('templates.store');
                 Route::put('templates/{id}', [\App\Http\Controllers\Central\TemplateController::class, 'update'])->name('templates.update');

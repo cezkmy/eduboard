@@ -15,6 +15,9 @@ class RoleController extends Controller
      */
     public function index()
     {
+        if (!auth()->user()->hasPermission('page_admin_roles')) {
+            abort(403, 'Unauthorized access to roles management.');
+        }
         // Strictly mapped to Admin page structure as requested
         // Strictly Page-Based Permissions Schema
         $permissionsSchema = [
@@ -61,18 +64,19 @@ class RoleController extends Controller
             'student' => 'Student',
         ];
 
-        // Ensure roles exist
-        $existingRoleNames = TenantRole::whereIn('name', array_keys($baseRoles))->pluck('name')->toArray();
+        // Ensure roles exist and have defaults if empty
+        $roles = TenantRole::all();
+        $existingRoleNames = $roles->pluck('name')->toArray();
+
         foreach ($baseRoles as $name => $displayName) {
             if (!in_array($name, $existingRoleNames)) {
                 $permissions = [];
                 if ($name === 'admin') {
-                    // Admin gets everything by default
                     $permissions = array_keys(array_merge(...array_values($permissionsSchema)));
-                } else {
-                    // Teacher, Student, and others start with NO page access by default (Black/Empty)
-                    // As requested: "if naay bag oh na user then black pa iyang mga permissions"
-                    $permissions = []; 
+                } elseif ($name === 'teacher') {
+                    $permissions = ['page_teacher_dashboard', 'page_teacher_announcements', 'page_teacher_my_announcements', 'page_teacher_edit_announcement', 'page_profile'];
+                } elseif ($name === 'student') {
+                    $permissions = ['page_student_studentpage', 'page_profile'];
                 }
 
                 TenantRole::create([
@@ -80,6 +84,23 @@ class RoleController extends Controller
                     'display_name' => $displayName,
                     'permissions' => $permissions
                 ]);
+            } else {
+                // Proactively fix empty permissions for base roles
+                $role = $roles->where('name', $name)->first();
+                if (empty($role->permissions)) {
+                    $permissions = [];
+                    if ($name === 'admin') {
+                        $permissions = array_keys(array_merge(...array_values($permissionsSchema)));
+                    } elseif ($name === 'teacher') {
+                        $permissions = ['page_teacher_dashboard', 'page_teacher_announcements', 'page_teacher_my_announcements', 'page_teacher_edit_announcement', 'page_profile'];
+                    } elseif ($name === 'student') {
+                        $permissions = ['page_student_studentpage', 'page_profile'];
+                    }
+                    
+                    if (!empty($permissions)) {
+                        $role->update(['permissions' => $permissions]);
+                    }
+                }
             }
         }
 

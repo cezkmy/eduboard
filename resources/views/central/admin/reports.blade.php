@@ -9,10 +9,10 @@
                 <p class="text-secondary">Comprehensive overview of revenue and tenant growth.</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-success d-flex align-items-center gap-2" onclick="downloadReport('revenue')">
+                <button type="button" class="btn btn-outline-success d-flex align-items-center gap-2" onclick="downloadReport('revenue')">
                     <i class="bi bi-download"></i> Download Revenue Report
                 </button>
-                <button class="btn btn-success d-flex align-items-center gap-2" onclick="downloadReport('tenant')">
+                <button type="button" class="btn btn-success d-flex align-items-center gap-2" onclick="downloadReport('tenant')">
                     <i class="bi bi-download"></i> Download Tenant Report
                 </button>
             </div>

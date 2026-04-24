@@ -45,10 +45,10 @@
                 <p class="text-secondary">Track all subscription payments and generate reports.</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-success d-flex align-items-center gap-2" onclick="generateReport('monthly')">
+                <button type="button" class="btn btn-outline-success d-flex align-items-center gap-2" onclick="generateReport('monthly')">
                     <i class="bi bi-file-earmark-pdf"></i> Monthly Report
                 </button>
-                <button class="btn btn-success d-flex align-items-center gap-2" onclick="generateReport('yearly')">
+                <button type="button" class="btn btn-success d-flex align-items-center gap-2" onclick="generateReport('yearly')">
                     <i class="bi bi-file-earmark-spreadsheet"></i> Yearly Report
                 </button>
             </div>
@@ -131,9 +131,9 @@
                                 </span>
                             </td>
                             <td class="pe-4 text-end">
-                                <button class="btn btn-sm btn-light border-0 bg-secondary bg-opacity-10" title="Download Invoice">
+                                <a href="{{ route('central.admin.payments.invoice.download', $payment->id) }}" class="btn btn-sm btn-light border-0 bg-secondary bg-opacity-10" title="Download Invoice">
                                     <i class="bi bi-download"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         @empty
@@ -175,13 +175,15 @@
     const reportInfoModal = new bootstrap.Modal(document.getElementById('reportInfoModal'));
 
     function generateReport(type) {
-        const message = 'Generating ' + type + ' payment report... This will export a detailed PDF file of all successful transactions.';
+        const message = 'Preparing ' + type + ' payment report... Your download will start shortly.';
         document.getElementById('reportModalMessage').textContent = message;
         reportInfoModal.show();
         
-        // Immediately redirect to the backend PDF download route.
         const url = "{{ route('central.admin.payments.download', ['type' => '__type__']) }}".replace('__type__', type);
-        setTimeout(() => { window.location.href = url; }, 300);
+        window.location.href = url;
+        
+        // Hide modal after a short delay once the PDF request has been initiated
+        setTimeout(() => reportInfoModal.hide(), 2000);
     }
 
     function sortTable(n) {

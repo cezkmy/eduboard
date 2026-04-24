@@ -1,13 +1,4 @@
 <x-app-layout>
-    @php
-        $myAnnouncements = \App\Models\Announcement::with('postedBy')
-            ->where('posted_by', Auth::id())
-            ->orderBy('is_pinned', 'desc')
-            ->orderBy('pinned_at', 'desc')
-            ->latest()
-            ->get();
-    @endphp
-
     <div x-data="{ 
         confirmingDeletion: false, 
         showingSuccess: false,
@@ -44,15 +35,29 @@
                     <h1 class="content-title">My Announcements</h1>
                     <p class="content-subtitle">Manage and track the announcements you've posted</p>
                 </div>
+                <div class="flex items-center gap-4">
+                    <form action="{{ url()->current() }}" method="GET" class="relative flex-1 max-w-md">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search my posts..." class="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-[var(--accent-rgb)]/10 focus:border-[var(--accent)] transition-all text-sm">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </form>
+                    <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);" @click="showingCreateModal = true">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        New Announcement
+                    </button>
+                </div>
             </div>
 
             {{-- Tabs --}}
             <div class="flex gap-4 mb-8 border-b border-gray-100 dark:border-gray-800">
                 <button @click="activeTab = 'published'" class="px-6 py-3 text-sm font-bold transition-all border-b-2" :class="activeTab === 'published' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-                    Published ({{ $myAnnouncements->where('status', '!=', 'draft')->count() }})
+                    Published ({{ $announcements->total() - $announcements->where('status', 'draft')->count() }})
                 </button>
                 <button @click="activeTab = 'drafts'" class="px-6 py-3 text-sm font-bold transition-all border-b-2" :class="activeTab === 'drafts' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-                    Drafts ({{ $myAnnouncements->where('status', 'draft')->count() }})
+                    Drafts ({{ $announcements->where('status', 'draft')->count() }})
                 </button>
             </div>
 
@@ -60,7 +65,7 @@
             <div id="announcements-list" class="announcements space-y-10">
                 {{-- Published Section --}}
                 <div x-show="activeTab === 'published'" class="space-y-10">
-                    @forelse($myAnnouncements->where('status', '!=', 'draft') as $announcement)
+                    @forelse($announcements->where('status', '!=', 'draft') as $announcement)
                         <div class="relative group">
                             <x-announcement-card :announcement="$announcement" :show-reactions="true" />
                             
@@ -94,11 +99,15 @@
                             <button class="btn-primary px-6 py-2" @click="showingCreateModal = true">Post Now</button>
                         </div>
                     @endforelse
+
+                    <div class="mt-8">
+                        {{ $announcements->links() }}
+                    </div>
                 </div>
 
                 {{-- Drafts Section --}}
                 <div x-show="activeTab === 'drafts'" class="space-y-10">
-                    @forelse($myAnnouncements->where('status', 'draft') as $announcement)
+                    @forelse($announcements->where('status', 'draft') as $announcement)
                         <div class="relative group">
                             <x-announcement-card :announcement="$announcement" :show-reactions="true" />
                             <div class="absolute top-4 right-20">
@@ -133,6 +142,7 @@
             <div x-show="showingCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" x-cloak>
                 <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" @click="closeModal()"></div>
                 <div class="relative w-full max-w-5xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 max-h-[95vh] flex flex-col"
+                     style="resize: both; min-width: 800px; min-height: 600px;"
                      x-show="showingCreateModal"
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 scale-95 translate-y-4"

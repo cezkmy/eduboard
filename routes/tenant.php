@@ -115,22 +115,48 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::delete('/custom-permissions/{code}', [\App\Http\Controllers\Tenant\RoleController::class, 'deleteCustomPermission'])->name('admin.roles.permissions.custom.destroy');
 
         Route::get('/announcements', function () { 
-            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
-                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+            if (!auth()->user()->hasPermission('page_admin_announcements')) {
+                abort(403, 'Unauthorized.');
+            }
+            $query = \App\Models\Announcement::where('status', '!=', 'draft');
+            
+            if (request('search')) {
+                $searchTerm = request('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhere('category', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            $announcements = $query->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
-                ->get();
+                ->paginate(10);
             return view('tenant_ui.admin.announcements', compact('announcements')); 
         })->name('admin.announcements');
 
         Route::get('/my-announcements', function () { 
-            $announcements = \App\Models\Announcement::where('posted_by', auth()->id())
-                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+            if (!auth()->user()->hasPermission('page_admin_my_announcements')) {
+                abort(403, 'Unauthorized.');
+            }
+            $query = \App\Models\Announcement::where('posted_by', auth()->id());
+
+            if (request('search')) {
+                $searchTerm = request('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhere('category', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            $announcements = $query->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
-                ->get();
+                ->paginate(10);
             return view('tenant_ui.admin.my-announcements', compact('announcements')); 
         })->name('admin.my-announcements');
         Route::get('/categories', [\App\Http\Controllers\Tenant\OrganizationController::class, 'index'])->name('admin.categories');
@@ -148,7 +174,17 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             $month = $request->get('month');
             $day = $request->get('day');
 
-            $query = \App\Models\Announcement::with('postedBy');
+            $query = \App\Models\Announcement::with('postedBy')
+                ->withCount(['comments' => function ($q) use ($year, $month, $day) {
+                    if ($year) $q->whereYear('created_at', $year);
+                    if ($month) $q->whereMonth('created_at', $month);
+                    if ($day) $q->whereDay('created_at', $day);
+                }])
+                ->withCount(['reactions' => function ($q) use ($year, $month, $day) {
+                    if ($year) $q->whereYear('created_at', $year);
+                    if ($month) $q->whereMonth('created_at', $month);
+                    if ($day) $q->whereDay('created_at', $day);
+                }]);
 
             if ($year) {
                 $query->whereYear('created_at', $year);
@@ -161,6 +197,27 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             }
 
             $announcements = $query->latest()->get();
+
+            // Calculate totals for the filtered period
+            $totalReactionsCount = \App\Models\Reaction::query();
+            $totalCommentsCount = \App\Models\Comment::query();
+            if ($year) {
+                $totalReactionsCount->whereYear('created_at', $year);
+                $totalCommentsCount->whereYear('created_at', $year);
+            }
+            if ($month) {
+                $totalReactionsCount->whereMonth('created_at', $month);
+                $totalCommentsCount->whereMonth('created_at', $month);
+            }
+            if ($day) {
+                $totalReactionsCount->whereDay('created_at', $day);
+                $totalCommentsCount->whereDay('created_at', $day);
+            }
+
+            $periodStats = [
+                'reactions' => $totalReactionsCount->count(),
+                'comments' => $totalCommentsCount->count()
+            ];
 
             $userQuery = \App\Models\User::query();
             if ($year) {
@@ -191,6 +248,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 'year' => $year,
                 'month' => $month,
                 'day' => $day,
+                'periodStats' => $periodStats,
             ]);
         })->name('admin.reports');
         
@@ -204,7 +262,17 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             $month = $request->get('month');
             $day = $request->get('day');
 
-            $query = \App\Models\Announcement::with('postedBy');
+            $query = \App\Models\Announcement::with('postedBy')
+                ->withCount(['comments' => function ($q) use ($year, $month, $day) {
+                    if ($year) $q->whereYear('created_at', $year);
+                    if ($month) $q->whereMonth('created_at', $month);
+                    if ($day) $q->whereDay('created_at', $day);
+                }])
+                ->withCount(['reactions' => function ($q) use ($year, $month, $day) {
+                    if ($year) $q->whereYear('created_at', $year);
+                    if ($month) $q->whereMonth('created_at', $month);
+                    if ($day) $q->whereDay('created_at', $day);
+                }]);
             if ($year) $query->whereYear('created_at', $year);
             if ($month) $query->whereMonth('created_at', $month);
             if ($day) $query->whereDay('created_at', $day);
@@ -216,12 +284,34 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             if ($day) $userQuery->whereDay('created_at', $day);
             $users = $userQuery->latest()->get();
 
+            // Calculate totals for the filtered period
+            $totalReactionsCount = \App\Models\Reaction::query();
+            $totalCommentsCount = \App\Models\Comment::query();
+            if ($year) {
+                $totalReactionsCount->whereYear('created_at', $year);
+                $totalCommentsCount->whereYear('created_at', $year);
+            }
+            if ($month) {
+                $totalReactionsCount->whereMonth('created_at', $month);
+                $totalCommentsCount->whereMonth('created_at', $month);
+            }
+            if ($day) {
+                $totalReactionsCount->whereDay('created_at', $day);
+                $totalCommentsCount->whereDay('created_at', $day);
+            }
+
+            $periodStats = [
+                'reactions' => $totalReactionsCount->count(),
+                'comments' => $totalCommentsCount->count()
+            ];
+
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tenant_ui.admin.reports-pdf', [
                 'announcements' => $announcements,
                 'users' => $users,
                 'year' => $year,
                 'month' => $month,
-                'day' => $day
+                'day' => $day,
+                'periodStats' => $periodStats,
             ]);
 
             $pdfContent = $pdf->output();
@@ -259,6 +349,11 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             if (!auth()->user()->hasPermission('page_admin_subscription')) {
                 abort(403, 'Unauthorized.');
             }
+
+            // Proactively ensure prices are updated in the database
+            \App\Models\Plan::where('name', 'Pro')->where('price', '!=', '₱199')->update(['price' => '₱199']);
+            \App\Models\Plan::where('name', 'Ultimate')->where('price', '!=', '₱299')->update(['price' => '₱299']);
+
             $plans = \App\Models\Plan::all();
             return view('tenant_ui.admin.subscription', compact('plans')); 
         })->name('admin.subscription');
@@ -270,9 +365,32 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             
             // Set the new plan in the tenant database
             $tenant = tenant();
+            $oldPlan = $tenant->plan ?? 'Basic';
+            $newPlan = $request->plan;
+
+            // Define base storage for each plan
+            $storageLimits = [
+                'Basic' => 5.0,
+                'Pro' => 15.0,
+                'Ultimate' => 30.0,
+            ];
+
+            $oldBase = $storageLimits[$oldPlan] ?? 5.0;
+            $newBase = $storageLimits[$newPlan] ?? 5.0;
+            $storageDiff = max(0, $newBase - $oldBase);
+
             $tenant->update([
-                'plan' => $request->plan,
+                'plan' => $newPlan,
             ]);
+
+            // Update storage limit in central DB if there's a difference
+            if ($storageDiff > 0) {
+                $currentLimit = (float) ($tenant->storage_limit_gb ?? 5.0);
+                \Illuminate\Support\Facades\DB::connection('mysql')
+                    ->table('tenants')
+                    ->where('id', $tenant->id)
+                    ->update(['storage_limit_gb' => $currentLimit + $storageDiff]);
+            }
             
             // Notify Central Admin via Email & Database
             tenancy()->central(function () use ($tenant, $request) {
@@ -304,6 +422,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 ->where('id', $tenant->id)
                 ->update(['storage_limit_gb' => $newLimit]);
 
+            // Update memory object
+            $tenant->storage_limit_gb = $newLimit;
+
             // Add payment to billing history in central DB
             tenancy()->central(function () use ($tenant, $request) {
                 \App\Models\BillingHistory::create([
@@ -332,6 +453,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
                 ->table('tenants')
                 ->where('id', $tenant->id)
                 ->update(['bandwidth_limit_gb' => $newLimit]);
+
+            // Update memory object
+            $tenant->bandwidth_limit_gb = $newLimit;
 
             // Add payment to billing history in central DB
             tenancy()->central(function () use ($tenant, $request) {
@@ -375,6 +499,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Teacher Routes
     Route::prefix('teacher')->middleware(['auth'])->name('tenant.teacher.')->group(function () {
         Route::get('/dashboard', function () {
+            if (!auth()->user()->hasPermission('page_teacher_dashboard')) {
+                abort(403, 'Unauthorized.');
+            }
             $user = auth()->user();
             $myAnnouncementIds = \App\Models\Announcement::where('posted_by', $user->id)->pluck('id');
             
@@ -407,23 +534,48 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             ]);
         })->name('dashboard');
         Route::get('/announcements', function () { 
+            if (!auth()->user()->hasPermission('page_teacher_announcements')) {
+                abort(403, 'Unauthorized.');
+            }
             $user = auth()->user();
-            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
-                ->forUser($user)
-                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+            $query = \App\Models\Announcement::where('status', '!=', 'draft')->forUser($user);
+
+            if (request('search')) {
+                $searchTerm = request('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhere('category', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            $announcements = $query->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
-                ->get();
+                ->paginate(10);
             return view('tenant_ui.teacher.announcements', compact('announcements')); 
         })->name('announcements');
         Route::get('/my-announcements', function () { 
-            $announcements = \App\Models\Announcement::where('posted_by', auth()->id())
-                ->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
+            if (!auth()->user()->hasPermission('page_teacher_my_announcements')) {
+                abort(403, 'Unauthorized.');
+            }
+            $query = \App\Models\Announcement::where('posted_by', auth()->id());
+
+            if (request('search')) {
+                $searchTerm = request('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhere('category', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            $announcements = $query->with(['postedBy', 'comments.user', 'comments.replies.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
-                ->get();
+                ->paginate(10);
             return view('tenant_ui.teacher.my-announcements', compact('announcements')); 
         })->name('my-announcements');
     });
@@ -431,14 +583,26 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Student Routes
     Route::prefix('student')->middleware(['auth', 'student'])->name('tenant.student.')->group(function () {
         Route::get('/dashboard', function () {
+            if (!auth()->user()->hasPermission('page_student_studentpage')) {
+                abort(403, 'Unauthorized.');
+            }
             $user = auth()->user();
-            $announcements = \App\Models\Announcement::where('status', '!=', 'draft')
-                ->forUser($user)
-                ->with(['postedBy', 'comments.user', 'reactions'])
+            $query = \App\Models\Announcement::where('status', '!=', 'draft')->forUser($user);
+
+            if (request('search')) {
+                $searchTerm = request('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'like', "%{$searchTerm}%")
+                      ->orWhere('content', 'like', "%{$searchTerm}%")
+                      ->orWhere('category', 'like', "%{$searchTerm}%");
+                });
+            }
+
+            $announcements = $query->with(['postedBy', 'comments.user', 'reactions'])
                 ->orderBy('is_pinned', 'desc')
                 ->orderBy('pinned_at', 'desc')
                 ->latest()
-                ->get();
+                ->paginate(10);
             return view('tenant_ui.students.studentpage', [
                 'announcements' => $announcements
             ]);
@@ -458,8 +622,9 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // ── Shared Announcement CRUD & Interactions ──
     Route::middleware(['auth'])->name('tenant.')->group(function () {
         // Shared Interaction routes (Admin, Teacher, Student)
-        Route::post('/announcements/{announcement}/comment', [App\Http\Controllers\AnnouncementInteractionController::class, 'storeComment'])->name('announcements.comment.store');
         Route::post('/announcements/{announcement}/react', [App\Http\Controllers\AnnouncementInteractionController::class, 'toggleReaction'])->name('announcements.react.toggle');
+        Route::get('/announcements/{announcement}/comments', [App\Http\Controllers\AnnouncementInteractionController::class, 'comments'])->name('announcements.comments');
+        Route::post('/announcements/{announcement}/comments', [App\Http\Controllers\AnnouncementInteractionController::class, 'storeComment'])->name('announcements.comment.store');
 
         Route::post('/announcements', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'store'])->name('announcements.store');
 

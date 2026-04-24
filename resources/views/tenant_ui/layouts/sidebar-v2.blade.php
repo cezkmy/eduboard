@@ -46,108 +46,115 @@
             $expiresAt = $tenant && $tenant->expires_at ? \Carbon\Carbon::parse($tenant->expires_at) : null;
             $isExpired = $expiresAt && $expiresAt->isPast();
             $isLocked = $isDeactivated || $isExpired;
+            $user = auth()->user();
         @endphp
 
-        @if(auth()->user()->role === 'admin' || !empty(auth()->user()->custom_permissions['granted']))
-            <div class="space-y-2">
-                <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Primary Tools</p>
-                
-                @if(auth()->user()->hasPermission('page_admin_dashboard'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                    <span class="font-bold text-sm">Dashboard</span>
-                </a>
-                @endif
-
-                @if(auth()->user()->hasPermission('page_admin_announcements'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
-                    <span class="font-bold text-sm">Announcements</span>
-                </a>
-                @endif
-
-                @if(auth()->user()->hasPermission('page_admin_my_announcements'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.my-announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.my-announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.my-announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h6"></path></svg>
-                    <span class="font-bold text-sm">My Feed</span>
-                </a>
-                @endif
-            </div>
-
-            <div class="space-y-2">
-                <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Management</p>
-                
-                @if(auth()->user()->hasPermission('page_admin_users'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.users') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.users') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.users') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
-                    <span class="font-bold text-sm">Users & Directory</span>
-                </a>
-                @endif
-                
-                @if(auth()->user()->hasPermission('page_admin_categories'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.categories') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.categories') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.categories') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                    <span class="font-bold text-sm">Categories</span>
-                </a>
-                @endif
-
-                @if($hasTemplates && auth()->user()->hasPermission('page_admin_templates'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.templates') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.templates') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.templates') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                    <span class="font-bold text-sm">Templates Lib</span>
-                </a>
-                @endif
-                
-                @if($hasReports && auth()->user()->hasPermission('page_admin_reports'))
-                <a href="{{ $isLocked ? '#' : route('tenant.admin.reports') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.reports') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.reports') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    <span class="font-bold text-sm">Reporting</span>
-                </a>
-                @endif
-            </div>
-
-            @if(auth()->user()->hasPermission('page_admin_subscription'))
-            <div class="space-y-2 mt-auto pt-8">
-                <a href="{{ route('tenant.admin.subscription') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.subscription') ? 'text-white shadow-lg' : 'hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.subscription') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : 'background: var(--sidebar-hover);' }}">
-                    <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                    </svg>
-                    <span class="font-bold text-sm text-gray-200">Subscription Plan</span>
-                </a>
-            </div>
+        <div class="space-y-2">
+            <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Primary Tools</p>
+            
+            @if($user->hasPermission('page_admin_dashboard'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                <span class="font-bold text-sm">Admin Dashboard</span>
+            </a>
             @endif
-        @elseif(auth()->user()->role === 'teacher')
+
+            @if($user->hasPermission('page_teacher_dashboard'))
+            <a href="{{ route('tenant.teacher.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
+                <span class="font-bold text-sm">Interactions</span>
+            </a>
+            @endif
+
+            @if($user->hasPermission('page_admin_announcements'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                <span class="font-bold text-sm">Announcements</span>
+            </a>
+            @elseif($user->hasPermission('page_teacher_announcements'))
+            <a href="{{ route('tenant.teacher.announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                <span class="font-bold text-sm">Announcements</span>
+            </a>
+            @elseif($user->hasPermission('page_student_studentpage'))
+            <a href="{{ route('tenant.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                <span class="font-bold text-sm">Announcements</span>
+            </a>
+            @endif
+
+            @if($user->hasPermission('page_admin_my_announcements'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.my-announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.my-announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.my-announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h6"></path></svg>
+                <span class="font-bold text-sm">My Feed</span>
+            </a>
+            @elseif($user->hasPermission('page_teacher_my_announcements'))
+            <a href="{{ route('tenant.teacher.my-announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.my-announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.my-announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h6"></path></svg>
+                <span class="font-bold text-sm">My Feed</span>
+            </a>
+            @endif
+        </div>
+
+        @if($user->hasPermission('page_admin_users') || $user->hasPermission('page_admin_categories') || $hasTemplates || $hasReports)
+        <div class="space-y-2">
+            <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Management</p>
+            
+            @if($user->hasPermission('page_admin_users'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.users') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.users') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.users') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                <span class="font-bold text-sm">Users & Directory</span>
+            </a>
+            @endif
+            
+            @if($user->hasPermission('page_admin_categories'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.categories') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.categories') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.categories') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                <span class="font-bold text-sm">Categories</span>
+            </a>
+            @endif
+
+            @if($hasTemplates && $user->hasPermission('page_admin_templates'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.templates') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.templates') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.templates') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                <span class="font-bold text-sm">Templates Lib</span>
+            </a>
+            @endif
+            
+            @if($hasReports && $user->hasPermission('page_admin_reports'))
+            <a href="{{ $isLocked ? '#' : route('tenant.admin.reports') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.reports') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.reports') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="font-bold text-sm">Reporting</span>
+            </a>
+            @endif
+        </div>
+        @endif
+
+        <div class="space-y-2">
+            <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Account</p>
+            @if($user->hasPermission('page_profile'))
+            <a href="{{ route('tenant.profile.edit') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.profile.edit') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.profile.edit') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
+                <span class="font-bold text-sm">My Profile</span>
+            </a>
+            @endif
+        </div>
+
+        @if($user->role === 'admin')
             <div class="space-y-2">
-                <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Teacher Menu</p>
+                <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">System</p>
                 
-                @if(auth()->user()->hasPermission('page_teacher_dashboard'))
-                <a href="{{ route('tenant.teacher.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                    <span class="font-bold text-sm">Interactions</span>
+                @if($user->hasPermission('page_admin_settings'))
+                <a href="{{ route('tenant.admin.system.update') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.system.update') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.system.update') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    <span class="font-bold text-sm">System Update</span>
                 </a>
                 @endif
 
-                @if(auth()->user()->hasPermission('page_teacher_announcements'))
-                <a href="{{ route('tenant.teacher.announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
-                    <span class="font-bold text-sm">Announcements</span>
-                </a>
-                @endif
-
-                @if(auth()->user()->hasPermission('page_teacher_my_announcements'))
-                <a href="{{ route('tenant.teacher.my-announcements') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.my-announcements') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.my-announcements') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 9h8"></path><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h6"></path></svg>
-                    <span class="font-bold text-sm">My Feed</span>
-                </a>
-                @endif
-            </div>
-        @else
-            <div class="space-y-2">
-                <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Student Menu</p>
-                @if(auth()->user()->hasPermission('page_student_studentpage'))
-                <a href="{{ route('tenant.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.dashboard') || request()->routeIs('tenant.student.page') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.dashboard') || request()->routeIs('tenant.student.page') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                    <span class="font-bold text-sm">Dashboard</span>
+                @if($user->hasPermission('page_admin_subscription'))
+                <a href="{{ route('tenant.admin.subscription') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.subscription') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.subscription') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
+                    <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+                    <span class="font-bold text-sm">Subscription</span>
                 </a>
                 @endif
             </div>

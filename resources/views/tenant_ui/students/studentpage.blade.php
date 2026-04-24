@@ -23,29 +23,33 @@
                 @click="activeTab = 'foryou'; $dispatch('filter-tab', 'foryou')">For You</button>
         </div>
 
-        {{-- Category Pills --}}
-        @if(tenant() && tenant()->hasFeature('categories'))
-            <div class="categories flex flex-wrap gap-2 mb-8">
-                <button
-                    class="ann-filter-pill all active px-4 py-1.5 rounded-full bg-[var(--accent)] text-white text-sm font-semibold"
-                    data-category="all">All</button>
-                <button
-                    class="ann-filter-pill academic px-4 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold"
-                    data-category="academic">Academic</button>
-                <button
-                    class="ann-filter-pill events px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-semibold"
-                    data-category="events">Events</button>
-                <button
-                    class="ann-filter-pill administrative px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-sm font-semibold"
-                    data-category="administrative">Administrative</button>
-                <button
-                    class="ann-filter-pill student-affairs px-4 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-sm font-semibold"
-                    data-category="student-affairs">Student Affairs</button>
-                <button
-                    class="ann-filter-pill emergency px-4 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold"
-                    data-category="emergency">Emergency</button>
+        {{-- Category & Interaction Filters --}}
+        <div class="filters-container space-y-6 mb-8">
+            @if(tenant() && tenant()->hasFeature('categories'))
+                <div class="category-filters">
+                    <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">Categories</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="ann-filter-pill all active px-4 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold transition-all shadow-sm" data-category="all">All Categories</button>
+                        @php
+                            $dynamicCategories = \App\Models\Category::where('type', 'announcement_category')->get();
+                        @endphp
+                        @foreach($dynamicCategories as $cat)
+                            <button class="ann-filter-pill {{ strtolower($cat->name) }} px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-[var(--accent)] transition-all shadow-sm" data-category="{{ strtolower($cat->name) }}">{{ $cat->name }}</button>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="interaction-filters">
+                <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">Interaction Filter</p>
+                <div class="flex flex-wrap gap-2">
+                    <button class="int-filter-pill all active px-4 py-1.5 rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-bold transition-all shadow-sm" data-filter="all">Any Interaction</button>
+                    <button class="int-filter-pill reacted px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-rose-500 transition-all shadow-sm" data-filter="reacted">❤️ Reacted Only</button>
+                    <button class="int-filter-pill commented px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-amber-500 transition-all shadow-sm" data-filter="commented">💬 Commented Only</button>
+                    <button class="int-filter-pill popular px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all shadow-sm" data-filter="popular">🔥 Highly Engaged</button>
+                </div>
             </div>
-        @endif
+        </div>
 
         {{-- Date Filter --}}
         <div
@@ -71,16 +75,27 @@
             </div>
         </div>
 
+        {{-- Search Section --}}
+        <div class="flex items-center justify-between gap-6 mb-8">
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Dashboard</h1>
+            <form action="{{ url()->current() }}" method="GET" class="relative flex-1 max-w-md">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search announcements..." class="w-full pl-12 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-[var(--accent-rgb)]/10 focus:border-[var(--accent)] transition-all text-sm">
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </form>
+        </div>
+
         {{-- Announcement Cards --}}
         <div class="space-y-6 ann-list">
-            @php
-                $filteredAnnouncements = $announcements->where('status', '!=', 'draft');
-            @endphp
-
-            @if($filteredAnnouncements->count() > 0)
-                @foreach($filteredAnnouncements as $announcement)
+            @if($announcements->count() > 0)
+                @foreach($announcements as $announcement)
                     <x-announcement-card :announcement="$announcement" :show-reactions="true" />
                 @endforeach
+
+                <div class="mt-8">
+                    {{ $announcements->links() }}
+                </div>
             @else
                 <div
                     class="empty-state bg-white dark:bg-gray-800 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-700 shadow-sm">

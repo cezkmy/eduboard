@@ -11,6 +11,32 @@ use Illuminate\Support\Facades\Auth;
 class AnnouncementInteractionController extends Controller
 {
     /**
+     * Get paginated comments.
+     */
+    public function comments(Announcement $announcement)
+    {
+        $comments = $announcement->comments()
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->latest()
+            ->paginate(10);
+
+        // Transform for human-readable time
+        $comments->getCollection()->transform(function ($comment) {
+            $comment->human_time = $comment->created_at->diffForHumans();
+            if ($comment->replies) {
+                $comment->replies->transform(function ($reply) {
+                    $reply->human_time = $reply->created_at->diffForHumans();
+                    return $reply;
+                });
+            }
+            return $comment;
+        });
+
+        return response()->json($comments);
+    }
+
+    /**
      * Store a new comment.
      */
     public function storeComment(Request $request, Announcement $announcement)

@@ -47,11 +47,14 @@ class UserController extends Controller
             ->pluck('count', 'role');
 
         $pendingCount  = User::whereNull('deleted_at')->where('status', 'pending')->count();
+        $lockedCount   = User::whereNull('deleted_at')->whereNotNull('locked_until')->where('locked_until', '>', now())->count();
         $archivedCount = User::onlyTrashed()->count();
 
         // Fetch users for the active tab with pagination
         if ($activeTab === 'pending') {
             $users = User::whereNull('deleted_at')->where('status', 'pending')->latest()->paginate(20)->withQueryString();
+        } elseif ($activeTab === 'locked') {
+            $users = User::whereNull('deleted_at')->whereNotNull('locked_until')->where('locked_until', '>', now())->latest()->paginate(20)->withQueryString();
         } elseif ($activeTab === 'archived') {
             $users = User::onlyTrashed()->latest()->paginate(20)->withQueryString();
         } else {
@@ -114,8 +117,63 @@ class UserController extends Controller
             }
         }
 
-        // tenantRoles as plain array: ['admin' => ['permissions' => [...]], ...]
-        $tenantRoles = \App\Models\TenantRole::all()->keyBy('name')->map(fn($r) => [
+        // Ensure base roles exist and have default permissions
+        $baseRoles = [
+            'admin' => 'Administrator',
+            'teacher' => 'Teacher',
+            'student' => 'Student',
+        ];
+
+        $roles = \App\Models\TenantRole::all();
+        $existingRoleNames = $roles->pluck('name')->toArray();
+
+        foreach ($baseRoles as $name => $displayName) {
+            if (!in_array($name, $existingRoleNames)) {
+                $permissions = [];
+                if ($name === 'admin') {
+                    $permissions = array_keys(array_merge(...array_values($permissionsSchema)));
+                } elseif ($name === 'teacher') {
+                    $permissions = ['page_teacher_dashboard', 'page_teacher_announcements', 'page_teacher_my_announcements', 'page_teacher_edit_announcement', 'page_profile'];
+                } elseif ($name === 'student') {
+                    $permissions = ['page_student_studentpage', 'page_profile'];
+                }
+
+                \App\Models\TenantRole::create([
+                    'name' => $name,
+                    'display_name' => $displayName,
+                    'permissions' => $permissions
+                ]);
+            } else {
+                // Proactively fix empty or incomplete permissions for existing base roles
+                $role = $roles->where('name', $name)->first();
+                $currentPerms = $role->permissions ?? [];
+                
+                $needsUpdate = false;
+                if (empty($currentPerms)) {
+                    $needsUpdate = true;
+                }
+                
+                if ($needsUpdate) {
+                    $permissions = [];
+                    if ($name === 'admin') {
+                        $permissions = array_keys(array_merge(...array_values($permissionsSchema)));
+                    } elseif ($name === 'teacher') {
+                        $permissions = ['page_teacher_dashboard', 'page_teacher_announcements', 'page_teacher_my_announcements', 'page_teacher_edit_announcement', 'page_profile'];
+                    } elseif ($name === 'student') {
+                        $permissions = ['page_student_studentpage', 'page_profile'];
+                    }
+                    
+                    if (!empty($permissions)) {
+                        $role->update(['permissions' => $permissions]);
+                    }
+                }
+            }
+        }
+
+        // Re-fetch roles to get the updated data
+        $roles = \App\Models\TenantRole::all();
+
+        $tenantRoles = $roles->keyBy('name')->map(fn($r) => [
             'permissions' => $r->permissions ?? [],
         ])->toArray();
 
@@ -133,6 +191,7 @@ class UserController extends Controller
             'users',
             'roleCounts',
             'pendingCount',
+            'lockedCount',
             'archivedCount',
             'activeTab',
             'yearLevels',
@@ -244,7 +303,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'role' => 'required|string|in:admin,teacher,student',
+            'role' => 'required|string|exists:tenant_roles,name',
             'status' => 'required|string|in:active,inactive'
         ]);
 
@@ -305,7 +364,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|string|in:admin,teacher,student',
+            'role' => 'required|string|exists:tenant_roles,name',
             'status' => 'required|string|in:active,inactive'
         ]);
 
@@ -342,7 +401,11 @@ class UserController extends Controller
 
         $user = User::withTrashed()->findOrFail($id);
         $user->restore();
-        return response()->json(['success' => true, 'message' => 'User restored successfully!']);
+        
+        // When restoring, also clear any temporary locks to ensure they can log in
+        $user->update(['locked_until' => null]);
+        
+        return response()->json(['success' => true, 'message' => 'User restored and account unlocked successfully!']);
     }
 
     public function forceDelete($id)

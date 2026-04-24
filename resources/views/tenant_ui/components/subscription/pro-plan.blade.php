@@ -3,7 +3,7 @@
     <div class="pricing-plan-name">Pro</div>
     <div class="pricing-price">
         <span class="pricing-currency">₱</span>
-        <span class="pricing-amount">2,499</span>
+        <span class="pricing-amount">199</span>
         <span class="pricing-period">/month</span>
     </div>
     <ul class="pricing-features">

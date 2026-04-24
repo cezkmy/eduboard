@@ -2,7 +2,7 @@
     <div class="pricing-plan-name">Ultimate</div>
     <div class="pricing-price">
         <span class="pricing-currency">₱</span>
-        <span class="pricing-amount">4,999</span>
+        <span class="pricing-amount">299</span>
         <span class="pricing-period">/month</span>
     </div>
     <ul class="pricing-features">

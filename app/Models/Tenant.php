@@ -140,9 +140,27 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function isStorageFull(): bool
     {
         $limit = (float) ($this->storage_limit_gb ?? 5.0);
-        $used = $this->updateStorageUsage();
         
-        // Give a tiny absolute buffer (e.g., 0.001 GB ~ 1MB) or strictly check
+        // Use the cached storage_used_gb instead of re-scanning the entire disk every time
+        // The usage is updated incrementally during uploads
+        $used = (float) ($this->storage_used_gb ?? 0);
+        
         return $used >= $limit;
+    }
+
+    /**
+     * Increment storage usage without scanning the entire disk.
+     * This is much faster for performance.
+     */
+    public function incrementStorageUsage(float $bytes): void
+    {
+        $gb = round($bytes / 1073741824, 6);
+        
+        \Illuminate\Support\Facades\DB::connection('mysql')
+            ->table('tenants')
+            ->where('id', $this->id)
+            ->increment('storage_used_gb', $gb);
+            
+        $this->storage_used_gb += $gb;
     }
 }

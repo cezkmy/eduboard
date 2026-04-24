@@ -12,6 +12,12 @@ class AnnouncementController extends Controller
 {
     public function store(Request $request)
     {
+        // Increase execution time and memory for large video uploads
+        if ($request->hasFile('media')) {
+            ini_set('max_execution_time', '300'); // 5 minutes
+            ini_set('memory_limit', '512M');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -92,21 +98,20 @@ class AnnouncementController extends Controller
         ]);
 
         if (count($mediaPaths) > 0) {
-            // Recalculate physical storage using raw DB (bypasses tenancy data-bag)
-            tenant()->updateStorageUsage();
-            
-            // Calculate the actual uploaded file size in GB
-            $uploadSizeGB = 0;
+            $totalBytes = 0;
             foreach ($request->file('media') as $file) {
-                $uploadSizeGB += $file->getSize() / 1073741824;
+                $totalBytes += $file->getSize();
             }
+
+            // Efficiently update storage and bandwidth usage
+            tenant()->incrementStorageUsage($totalBytes);
             
-            // IMPORTANT: Use central DB connection — inside tenant context, DB::table()
-            // defaults to the tenant database, so we must force 'mysql' (central)
+            $uploadSizeGB = round($totalBytes / 1073741824, 6);
+            
             \Illuminate\Support\Facades\DB::connection('mysql')
                 ->table('tenants')
                 ->where('id', tenant('id'))
-                ->increment('bandwidth_used_gb', round($uploadSizeGB + 0.001, 4));
+                ->increment('bandwidth_used_gb', $uploadSizeGB);
         }
 
         if ($request->ajax()) {
@@ -122,6 +127,12 @@ class AnnouncementController extends Controller
 
     public function update(Request $request, Announcement $announcement)
     {
+        // Increase execution time and memory for large video uploads
+        if ($request->hasFile('media')) {
+            ini_set('max_execution_time', '300'); // 5 minutes
+            ini_set('memory_limit', '512M');
+        }
+
         // Ensure only the author can update
         if ($announcement->posted_by !== auth()->id()) {
             abort(403);
@@ -152,6 +163,32 @@ class AnnouncementController extends Controller
             'target_roles' => 'nullable|array',
         ]);
 
+        $mediaRule = tenant()->hasFeature('video_upload') 
+            ? 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400' 
+            : 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240';
+
+        $request->validate([
+            'media.*' => $mediaRule,
+        ]);
+
+        if ($request->hasFile('media')) {
+            if (tenant()->isStorageFull()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You have exceeded your storage limit. Image uploads are temporarily disabled. Please upgrade your storage plan.',
+                    'errors' => ['media' => ['Storage limit exceeded.']]
+                ], 422);
+            }
+        }
+
+        $mediaPaths = $announcement->media_paths ?? [];
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('announcements', 'public');
+                $mediaPaths[] = $path;
+            }
+        }
+
         $announcement->update([
             'title' => $validated['title'],
             'content' => $validated['content'],
@@ -176,7 +213,24 @@ class AnnouncementController extends Controller
             'target_strand' => $request->target_strand ?: null,
             'target_section' => $request->target_section ?: null,
             'target_roles' => $request->target_roles ?: null,
+            'media_paths' => $mediaPaths,
         ]);
+
+        if ($request->hasFile('media')) {
+            $totalBytes = 0;
+            foreach ($request->file('media') as $file) {
+                $totalBytes += $file->getSize();
+            }
+
+            tenant()->incrementStorageUsage($totalBytes);
+            
+            $uploadSizeGB = round($totalBytes / 1073741824, 6);
+            
+            \Illuminate\Support\Facades\DB::connection('mysql')
+                ->table('tenants')
+                ->where('id', tenant('id'))
+                ->increment('bandwidth_used_gb', $uploadSizeGB);
+        }
 
         if ($request->ajax()) {
             return response()->json([
@@ -212,5 +266,25 @@ class AnnouncementController extends Controller
             'success' => true,
             'message' => 'Announcement deleted successfully!'
         ]);
+    }
+
+    public function comments(Announcement $announcement)
+    {        $comments = $announcement->comments()
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->latest()
+            ->paginate(10);
+
+        // Transform for human-readable time
+        $comments->getCollection()->transform(function ($comment) {
+            $comment->human_time = $comment->created_at->diffForHumans();
+            $comment->replies->transform(function ($reply) {
+                $reply->human_time = $reply->created_at->diffForHumans();
+                return $reply;
+            });
+            return $comment;
+        });
+
+        return response()->json($comments);
     }
 }

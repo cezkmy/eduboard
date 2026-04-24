@@ -97,10 +97,17 @@
                     <div class="space-y-10">
                         <template x-for="(permissions, group) in filteredPermissionsSchema" :key="group">
                             <div class="animate-fade-in">
-                                <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
-                                    <span x-text="group"></span>
-                                </h3>
+                                <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
+                                    <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
+                                        <span x-text="group"></span>
+                                    </h3>
+                                    <button type="button" @click="toggleGroup(permissions)" 
+                                            class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all"
+                                            :class="isGroupSelected(permissions) ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'">
+                                        <span x-text="isGroupSelected(permissions) ? 'Deselect All' : 'Select All'"></span>
+                                    </button>
+                                </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                      <template x-for="(label, code) in permissions" :key="code">
                                          <div class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-[1.5rem] border-2 transition-all cursor-pointer group/item shadow-sm"
@@ -115,7 +122,7 @@
                                                      <div class="w-1.5 h-1.5 rounded-full" :class="rolesTabState.permissions.includes(code) ? 'bg-[var(--accent)]' : 'bg-gray-300'"></div>
                                                      <span x-text="label"></span>
                                                  </span>
-                                                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-3.5" x-text="'Allow access to this page/feature'"></p>
+                                                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-3.5" x-text="rolesTabState.permissions.includes(code) ? 'Permission Enabled' : 'Permission Disabled'"></p>
                                              </div>
                                              <div class="shrink-0">
                                                  <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
@@ -310,6 +317,24 @@
                         }
                     }
                     return filtered;
+                },
+
+                isGroupSelected(permissions) {
+                    return Object.keys(permissions).every(code => this.rolesTabState.permissions.includes(code));
+                },
+
+                toggleGroup(permissions) {
+                    const allSelected = this.isGroupSelected(permissions);
+                    const codes = Object.keys(permissions);
+                    
+                    if (allSelected) {
+                        // Deselect all in this group
+                        this.rolesTabState.permissions = this.rolesTabState.permissions.filter(p => !codes.includes(p));
+                    } else {
+                        // Select all in this group (avoid duplicates)
+                        const toAdd = codes.filter(c => !this.rolesTabState.permissions.includes(c));
+                        this.rolesTabState.permissions.push(...toAdd);
+                    }
                 },
 
                 saveRolePermissions() {
