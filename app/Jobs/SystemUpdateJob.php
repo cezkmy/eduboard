@@ -99,7 +99,7 @@ class SystemUpdateJob implements ShouldQueue
 
             // 7. Run Migrations
             $this->log("Running system migrations...", 'info');
-            $this->runProcess(['php', 'artisan', 'migrate', '--force'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'migrate', '--force'], $base);
             
             // $this->log("Running tenant migrations...", 'info');
             // $this->runProcess(['php', 'artisan', 'tenants:migrate', '--force'], $base);
@@ -108,7 +108,7 @@ class SystemUpdateJob implements ShouldQueue
 
             // 8. Optimize Cache
             $this->log("Clearing and optimizing caches...", 'info');
-            $this->runProcess(['php', 'artisan', 'optimize:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'optimize:clear'], $base);
             
             CentralSetting::set('system_version', $this->version);
             CentralSetting::set('last_notified_version', $this->version);

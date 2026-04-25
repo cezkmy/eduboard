@@ -59,7 +59,7 @@ class VersionController extends Controller
 
             // Run tenant-specific migrations only for this tenant.
             $this->runTenantCommand([
-                'php',
+                PHP_BINARY,
                 'artisan',
                 'tenants:migrate',
                 '--tenants=' . $tenant->id,
@@ -100,7 +100,7 @@ class VersionController extends Controller
 
             // Keep schema aligned after revert action for this tenant.
             $this->runTenantCommand([
-                'php',
+                PHP_BINARY,
                 'artisan',
                 'tenants:migrate',
                 '--tenants=' . $tenant->id,

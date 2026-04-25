@@ -33,7 +33,7 @@ class TenantVersionUpdateJob implements ShouldQueue
         try {
             // Run tenant-only migrations.
             $process = new Process([
-                'php',
+                PHP_BINARY,
                 'artisan',
                 'tenants:migrate',
                 '--tenants=' . $tenant->id,
