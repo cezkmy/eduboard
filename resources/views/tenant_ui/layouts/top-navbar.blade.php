@@ -1,5 +1,14 @@
 <header class="admin-topbar">
     <div class="admin-topbar-left" style="display: flex; align-items: center; gap: 14px;">
+        <!-- Mobile Menu Toggle -->
+        @if(auth()->user()->role !== 'student')
+        <button class="topbar-btn mobile-toggle lg:hidden" @click="sidebarOpen = true" style="margin-right: 4px;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        @endif
+
         @if(tenant('logo') && auth()->check())
             <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(tenant('logo')) : asset('storage/' . tenant('logo')) }}" style="height: 38px; width: auto; object-fit: contain; border-radius: 8px;" onerror="this.style.display='none';">
         @endif

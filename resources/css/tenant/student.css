@@ -164,6 +164,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
+}
+
+@media (max-width: 1024px) {
+    .admin-topbar {
+        padding: 0 16px;
+    }
+}
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;

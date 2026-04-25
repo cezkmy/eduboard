@@ -160,6 +160,35 @@
     flex-direction: column;
 }
 
+.mobile-toggle {
+    display: none !important;
+}
+
+@media (max-width: 1024px) {
+    .mobile-toggle {
+        display: flex !important;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 70;
+    }
+
+    .sidebar-mobile-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .admin-topbar {
+        padding: 0 16px;
+    }
+}
+
 .admin-topbar {
     height: 70px;
     background: var(--bg-card);

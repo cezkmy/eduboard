@@ -199,13 +199,26 @@
     </style>
 
 </head>
-<body class="admin-body min-h-screen" style="margin:0; padding:0; background: var(--bg-main); font-family: 'Sora', sans-serif;">
+<body class="admin-body min-h-screen" style="margin:0; padding:0; background: var(--bg-main); font-family: 'Sora', sans-serif;" x-data="{ sidebarOpen: false }">
+    <!-- Mobile Sidebar Backdrop -->
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false" 
+         class="fixed inset-0 bg-black/60 z-[60] lg:hidden" x-cloak></div>
+
     <div class="admin-layout {{ ($appearance['navPos'] ?? 'left') === 'top' ? 'nav-top' : (($appearance['navPos'] ?? 'left') === 'right' ? 'nav-right' : 'nav-left') }} min-h-screen w-full">
         @if(auth()->user()->role !== 'student')
-            @include('tenant_ui.layouts.sidebar')
+            <div :class="sidebarOpen ? 'sidebar-mobile-open' : ''">
+                @include('tenant_ui.layouts.sidebar')
+            </div>
         @endif
 
-        <div class="admin-main" style="max-height: 100vh; overflow-y: auto; overflow-x: hidden; {{ auth()->user()->role === 'student' ? 'margin-left: 0; width: 100%;' : 'width: calc(100% - 260px);' }}">
+        <div class="admin-main" style="max-height: 100vh; overflow-y: auto; overflow-x: hidden;">
             @include('tenant_ui.layouts.top-navbar', ['title' => $title ?? null])
 
             <main class="admin-content">
