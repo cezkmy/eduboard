@@ -46,12 +46,7 @@
     contentColor: '#4b5563',
     categoryColor: '#4b5563',
     borderColor: 'transparent',
-    isPinned: false,
     isPublishing: false,
-    uploadRequest: null,
-    uploadProgress: 0,
-    uploadStatus: '',
-    maxUploadSizeMb: {{ tenant() && tenant()->hasFeature('video_upload') ? 100 : 10 }},
     presetColors: [
         { name: 'Emerald', color: '#10b981' },
         { name: 'Blue', color: '#3b82f6' },
@@ -94,7 +89,6 @@
         this.selectedTemplateImage = '';
         this.bgColor = '#ffffff';
         this.mediaPreview = [];
-        this.isPinned = false;
         this.isPublishing = false;
     },
     selectTemplate(id, image) {
@@ -139,7 +133,6 @@
         this.contentColor = announcement.content_color || '#4b5563';
         this.categoryColor = announcement.category_color || '#4b5563';
         this.borderColor = announcement.border_color || 'transparent';
-        this.isPinned = announcement.is_pinned ?? false;
     },
     saveToLocalStorage() {
         if (this.isEdit) return;
@@ -170,20 +163,7 @@
             localStorage.removeItem('announcement_draft_local');
         }
     },
-    appendArrayField(formData, fieldName, values) {
-        if (!Array.isArray(values) || values.length === 0) return;
-        values.forEach(value => formData.append(`${fieldName}[]`, value));
-    },
-    cancelUpload() {
-        if (this.uploadRequest) {
-            this.uploadRequest.abort();
-            this.uploadRequest = null;
-        }
-        this.isPublishing = false;
-        this.uploadProgress = 0;
-        this.uploadStatus = 'Upload canceled.';
-    },
-    submitForm(status = 'published') {
+    async submitForm(status = 'published') {
         if (this.isPublishing) return;
 
         const form = this.$refs.annForm || this.$el.querySelector('form');
@@ -192,112 +172,67 @@
             return;
         }
 
-        const maxUploadBytes = this.maxUploadSizeMb * 1024 * 1024;
-        const mediaInput = this.$refs.mediaInput;
-        if (mediaInput && mediaInput.files.length > 0) {
-            for (const file of mediaInput.files) {
-                if (file.size > maxUploadBytes) {
-                    alert(`Each file must be under ${this.maxUploadSizeMb}MB. "${file.name}" is too large.`);
-                    return;
-                }
-            }
-        }
-
         this.isPublishing = true;
-        this.uploadProgress = 0;
-        this.uploadStatus = 'Preparing upload...';
-
-        const formData = new FormData(form);
-        formData.append('status', status);
-        formData.append('template_id', this.selectedTemplate);
-        
-        if (!this.targetAll) {
-            this.appendArrayField(formData, 'target_college', this.targetColleges);
-            this.appendArrayField(formData, 'target_program', this.targetPrograms);
-            this.appendArrayField(formData, 'target_year', this.targetYearLevels);
-            this.appendArrayField(formData, 'target_grade_level', this.targetGradeLevels);
-            this.appendArrayField(formData, 'target_strand', this.targetStrands);
-            this.appendArrayField(formData, 'target_section', this.targetSections);
-            this.appendArrayField(formData, 'target_roles', this.targetRoles);
-        }
-
-        formData.append('bg_color', this.bgColor);
-        formData.append('layout_type', this.layoutType);
-        formData.append('border_radius', this.borderRadius);
-        formData.append('media_layout', this.mediaLayout);
-        formData.append('font_style', this.fontStyle);
-        formData.append('title_color', this.titleColor);
-        formData.append('content_color', this.contentColor);
-        formData.append('category_color', this.categoryColor);
-        formData.append('border_color', this.borderColor);
-        formData.append('is_pinned', this.isPinned ? 1 : 0);
-
-        const url = this.isEdit 
-            ? `{{ url('announcements') }}/${this.announcementId}`
-            : '{{ route("tenant.announcements.store") }}';
+        try {
+            const formData = new FormData(form);
+            formData.append('status', status);
+            formData.append('template_id', this.selectedTemplate);
             
-        if (this.isEdit) formData.append('_method', 'PUT');
+            if (!this.targetAll) {
+                this.targetColleges.forEach(val => formData.append('target_college[]', val));
+                this.targetPrograms.forEach(val => formData.append('target_program[]', val));
+                this.targetYearLevels.forEach(val => formData.append('target_year[]', val));
+                this.targetGradeLevels.forEach(val => formData.append('target_grade_level[]', val));
+                this.targetStrands.forEach(val => formData.append('target_strand[]', val));
+                this.targetSections.forEach(val => formData.append('target_section[]', val));
+                this.targetRoles.forEach(val => formData.append('target_roles[]', val));
+            }
 
-        return new Promise((resolve) => {
-            const xhr = new XMLHttpRequest();
-            this.uploadRequest = xhr;
+            formData.append('bg_color', this.bgColor);
+            formData.append('layout_type', this.layoutType);
+            formData.append('border_radius', this.borderRadius);
+            formData.append('media_layout', this.mediaLayout);
+            formData.append('font_style', this.fontStyle);
+            formData.append('title_color', this.titleColor);
+            formData.append('content_color', this.contentColor);
+            formData.append('category_color', this.categoryColor);
+            formData.append('border_color', this.borderColor);
 
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+            const url = this.isEdit 
+                ? `{{ url('announcements') }}/${this.announcementId}`
+                : '{{ route("tenant.announcements.store") }}';
+                
+            if (this.isEdit) formData.append('_method', 'PUT');
 
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    this.uploadProgress = Math.round((event.loaded / event.total) * 100);
-                    this.uploadStatus = `Uploading media ${this.uploadProgress}%`;
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
-            };
+            });
 
-            xhr.onload = () => {
-                this.uploadRequest = null;
-                this.isPublishing = false;
-                this.uploadProgress = 100;
-                try {
-                    const result = JSON.parse(xhr.responseText || '{}');
-                    if (result.success) {
-                        window.dispatchEvent(new CustomEvent('announcement-published', {
-                            detail: { message: this.isEdit ? 'Updated' : 'Published' }
-                        }));
-                        if (!this.isEdit) localStorage.removeItem('announcement_draft_local');
-                        setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                        alert('Error: ' + (result.message || 'Check inputs'));
-                    }
-                } catch (error) {
-                    alert('Upload failed. Please try again.');
-                }
-                resolve();
-            };
-
-            xhr.onerror = () => {
-                this.uploadRequest = null;
-                this.isPublishing = false;
-                this.uploadStatus = 'Upload failed due to connection error.';
-                alert('A connection error occurred.');
-                resolve();
-            };
-
-            xhr.onabort = () => {
-                this.uploadRequest = null;
-                this.isPublishing = false;
-                this.uploadProgress = 0;
-                this.uploadStatus = 'Upload canceled.';
-                resolve();
-            };
-
-            xhr.send(formData);
-        });
+            const result = await response.json();
+            if (result.success) {
+                window.dispatchEvent(new CustomEvent('announcement-published', {
+                    detail: { message: this.isEdit ? 'Updated' : 'Published' }
+                }));
+                if (!this.isEdit) localStorage.removeItem('announcement_draft_local');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                alert('Error: ' + (result.message || 'Check inputs'));
+            }
+        } catch (error) {
+            alert('A connection error occurred.');
+        } finally {
+            this.isPublishing = false;
+        }
     }
 }">
     <form x-ref="annForm" @submit.prevent="submitForm('published')" class="space-y-6">
         @csrf
-        <div class="grid grid-cols-1 xl:grid-cols-[0.6fr_0.4fr] gap-6">
-            <div class="space-y-6">
 
         {{-- Loading Overlay --}}
         <template x-teleport="body">
@@ -317,12 +252,7 @@
                     </div>
                     <div class="text-center">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Uploading Media</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" x-text="uploadStatus || 'Please wait while we process your announcement...'">Please wait while we process your announcement...</p>
-                        <div class="h-2 mt-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-emerald-500 transition-all" :style="`width: ${uploadProgress}%`"></div>
-                        </div>
-                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">Progress: <span x-text="uploadProgress"></span>%</div>
-                        <button type="button" @click="cancelUpload()" class="mt-4 px-5 py-2 text-sm font-bold text-white bg-red-500 rounded-full hover:bg-red-600 transition-all">Cancel Upload</button>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Please wait while we process your announcement...</p>
                     </div>
                 </div>
             </div>
@@ -401,7 +331,6 @@
                 <input
                     type="file"
                     id="annMedia"
-                    x-ref="mediaInput"
                     name="media[]"
                     multiple
                     @change="
@@ -643,9 +572,6 @@
             </div>
         @endif
 
-            </div>
-            <div class="space-y-6 xl:sticky xl:top-24">
-
         {{-- Live Preview Section --}}
         <div class="mt-8">
             <div class="flex items-center justify-between mb-4">
@@ -787,8 +713,6 @@
                 </div>
             </div>
         </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -811,8 +735,7 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
                     <input
                         type="checkbox"
-                        name="is_pinned"
-                        x-model="isPinned"
+                        x-ref="annPinned"
                         class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
                     />
                     <div class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
