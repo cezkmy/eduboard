@@ -28,7 +28,7 @@
                 @endif
             </div>
             <div>
-                <h1 class="brand-title font-black text-xl tracking-tight leading-none" style="color: var(--sidebar-title);">{{ tenant('school_short_name') ?? tenant('school_name') ?? 'Buksu' }}</h1>
+                <h1 class="brand-title font-black text-lg tracking-tight leading-none" style="color: var(--sidebar-title);">{{ tenant('school_short_name') ?? tenant('school_name') ?? 'Buksu' }}</h1>
                 <p class="brand-subtitle text-[10px] font-bold uppercase tracking-widest leading-none mt-1" style="color: var(--sidebar-title); opacity: 0.7;">EduBoard</p>
             </div>
         </a>
@@ -50,19 +50,19 @@
         @endphp
 
         <div class="space-y-2">
-            <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Primary Tools</p>
+            <p class="sidebar-section-label px-4 text-[10px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Primary Tools</p>
             
             @if($user->hasPermission('page_admin_dashboard'))
             <a href="{{ $isLocked ? '#' : route('tenant.admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.admin.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.admin.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
                 <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                <span class="font-bold text-sm">Admin Dashboard</span>
+                <span class="font-bold text-xs">Admin Dashboard</span>
             </a>
             @endif
 
-            @if($user->hasPermission('page_teacher_dashboard'))
+            @if($user->role === 'teacher' && $user->hasPermission('page_teacher_dashboard'))
             <a href="{{ route('tenant.teacher.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.teacher.dashboard') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.teacher.dashboard') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
                 <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm13.5 0a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm-13.5 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm13.5 0a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                <span class="font-bold text-sm">Interactions</span>
+                <span class="font-bold text-xs">Interactions</span>
             </a>
             @endif
 
@@ -96,7 +96,7 @@
             @endif
         </div>
 
-        @if($user->hasPermission('page_admin_users') || $user->hasPermission('page_admin_categories') || $hasTemplates || $hasReports)
+        @if($user->role !== 'teacher' && ($user->hasPermission('page_admin_users') || $user->hasPermission('page_admin_categories') || $hasTemplates || $hasReports))
         <div class="space-y-2">
             <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Management</p>
             
@@ -128,17 +128,12 @@
             </a>
             @endif
         </div>
-        @endif
-
+        @if($user->role !== 'teacher')
         <div class="space-y-2">
             <p class="sidebar-section-label px-4 text-[11px] font-black uppercase tracking-widest mb-3" style="color: var(--sidebar-heading);">Account</p>
-            @if($user->hasPermission('page_profile'))
-            <a href="{{ route('tenant.profile.edit') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('tenant.profile.edit') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('tenant.profile.edit') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
-                <span class="font-bold text-sm">My Profile</span>
-            </a>
-            @endif
+            {{-- Profile is now managed from the topbar account dropdown for admin/teacher views --}}
         </div>
+        @endif
 
         @if($user->role === 'admin')
             <div class="space-y-2">

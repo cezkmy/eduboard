@@ -499,7 +499,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     // Teacher Routes
     Route::prefix('teacher')->middleware(['auth'])->name('tenant.teacher.')->group(function () {
         Route::get('/dashboard', function () {
-            if (!auth()->user()->hasPermission('page_teacher_dashboard')) {
+            if (!auth()->user()->hasPermission('page_teacher_dashboard') && auth()->user()->role !== 'admin') {
                 abort(403, 'Unauthorized.');
             }
             $user = auth()->user();

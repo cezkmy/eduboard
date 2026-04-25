@@ -48,11 +48,11 @@
                 class="sidebar-item {{ request()->routeIs('tenant.admin.dashboard') ? 'active' : '' }}" @if($isLocked)
                 style="opacity: 0.5; pointer-events: none;" tabindex="-1" @endif>
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
-                Admin Dashboard
+                Dashboard
             </a>
         @endif
 
-        @if($user->hasPermission('page_teacher_dashboard'))
+        @if($user->role === 'teacher' && $user->hasPermission('page_teacher_dashboard'))
             <a href="{{ route('tenant.teacher.dashboard') }}"
                 class="sidebar-item {{ request()->routeIs('tenant.teacher.dashboard') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>
@@ -105,7 +105,7 @@
             </a>
         @endif
 
-        @if($user->hasPermission('page_admin_users') || $user->hasPermission('page_admin_roles') || $hasTemplates || $hasReports)
+        @if($user->role !== 'teacher' && ($user->hasPermission('page_admin_users') || $user->hasPermission('page_admin_roles') || $hasTemplates || $hasReports))
             <div class="sidebar-label">Management</div>
         @endif
 
@@ -136,14 +136,10 @@
             </a>
         @endif
 
-        <div class="sidebar-label">Account</div>
+        @if($user->role !== 'teacher')
+            <div class="sidebar-label">Account</div>
 
-        @if($user->hasPermission('page_profile'))
-            <a href="{{ route('tenant.profile.edit') }}"
-                class="sidebar-item {{ request()->routeIs('tenant.profile.edit') ? 'active' : '' }}">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
-                Profile
-            </a>
+            {{-- Profile is now managed from the topbar account dropdown for admin/teacher views --}}
         @endif
 
         @if($user->role === 'admin')
@@ -178,7 +174,7 @@
     </nav>
 
     <div class="sidebar-footer">
-        <a href="{{ route('tenant.profile.edit') }}" class="sidebar-user">
+        <div class="sidebar-user">
             <div class="user-avatar overflow-hidden" id="sidebar-avatar" style="background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                 @if(auth()->user()->profile_photo)
                     <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerText='{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
@@ -190,7 +186,7 @@
                 <span class="name">{{ auth()->user()->name }}</span>
                 <span class="role">{{ ucfirst(auth()->user()->role) }}</span>
             </div>
-        </a>
+        </div>
     </div>
 </aside>
 @endif
