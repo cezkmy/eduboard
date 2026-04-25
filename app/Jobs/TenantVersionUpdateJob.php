@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Artisan;
 
 class TenantVersionUpdateJob implements ShouldQueue
 {
@@ -32,18 +32,13 @@ class TenantVersionUpdateJob implements ShouldQueue
 
         try {
             // Run tenant-only migrations.
-            $process = new Process([
-                PHP_BINARY,
-                'artisan',
-                'tenants:migrate',
-                '--tenants=' . $tenant->id,
-                '--force',
-            ], base_path());
-            $process->setTimeout(600);
-            $process->run();
+            $exitCode = Artisan::call('tenants:migrate', [
+                '--tenants' => $tenant->id,
+                '--force' => true,
+            ]);
 
-            if (!$process->isSuccessful()) {
-                throw new \RuntimeException(trim($process->getErrorOutput()) ?: 'Tenant migrate failed.');
+            if ($exitCode !== 0) {
+                throw new \RuntimeException(trim(Artisan::output()) ?: 'Tenant migrate failed.');
             }
 
             $tenant->update([

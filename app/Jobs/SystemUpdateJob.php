@@ -42,13 +42,9 @@ class SystemUpdateJob implements ShouldQueue
     {
         $base = base_path();
         $storageUpdater = storage_path('app/updater');
-        
-        // Normalize version for file naming (remove 'v' prefix)
+        $currentVersion = CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
         $cleanVersion = ltrim($this->version, 'vV');
-        
         $backupZip = $storageUpdater . '/backup_before_' . $cleanVersion . '_' . time() . '.zip';
-        $downloadZip = $storageUpdater . '/release_' . $cleanVersion . '.zip';
-        $extractDir = $storageUpdater . '/extracted_' . $cleanVersion;
 
         if (!File::exists($storageUpdater)) {
             File::makeDirectory($storageUpdater, 0755, true);
@@ -57,79 +53,105 @@ class SystemUpdateJob implements ShouldQueue
         try {
             $this->log("Running System Update to {$this->version}", 'info');
 
-            // 1. Create Backup
-            $this->log("Creating system backup before update...");
+            $this->log('Putting application into maintenance mode...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'down'], $base);
+
+            $this->log('Creating system backup before update...', 'info');
             $this->createBackup($base, $backupZip);
-            
-            // Save this backup path as the latest stable rollback point
-            $currentVersion = CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
             CentralSetting::set('latest_stable_backup', $backupZip);
             CentralSetting::set('latest_stable_version', $currentVersion);
-            
             $this->log("Backup created successfully at {$backupZip}", 'success');
 
-            // 2. Download Release
-            $this->log("Downloading release from GitHub...");
-            $this->downloadRelease($this->downloadUrl, $downloadZip);
-            $this->log("Download complete.", 'success');
+            $this->log('Fetching latest Git tags...', 'info');
+            $this->runProcess(['git', 'fetch', '--all'], $base);
 
-            // 3. Extract Release
-            $this->log("Extracting release files...");
-            $this->extractRelease($downloadZip, $extractDir);
-            
-            // 4. Copy over files
-            $this->log("Overwriting system files with new version...", 'info');
-            $this->overwriteFiles($extractDir, $base);
-            $this->log("System files updated successfully.", 'success');
+            $this->log("Checking out release tag {$this->version}...", 'info');
+            $this->runProcess(['git', 'checkout', 'tags/' . $this->version], $base);
 
-            // 5. Run Composer
-            $this->log("Running Composer install (this may take a while)...", 'info');
+            $this->log('Installing Composer dependencies...', 'info');
             $this->runProcess(['composer', 'install', '--no-dev', '--optimize-autoloader'], $base);
-            $this->log("Composer dependencies updated.", 'success');
+            $this->log('Composer install finished.', 'success');
 
-            // 6. Run NPM (Optional if NPM is available)
-            $this->log("Attempting NPM install and build...", 'info');
-            try {
-                $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $base);
-                $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $base);
-                $this->log("NPM build successful.", 'success');
-            } catch (Exception $e) {
-                $this->log("NPM build skipped or failed (Optional step): " . rtrim($e->getMessage()), 'warning');
-            }
+            $this->log('Installing NPM packages...', 'info');
+            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $base);
+            $this->log('Building frontend assets...', 'info');
+            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $base);
+            $this->log('NPM build finished.', 'success');
 
-            // 7. Run Migrations
-            $this->log("Running system migrations...", 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'migrate', '--force'], $base);
-            
-            // $this->log("Running tenant migrations...", 'info');
-            // $this->runProcess(['php', 'artisan', 'tenants:migrate', '--force'], $base);
-            // $this->log("Migrations completed.", 'success');
-            $this->log("Central system migrations completed. Tenants must manually apply updates to their own instances.", 'info');
+            $this->log('Running migrations and seeders...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'migrate', '--seed', '--force'], $base);
 
-            // 8. Optimize Cache
-            $this->log("Clearing and optimizing caches...", 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'optimize:clear'], $base);
-            
+            $this->log('Clearing caches...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $base);
+
+            $this->log('Rebuilding caches...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'config:cache'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'route:cache'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'view:cache'], $base);
+
+            $this->log('Bringing application back online...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'up'], $base);
+
             CentralSetting::set('system_version', $this->version);
             CentralSetting::set('last_notified_version', $this->version);
 
             $this->log("Update to {$this->version} has been completed successfully!", 'success');
-
-            // Cleanup
-            File::deleteDirectory($extractDir);
-            File::delete($downloadZip);
-
         } catch (Exception $e) {
             $this->log("FATAL UPDATE ERROR: " . $e->getMessage(), 'error');
-            $this->log("Initiating rollback from backup...", 'warning');
-            
+            $this->log('Initiating rollback to previous stable version...', 'warning');
+
             try {
-                $this->rollback($backupZip, $base);
-                $this->log("Rollback completed successfully. System restored to previous state.", 'info');
+                $this->rollback($currentVersion, $base);
+                $this->log('Rollback completed successfully. System restored to previous state.', 'info');
             } catch (Exception $rollbackException) {
-                $this->log("CRITICAL: Rollback failed! " . $rollbackException->getMessage(), 'error');
+                $this->log('CRITICAL: Rollback failed! ' . $rollbackException->getMessage(), 'error');
             }
         }
+    }
+
+    protected function rollback($previousVersion, $basePath)
+    {
+        if (empty($previousVersion)) {
+            throw new Exception('No previous version available for rollback.');
+        }
+
+        $this->log('Putting application into maintenance mode for rollback...', 'info');
+        $this->runProcess([PHP_BINARY, 'artisan', 'down'], $basePath);
+
+        $this->log('Fetching latest Git tags for rollback...', 'info');
+        $this->runProcess(['git', 'fetch', '--all'], $basePath);
+
+        $this->log("Checking out rollback tag {$previousVersion}...", 'info');
+        $this->runProcess(['git', 'checkout', 'tags/' . $previousVersion], $basePath);
+
+        $this->log('Reinstalling Composer dependencies for rollback...', 'info');
+        $this->runProcess(['composer', 'install'], $basePath);
+
+        $this->log('Installing NPM packages for rollback...', 'info');
+        $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $basePath);
+        $this->log('Building frontend assets for rollback...', 'info');
+        $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $basePath);
+
+        $this->log('Rolling back database changes by one step...', 'info');
+        $this->runProcess([PHP_BINARY, 'artisan', 'migrate:rollback', '--step=1'], $basePath);
+
+        $this->log('Re-running database seeder after rollback...', 'info');
+        $this->runProcess([PHP_BINARY, 'artisan', 'db:seed', '--force'], $basePath);
+
+        $this->log('Clearing caches after rollback...', 'info');
+        $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $basePath);
+        $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $basePath);
+        $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $basePath);
+        $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $basePath);
+
+        $this->log('Bringing application back online after rollback...', 'info');
+        $this->runProcess([PHP_BINARY, 'artisan', 'up'], $basePath);
+
+        CentralSetting::set('system_version', $previousVersion);
+        CentralSetting::set('last_notified_version', $previousVersion);
     }
 
     protected function createBackup($basePath, $destination)
@@ -250,21 +272,6 @@ class SystemUpdateJob implements ShouldQueue
 
         if (!$process->isSuccessful()) {
             throw new Exception("Process failed: " . implode(' ', $command) . "\n" . $process->getErrorOutput());
-        }
-    }
-
-    protected function rollback($backupZip, $basePath)
-    {
-        if (File::exists($backupZip)) {
-            $zip = new ZipArchive;
-            if ($zip->open($backupZip) === true) {
-                $zip->extractTo($basePath);
-                $zip->close();
-            } else {
-                throw new Exception("Failed to open backup zip for rollback.");
-            }
-        } else {
-            throw new Exception("No backup file found to rollback from.");
         }
     }
 

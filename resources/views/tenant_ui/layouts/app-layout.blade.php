@@ -38,12 +38,12 @@
         $tenantThemeColor = tenant('theme_color');
         
         $theme = match ($tenantThemeColor) {
-            'blue' => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],
-            'green' => ['accent' => '#198754', 'accent_dark' => '#157347', 'rgb' => '25, 135, 84'],
-            'pink' => ['accent' => '#ec4899', 'accent_dark' => '#be185d', 'rgb' => '236, 72, 153'],
-            'yellow' => ['accent' => '#facc15', 'accent_dark' => '#eab308', 'rgb' => '250, 204, 21'],
-            'orange' => ['accent' => '#f97316', 'accent_dark' => '#ea580c', 'rgb' => '249, 115, 22'],
-            default => ['accent' => '#0d6efd', 'accent_dark' => '#0b5ed7', 'rgb' => '13, 110, 253'],
+            'blue' => ['accent' => '#2563eb', 'accent_dark' => '#1d4ed8', 'rgb' => '37, 99, 235'],
+            'green' => ['accent' => '#15803d', 'accent_dark' => '#166534', 'rgb' => '21, 128, 61'],
+            'pink' => ['accent' => '#be185d', 'accent_dark' => '#9d174d', 'rgb' => '190, 24, 93'],
+            'yellow' => ['accent' => '#ca8a04', 'accent_dark' => '#b45309', 'rgb' => '202, 138, 4'],
+            'orange' => ['accent' => '#c05621', 'accent_dark' => '#9c4221', 'rgb' => '192, 66, 33'],
+            default => ['accent' => '#2563eb', 'accent_dark' => '#1d4ed8', 'rgb' => '37, 99, 235'],
         };
     @endphp
 

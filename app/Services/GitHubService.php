@@ -90,6 +90,59 @@ class GitHubService
     }
 
     /**
+     * Fetch a specific release by tag name.
+     *
+     * @param string $tag
+     * @return array|null
+     */
+    public static function getReleaseByTag(string $tag)
+    {
+        if (empty($tag)) {
+            return null;
+        }
+
+        try {
+            $repo = config('services.github.repo', 'cezkmy/eduboard');
+            $url = "https://api.github.com/repos/{$repo}/releases/tags/{$tag}";
+
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                Log::error("Curl Error: " . curl_error($ch));
+                curl_close($ch);
+                return null;
+            }
+
+            curl_close($ch);
+
+            $release = json_decode($response, true);
+
+            if (!empty($release['tag_name'])) {
+                return [
+                    'tag_name' => $release['tag_name'] ?? null,
+                    'name' => $release['name'] ?? 'Release',
+                    'body' => $release['body'] ?? 'No release notes available.',
+                    'published_at' => $release['published_at'] ?? now()->toDateTimeString(),
+                    'html_url' => $release['html_url'] ?? "https://github.com/{$repo}",
+                    'zipball_url' => $release['zipball_url'] ?? null,
+                    'is_prerelease' => $release['prerelease'] ?? false,
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('GitHubService Error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Get only the version string (tag_name).
      *
      * @return string
