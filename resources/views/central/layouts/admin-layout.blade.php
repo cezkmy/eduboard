@@ -433,7 +433,7 @@
                     @hasSection('page-title')
                         @yield('page-title')
                     @else
-                        {{ ucfirst(str_replace('central.admin.', '', request()->route()->getName() ?? 'Dashboard')) }}
+                        {{ ucwords(str_replace(['central.admin.', '.'], ['', ' '], request()->route()->getName() ?? 'Dashboard')) }}
                     @endif
                 </h1>
                 

@@ -1,5 +1,7 @@
 @extends('central.layouts.admin-layout')
 
+@section('page-title', 'System Update')
+
 @section('content')
 <div class="px-6 py-8 mx-auto max-w-5xl" x-data="systemUpdater()">
     {{-- Header --}}
