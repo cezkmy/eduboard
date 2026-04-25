@@ -27,6 +27,12 @@
             </div>
         @endif
 
+        @if(tenant('is_updating'))
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-xl text-sm font-bold">
+                A system update is already running for this tenant. Please wait until it finishes before submitting another update.
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 space-y-4">
                 <div class="text-xs font-black text-gray-400 uppercase tracking-widest">Current Version</div>
@@ -62,8 +68,11 @@
                     </button>
                 </div>
 
-                <form action="{{ route('tenant.admin.version.apply') }}" method="POST" class="space-y-3">
+                <form action="{{ route('tenant.admin.version.apply') }}" method="POST" class="space-y-3 apply-release-form" id="tenant-update-form">
                     @csrf
+                    <div id="tenant-update-status" class="hidden text-sm font-bold text-gray-700 dark:text-gray-200 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-3 py-3 rounded-xl">
+                        <span id="tenant-update-status-text"></span>
+                    </div>
                     <label class="block">
                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Version</span>
                         <select name="version" class="mt-2 w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold">
@@ -74,6 +83,16 @@
                             @endforeach
                         </select>
                     </label>
+
+                    <div class="text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-3">
+                        This update will run:
+                        <ul class="list-disc list-inside ml-2 mt-1 space-y-1">
+                            <li>composer install</li>
+                            <li>npm install</li>
+                            <li>npm run build</li>
+                            <li>tenant migrate (with seed and cache refresh)</li>
+                        </ul>
+                    </div>
 
                 @if($hasUpdate)
                         <button type="submit"
@@ -95,7 +114,7 @@
                 </form>
 
                 @if($rollbackAvailable)
-                    <form action="{{ route('tenant.admin.version.rollback') }}" method="POST" class="space-y-3">
+                    <form action="{{ route('tenant.admin.version.rollback') }}" method="POST" class="space-y-3 rollback-release-form">
                         @csrf
                         <button type="submit"
                                 onclick="return confirmAction(event, 'Revert your school from {{ tenant('system_version') }} back to {{ tenant('previous_version') }}? This will restore your previous version marker.')"
@@ -123,5 +142,40 @@
             </div>
         @endif
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusBox = document.getElementById('tenant-update-status');
+            const statusText = document.getElementById('tenant-update-status-text');
+            const updateForm = document.querySelector('form.apply-release-form');
+            const rollbackForm = document.querySelector('form.rollback-release-form');
+            const spinner = '<span class="inline-block mr-2 h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span>';
+
+            function attachForm(form, actionLabel) {
+                if (!form) {
+                    return;
+                }
+
+                form.addEventListener('submit', function () {
+                    const submitButton = form.querySelector('button[type=submit]');
+                    if (!submitButton || submitButton.disabled) {
+                        return;
+                    }
+
+                    submitButton.disabled = true;
+                    submitButton.classList.add('cursor-wait', 'opacity-70');
+                    submitButton.innerHTML = spinner + actionLabel;
+
+                    if (statusBox && statusText) {
+                        statusText.textContent = actionLabel + ' This may take several minutes. Composer install, NPM install, build, and tenant migrations will run. Do not refresh or close this page.';
+                        statusBox.classList.remove('hidden');
+                    }
+                });
+            }
+
+            attachForm(updateForm, 'Updating tenant instance...');
+            attachForm(rollbackForm, 'Rolling back tenant instance...');
+        });
+    </script>
 </x-app-layout>
 

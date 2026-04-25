@@ -271,30 +271,46 @@
                 const target = event.currentTarget;
                 const form = target.closest('form');
                 const link = target.closest('a');
-                
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: message,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, proceed!',
-                    cancelButtonText: 'Cancel',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        if (form) form.submit();
-                        else if (link) window.location.href = link.href;
+                const submitForm = () => {
+                    if (form) form.submit();
+                    else if (link) window.location.href = link.href;
+                };
+
+                if (window.Swal && typeof Swal.fire === 'function') {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: message,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, proceed!',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            submitForm();
+                        }
+                    });
+                } else {
+                    if (window.confirm(message || 'Are you sure?')) {
+                        submitForm();
                     }
-                });
+                }
                 return false;
             };
 
             window.showAlert = function(title, text, icon = 'info') {
-                return Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: icon,
-                    confirmButtonText: 'OK'
+                if (window.Swal && typeof Swal.fire === 'function') {
+                    return Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: icon,
+                        confirmButtonText: 'OK'
+                    });
+                }
+
+                return new Promise((resolve) => {
+                    window.alert(title + '\n\n' + text);
+                    resolve({ isConfirmed: true });
                 });
             };
         })();
