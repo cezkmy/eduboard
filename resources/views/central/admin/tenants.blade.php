@@ -118,12 +118,17 @@
                                 @php
                                     $domainRecord = $tenant->domains->first();
                                     $domainName = $domainRecord ? $domainRecord->domain : 'N/A';
-                                    if ($domainName !== 'N/A') {
-                                        // If it's just a subdomain (no dots), append the local suffix
-                                        if (strpos($domainName, '.') === false) {
-                                            $domainName .= '.localhost:8000';
-                                        } elseif (strpos($domainName, 'localhost') !== false && strpos($domainName, ':') === false) {
-                                            $domainName .= ':8000';
+                                    
+                                    // If the domain doesn't contain a dot, it might be a subdomain
+                                    // We should try to append the current central domain
+                                    if ($domainName !== 'N/A' && strpos($domainName, '.') === false) {
+                                        $currentHost = request()->getHost();
+                                        $domainName .= '.' . $currentHost;
+                                        
+                                        // If we are on a specific port, append it
+                                        $port = request()->getPort();
+                                        if ($port && !in_array($port, [80, 443])) {
+                                            $domainName .= ':' . $port;
                                         }
                                     }
                                 @endphp

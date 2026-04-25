@@ -51,6 +51,8 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'plan',
             'system_version',
             'previous_version',
+            'latest_backup_path',
+            'latest_db_backup_path',
             'storage_limit_gb',
             'storage_used_gb',
             'bandwidth_limit_gb',

@@ -45,10 +45,14 @@ class SystemUpdateJob implements ShouldQueue
         $currentVersion = CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
         $cleanVersion = ltrim($this->version, 'vV');
         $backupZip = $storageUpdater . '/backup_before_' . $cleanVersion . '_' . time() . '.zip';
+        $dbBackupSql = $storageUpdater . '/db_before_' . $cleanVersion . '_' . time() . '.sql';
 
         if (!File::exists($storageUpdater)) {
             File::makeDirectory($storageUpdater, 0755, true);
         }
+
+        // Set lock
+        CentralSetting::set('is_system_updating', true);
 
         try {
             $this->log("Running System Update to {$this->version}", 'info');
@@ -56,17 +60,34 @@ class SystemUpdateJob implements ShouldQueue
             $this->log('Putting application into maintenance mode...', 'info');
             $this->runProcess([PHP_BINARY, 'artisan', 'down'], $base);
 
-            $this->log('Creating system backup before update...', 'info');
+            $this->log('Creating database backup...', 'info');
+            $this->backupDatabase($dbBackupSql);
+            $this->log('Database backup created successfully.', 'success');
+
+            $this->log('Creating system files backup...', 'info');
             $this->createBackup($base, $backupZip);
             CentralSetting::set('latest_stable_backup', $backupZip);
+            CentralSetting::set('latest_stable_db_backup', $dbBackupSql);
             CentralSetting::set('latest_stable_version', $currentVersion);
             $this->log("Backup created successfully at {$backupZip}", 'success');
 
-            $this->log('Fetching latest Git tags...', 'info');
-            $this->runProcess(['git', 'fetch', '--all'], $base);
+            $this->log('Downloading release archive from GitHub...', 'info');
+            $zipPath = $storageUpdater . DIRECTORY_SEPARATOR . 'release.zip';
+            $this->downloadRelease($this->downloadUrl, $zipPath);
 
-            $this->log("Checking out release tag {$this->version}...", 'info');
-            $this->runProcess(['git', 'checkout', 'tags/' . $this->version], $base);
+            $this->log('Extracting release archive...', 'info');
+            $extractDir = $storageUpdater . DIRECTORY_SEPARATOR . 'extract';
+            if (File::exists($extractDir)) {
+                File::deleteDirectory($extractDir);
+            }
+            $this->extractRelease($zipPath, $extractDir);
+
+            $this->log('Applying new files to system core...', 'info');
+            $this->overwriteFiles($extractDir, $base);
+            
+            // Clean up
+            File::delete($zipPath);
+            File::deleteDirectory($extractDir);
 
             $this->log('Installing Composer dependencies...', 'info');
             $this->runProcess(['composer', 'install', '--no-dev', '--optimize-autoloader'], $base);
@@ -109,6 +130,37 @@ class SystemUpdateJob implements ShouldQueue
             } catch (Exception $rollbackException) {
                 $this->log('CRITICAL: Rollback failed! ' . $rollbackException->getMessage(), 'error');
             }
+        } finally {
+            CentralSetting::set('is_system_updating', false);
+        }
+    }
+
+    protected function backupDatabase($destination)
+    {
+        $connection = config('database.default');
+        $config = config("database.connections.{$connection}");
+
+        if ($connection === 'mysql') {
+            $command = [
+                'mysqldump',
+                '--user=' . $config['username'],
+                '--password=' . $config['password'],
+                '--host=' . $config['host'],
+                '--port=' . $config['port'],
+                $config['database'],
+            ];
+            
+            $process = new Process($command);
+            $process->run();
+            
+            if ($process->isSuccessful()) {
+                File::put($destination, $process->getOutput());
+            } else {
+                // Fallback: If mysqldump is not available, we skip DB backup but log it
+                $this->log('Warning: mysqldump not found or failed. Database backup skipped.', 'warning');
+            }
+        } elseif ($connection === 'sqlite') {
+            File::copy($config['database'], $destination);
         }
     }
 
@@ -118,40 +170,72 @@ class SystemUpdateJob implements ShouldQueue
             throw new Exception('No previous version available for rollback.');
         }
 
+        $this->log('Initiating automatic rollback...', 'warning');
+
         $this->log('Putting application into maintenance mode for rollback...', 'info');
         $this->runProcess([PHP_BINARY, 'artisan', 'down'], $basePath);
 
-        $this->log('Fetching latest Git tags for rollback...', 'info');
-        $this->runProcess(['git', 'fetch', '--all'], $basePath);
+        $backupZip = CentralSetting::get('latest_stable_backup');
+        $dbBackupSql = CentralSetting::get('latest_stable_db_backup');
 
-        $this->log("Checking out rollback tag {$previousVersion}...", 'info');
-        $this->runProcess(['git', 'checkout', 'tags/' . $previousVersion], $basePath);
+        if ($dbBackupSql && File::exists($dbBackupSql)) {
+            $this->log('Restoring database from stable backup...', 'info');
+            // We use the same restore logic as ManualRollbackJob but inside this job
+            $this->restoreDatabase($dbBackupSql);
+            $this->log('Database restored successfully.', 'success');
+        }
 
-        $this->log('Reinstalling Composer dependencies for rollback...', 'info');
+        if ($backupZip && File::exists($backupZip)) {
+            $this->log('Restoring files from stable backup archive...', 'info');
+            $zip = new ZipArchive;
+            if ($zip->open($backupZip) === true) {
+                $zip->extractTo($basePath);
+                $zip->close();
+                $this->log('Files restored successfully.', 'success');
+            } else {
+                throw new Exception('Failed to open backup zip for rollback.');
+            }
+        } else {
+            $this->log('Backup not found, attempting Git rollback...', 'warning');
+            $this->runProcess(['git', 'fetch', '--all'], $basePath);
+            $this->runProcess(['git', 'checkout', 'tags/' . $previousVersion], $basePath);
+        }
+
+        $this->log('Re-running dependency check...', 'info');
         $this->runProcess(['composer', 'install'], $basePath);
-
-        $this->log('Installing NPM packages for rollback...', 'info');
-        $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $basePath);
-        $this->log('Building frontend assets for rollback...', 'info');
-        $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $basePath);
-
-        $this->log('Rolling back database changes by one step...', 'info');
-        $this->runProcess([PHP_BINARY, 'artisan', 'migrate:rollback', '--step=1'], $basePath);
-
-        $this->log('Re-running database seeder after rollback...', 'info');
-        $this->runProcess([PHP_BINARY, 'artisan', 'db:seed', '--force'], $basePath);
 
         $this->log('Clearing caches after rollback...', 'info');
         $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $basePath);
         $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $basePath);
-        $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $basePath);
-        $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $basePath);
 
         $this->log('Bringing application back online after rollback...', 'info');
         $this->runProcess([PHP_BINARY, 'artisan', 'up'], $basePath);
 
         CentralSetting::set('system_version', $previousVersion);
         CentralSetting::set('last_notified_version', $previousVersion);
+    }
+
+    protected function restoreDatabase($source)
+    {
+        $connection = config('database.default');
+        $config = config("database.connections.{$connection}");
+
+        if ($connection === 'mysql') {
+            $command = [
+                'mysql',
+                '--user=' . $config['username'],
+                '--password=' . $config['password'],
+                '--host=' . $config['host'],
+                '--port=' . $config['port'],
+                $config['database'],
+            ];
+            
+            $process = new Process($command);
+            $process->setInput(File::get($source));
+            $process->run();
+        } elseif ($connection === 'sqlite') {
+            File::copy($source, $config['database']);
+        }
     }
 
     protected function createBackup($basePath, $destination)
@@ -256,7 +340,7 @@ class SystemUpdateJob implements ShouldQueue
     protected function runProcess(array $command, $cwd)
     {
         $process = new Process($command, $cwd);
-        $process->setTimeout(300); // 5 minutes
+        $process->setTimeout(600); // 10 minutes per process
 
         // Stream output to logs
         $process->run(function ($type, $buffer) {
@@ -265,13 +349,17 @@ class SystemUpdateJob implements ShouldQueue
             })->filter()->values();
             
             foreach($logs as $msg) {
+                // Ignore empty or trivial lines
+                if (empty($msg) || $msg === '.' || $msg === '...') continue;
+                
                 $msgType = $type === Process::ERR ? 'warning' : 'info';
                 $this->log($msg, $msgType);
             }
         });
 
         if (!$process->isSuccessful()) {
-            throw new Exception("Process failed: " . implode(' ', $command) . "\n" . $process->getErrorOutput());
+            $errorOutput = $process->getErrorOutput() ?: $process->getOutput();
+            throw new Exception("Process failed: " . implode(' ', $command) . "\n" . $errorOutput);
         }
     }
 

@@ -166,114 +166,84 @@ class VersionController extends Controller
         $latestVersion = $requested ?: ($release['tag_name'] ?? null);
 
         if (!$latestVersion) {
-            return back()->with('error', 'Unable to fetch the latest release right now. Please try again.');
+            return response()->json(['success' => false, 'message' => 'Unable to fetch release details.']);
         }
 
         if ($tenant->system_version === $latestVersion) {
-            return back()->with('info', 'Your system is already running the latest version.');
+            return response()->json(['success' => false, 'message' => 'System is already on this version.']);
         }
 
         if (empty($release['zipball_url'])) {
-            return back()->with('error', 'Release archive is unavailable for the selected version.');
+            return response()->json(['success' => false, 'message' => 'Release archive is unavailable.']);
         }
 
-        try {
-            $this->markTenantUpdating($tenant, true);
+        $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-            $this->runShellCommand([PHP_BINARY, 'artisan', 'down']);
-            $this->applyReleaseZip($latestVersion, $release['zipball_url']);
-            $this->runShellCommand(['composer', 'install', '--no-dev', '--optimize-autoloader']);
-            $this->runShellCommand($this->npmCommand(['install']));
-            $this->runShellCommand($this->npmCommand(['run', 'build']));
-            $this->runTenantCommand('tenants:migrate', [
-                '--tenants' => $tenant->id,
-                '--force' => true,
-                '--seed' => true,
-            ]);
-            $this->runTenantCommand('config:clear');
-            $this->runTenantCommand('cache:clear');
-            $this->runTenantCommand('view:clear');
-            $this->runTenantCommand('route:clear');
-            $this->runTenantCommand('config:cache');
-            $this->runTenantCommand('route:cache');
-            $this->runTenantCommand('view:cache');
-            $this->runShellCommand([PHP_BINARY, 'artisan', 'up']);
+        \App
+\Jobs\TenantUpdateJob::dispatch(
+            $updateId,
+            $tenant->id,
+            $latestVersion,
+            $release['zipball_url']
+        );
 
-            $tenant->update([
-                'previous_version' => $tenant->system_version,
-                'system_version' => $latestVersion,
-            ]);
-        } catch (\Throwable $e) {
-            try {
-                $this->runShellCommand([PHP_BINARY, 'artisan', 'up']);
-            } catch (\Throwable $ignored) {
-                // ensure app is back online if possible
-            }
-
-            return back()->with('error', 'Tenant update failed: ' . $e->getMessage());
-        } finally {
-            $this->markTenantUpdating($tenant, false);
-        }
-
-        return back()->with('success', "Tenant updated successfully to {$latestVersion}.");
+        return response()->json([
+            'success' => true,
+            'update_id' => $updateId,
+            'message' => "Update to {$latestVersion} started in background."
+        ]);
     }
 
     /**
-     * Rollback to the previous version.
+     * Rollback the current tenant to the previous version.
      */
     public function rollback(Request $request)
     {
         $this->ensurePermission();
-
         $tenant = tenant();
 
-        if (!$tenant->previous_version) {
-            return back()->with('error', 'No previous version found to rollback to.');
+        if (empty($tenant->previous_version) || empty($tenant->latest_backup_path)) {
+            return response()->json(['success' => false, 'message' => 'No rollback point available.']);
         }
 
-        $oldVersion = $tenant->previous_version;
-        $currentVersion = $tenant->system_version;
+        $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-        $release = GitHubService::getReleaseByTag($oldVersion);
-        if (!$release || empty($release['zipball_url'])) {
-            return back()->with('error', 'Unable to locate the release archive for the previous version.');
-        }
+        \App
+\Jobs\TenantRollbackJob::dispatch(
+            $updateId,
+            $tenant->id
+        );
 
-        try {
-            $this->markTenantUpdating($tenant, true);
+        return response()->json([
+            'success' => true,
+            'update_id' => $updateId,
+            'message' => "Rollback to {$tenant->previous_version} started in background."
+        ]);
+    }
 
-            $this->runShellCommand([PHP_BINARY, 'artisan', 'down']);
-            $this->applyReleaseZip($oldVersion, $release['zipball_url']);
-            $this->runShellCommand(['composer', 'install']);
-            $this->runShellCommand($this->npmCommand(['install']));
-            $this->runShellCommand($this->npmCommand(['run', 'build']));
-            $this->runTenantCommand('tenants:migrate', [
-                '--tenants' => $tenant->id,
-                '--force' => true,
-                '--step' => 1,
-            ]);
-            $this->runTenantCommand('db:seed', ['--force' => true]);
-            $this->runTenantCommand('cache:clear');
-            $this->runTenantCommand('config:clear');
-            $this->runTenantCommand('route:clear');
-            $this->runTenantCommand('view:clear');
-            $this->runShellCommand([PHP_BINARY, 'artisan', 'up']);
+    /**
+     * Get logs for a specific update session.
+     */
+    public function logs($updateId)
+    {
+        $this->ensurePermission();
+        
+        $logs = \App
+\Models\UpdateLog::where('update_id', $updateId)
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
-            $tenant->update([
-                'system_version' => $oldVersion,
-                'previous_version' => $currentVersion,
-            ]);
-        } catch (\Throwable $e) {
-            try {
-                $this->runShellCommand([PHP_BINARY, 'artisan', 'up']);
-            } catch (\Throwable $ignored) {
-            }
+        $isFinished = $logs->contains(function ($log) {
+            $msg = strtolower($log->message);
+            return str_contains($msg, 'completed successfully') || 
+                   str_contains($msg, 'fatal update error') ||
+                   str_contains($msg, 'rollback error');
+        });
 
-            return back()->with('error', 'Tenant rollback failed: ' . $e->getMessage());
-        } finally {
-            $this->markTenantUpdating($tenant, false);
-        }
-
-        return back()->with('success', "Tenant reverted from {$currentVersion} to {$oldVersion}.");
+        return response()->json([
+            'logs' => $logs->pluck('message'),
+            'finished' => $isFinished
+        ]);
     }
 }

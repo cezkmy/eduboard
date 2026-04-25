@@ -489,6 +489,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         // Version Management
         Route::post('/version/apply', [\App\Http\Controllers\Tenant\VersionController::class, 'applyUpdate'])->name('admin.version.apply');
         Route::post('/version/rollback', [\App\Http\Controllers\Tenant\VersionController::class, 'rollback'])->name('admin.version.rollback');
+        Route::get('/version/logs/{updateId}', [\App\Http\Controllers\Tenant\VersionController::class, 'logs'])->name('admin.version.logs');
         
         Route::get('/notifications/read', function () {
             auth()->user()->unreadNotifications->markAsRead();

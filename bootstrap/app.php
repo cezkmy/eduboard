@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'student' => \App\Http\Middleware\StudentMiddleware::class,
         ]);
         
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'admin/system/update/logs/*',
+            'admin/version/logs/*',
+        ]);
+        
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->append(\App\Http\Middleware\PreventCRLFInjection::class);
         $middleware->append(\App\Http\Middleware\XssSanitization::class);

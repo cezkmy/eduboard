@@ -20,6 +20,9 @@ class SystemUpdateController extends Controller
         $release = GitHubService::getLatestRelease(true);
         $latestVersion = $release['tag_name'] ?? $currentVersion;
 
+        // Fetch all available releases for the dropdown
+        $allReleases = GitHubService::getAllReleases(true);
+
         if ($release && !empty($release['tag_name'])) {
             $releaseList = CentralSetting::getJson('github_releases', []);
             $releaseCollection = collect($releaseList)->keyBy('tag_name');
@@ -27,7 +30,6 @@ class SystemUpdateController extends Controller
             if (!$releaseCollection->has($release['tag_name'])) {
                 $releaseCollection->put($release['tag_name'], $release);
                 CentralSetting::setJson('github_releases', $releaseCollection->values()->all());
-                CentralSetting::set('system_version', $release['tag_name']);
             }
         }
 
@@ -46,7 +48,16 @@ class SystemUpdateController extends Controller
             $rollbackAvailable = true;
         }
 
-        return view('central.admin.system-updater', compact('currentVersion', 'latestVersion', 'hasUpdate', 'release', 'autoUpdate', 'rollbackAvailable', 'rollbackVersion'));
+        return view('central.admin.system-updater', compact(
+            'currentVersion', 
+            'latestVersion', 
+            'hasUpdate', 
+            'release', 
+            'allReleases',
+            'autoUpdate', 
+            'rollbackAvailable', 
+            'rollbackVersion'
+        ));
     }
 
     public function rollback(Request $request)
@@ -76,9 +87,21 @@ class SystemUpdateController extends Controller
 
     public function trigger(Request $request)
     {
-        $release = GitHubService::getLatestRelease(true);
+        $version = $request->input('version');
+        
+        if ($version) {
+            $release = GitHubService::getReleaseByTag($version);
+        } else {
+            $release = GitHubService::getLatestRelease(true);
+        }
+
         if (!$release || empty($release['zipball_url'])) {
-            return response()->json(['success' => false, 'message' => 'Unable to fetch the latest release zipball URL.']);
+            return response()->json(['success' => false, 'message' => 'Unable to fetch the selected release zipball URL.']);
+        }
+
+        // Check for lock
+        if (CentralSetting::get('is_system_updating')) {
+            return response()->json(['success' => false, 'message' => 'A system update is already in progress.']);
         }
 
         $updateId = Str::uuid()->toString();
@@ -89,7 +112,7 @@ class SystemUpdateController extends Controller
         return response()->json([
             'success' => true,
             'update_id' => $updateId,
-            'message' => 'Update job dispatched. Please wait while the system updates.'
+            'message' => "Update to {$release['tag_name']} dispatched. Please wait while the system updates."
         ]);
     }
 

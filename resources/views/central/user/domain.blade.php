@@ -65,12 +65,13 @@
                                         <h4 class="mb-0 fw-bold text-success text-break w-100" style="word-break: break-all;">
                                             @php
                                                 $displayDomain = auth()->user()->school_domain;
-                                                if ($displayDomain) {
-                                                    if (str_contains($displayDomain, '.localhost') && str_contains($displayDomain, '_')) {
-                                                        $displayDomain = str_replace('_', '-', $displayDomain);
-                                                    }
-                                                    if (str_contains($displayDomain, 'localhost') && !str_contains($displayDomain, ':')) {
-                                                        $displayDomain .= ':8000';
+                                                if ($displayDomain && strpos($displayDomain, '.') === false) {
+                                                    $currentHost = request()->getHost();
+                                                    $displayDomain .= '.' . $currentHost;
+                                                    
+                                                    $port = request()->getPort();
+                                                    if ($port && !in_array($port, [80, 443])) {
+                                                        $displayDomain .= ':' . $port;
                                                     }
                                                 }
                                             @endphp

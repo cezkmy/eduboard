@@ -74,20 +74,16 @@ class TenantController extends Controller
         }
         
         // Use the current host to determine the domain suffix
-        $host = parse_url(config('app.url'), PHP_URL_HOST) ?? request()->getHost();
-        if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
-            // Local dev should use *.localhost so tenancy can resolve fast.
-            $baseHost = 'localhost';
-        } elseif (str_starts_with($host, 'eduboard.')) {
+        $host = request()->getHost();
+        $baseHost = $host;
+        
+        // If the host is eduboard.something, the base host is something
+        if (str_starts_with($host, 'eduboard.')) {
             $baseHost = substr($host, 9);
-        } else {
-            $baseHost = $host;
         }
         
-        // Canonical tenant hostname for local dev should not contain underscores.
-        $safeSubdomain = $baseHost === 'localhost'
-            ? str_replace('_', '-', $subdomain)
-            : $subdomain;
+        // Canonical tenant hostname should use hyphens instead of underscores for DNS compatibility
+        $safeSubdomain = str_replace('_', '-', $subdomain);
 
         $domainName = $safeSubdomain . '.' . $baseHost;
         

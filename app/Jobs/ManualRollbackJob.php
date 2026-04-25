@@ -34,6 +34,7 @@ class ManualRollbackJob implements ShouldQueue
     public function handle(): void
     {
         $base = base_path();
+        CentralSetting::set('is_system_updating', true);
 
         try {
             $this->log('Manual Rollback Initiated', 'info');
@@ -45,11 +46,31 @@ class ManualRollbackJob implements ShouldQueue
             $this->log('Putting application into maintenance mode for rollback...', 'info');
             $this->runProcess([PHP_BINARY, 'artisan', 'down'], $base);
 
-            $this->log('Fetching latest Git tags for rollback...', 'info');
-            $this->runProcess(['git', 'fetch', '--all'], $base);
+            // Database rollback if available
+            $dbBackupSql = CentralSetting::get('latest_stable_db_backup');
+            if ($dbBackupSql && File::exists($dbBackupSql)) {
+                $this->log('Restoring database from backup...', 'info');
+                $this->restoreDatabase($dbBackupSql);
+                $this->log('Database restored successfully.', 'success');
+            }
 
-            $this->log("Checking out rollback tag {$this->rollbackVersion}...", 'info');
-            $this->runProcess(['git', 'checkout', 'tags/' . $this->rollbackVersion], $base);
+            if (File::exists($this->backupZip)) {
+                $this->log('Restoring files from backup archive...', 'info');
+                $zip = new ZipArchive;
+                if ($zip->open($this->backupZip) === true) {
+                    // We don't want to just extractTo(base) because that won't delete new files added by the update.
+                    // But for a simple rollback, overwriting is usually enough for core files.
+                    $zip->extractTo($base);
+                    $zip->close();
+                    $this->log('Files restored from backup successfully.', 'success');
+                } else {
+                    throw new Exception('Failed to open backup zip archive.');
+                }
+            } else {
+                $this->log('Backup zip not found, attempting Git-based rollback...', 'warning');
+                $this->runProcess(['git', 'fetch', '--all'], $base);
+                $this->runProcess(['git', 'checkout', 'tags/' . $this->rollbackVersion], $base);
+            }
 
             $this->log('Reinstalling Composer dependencies for rollback...', 'info');
             $this->runProcess(['composer', 'install'], $base);
@@ -95,23 +116,59 @@ class ManualRollbackJob implements ShouldQueue
                     $this->log('Failed to open backup zip for fallback restore.', 'error');
                 }
             }
+        } finally {
+            CentralSetting::set('is_system_updating', false);
+        }
+    }
+
+    protected function restoreDatabase($source)
+    {
+        $connection = config('database.default');
+        $config = config("database.connections.{$connection}");
+
+        if ($connection === 'mysql') {
+            $command = [
+                'mysql',
+                '--user=' . $config['username'],
+                '--password=' . $config['password'],
+                '--host=' . $config['host'],
+                '--port=' . $config['port'],
+                $config['database'],
+            ];
+            
+            $process = new Process($command);
+            $process->setInput(File::get($source));
+            $process->run();
+            
+            if (!$process->isSuccessful()) {
+                $this->log('Warning: Database restoration failed.', 'warning');
+            }
+        } elseif ($connection === 'sqlite') {
+            File::copy($source, $config['database']);
         }
     }
 
     protected function runProcess(array $command, $cwd)
     {
         $process = new Process($command, $cwd);
-        $process->setTimeout(300);
+        $process->setTimeout(600); // 10 minutes
 
+        // Stream output to logs
         $process->run(function ($type, $buffer) {
-            $lines = collect(explode("\n", rtrim($buffer)))->filter()->map('trim');
-            foreach ($lines as $line) {
-                $this->log($line, $type === Process::ERR ? 'warning' : 'info');
+            $logs = collect(explode("\n", rtrim($buffer)))->filter()->map(function($line) {
+                return trim($line);
+            })->filter()->values();
+            
+            foreach($logs as $msg) {
+                if (empty($msg) || $msg === '.' || $msg === '...') continue;
+                $msgType = $type === Process::ERR ? 'warning' : 'info';
+                $this->log($msg, $msgType);
             }
         });
 
         if (!$process->isSuccessful()) {
-            throw new Exception('Process failed: ' . implode(' ', $command) . '\n' . $process->getErrorOutput());
+            $errorOutput = $process->getErrorOutput() ?: $process->getOutput();
+            throw new Exception("Process failed: " . implode(' ', $command) . "\n" . $errorOutput);
         }
     }
 

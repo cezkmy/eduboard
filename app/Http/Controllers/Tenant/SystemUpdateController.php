@@ -18,23 +18,17 @@ class SystemUpdateController extends Controller
         $tenant = tenant();
         $currentVersion = $tenant->system_version ?? config('app.version', 'v1.0.0');
 
-        // Fetch real-time latest release from GitHub API to ensure timely detection
-        $latestGithubRelease = GitHubService::getLatestRelease(true);
+        // Fetch real-time releases from GitHub API
+        $allReleases = GitHubService::getAllReleases(true);
+        $latestGithubRelease = !empty($allReleases) ? $allReleases[0] : null;
 
-        // Get locally stored releases so tenants can browse/select versions
+        // Get locally stored releases for historical browsing if API fails
         $releaseList = CentralSetting::getJson('github_releases', []);
         $releaseCollection = collect($releaseList)->keyBy('tag_name');
 
-        // Always inject the real-time latest release to the list
-        if ($latestGithubRelease && !empty($latestGithubRelease['tag_name'])) {
-            $releaseCollection->put($latestGithubRelease['tag_name'], $latestGithubRelease);
-
-            // Optionally sync it back to central settings so it's globally updated
-            if (!collect($releaseList)->contains('tag_name', $latestGithubRelease['tag_name'])) {
-                CentralSetting::setJson('github_releases', $releaseCollection->values()->all());
-                // Update system version for central admin tracking
-                CentralSetting::set('system_version', $latestGithubRelease['tag_name']);
-            }
+        // Sync real-time releases to the collection
+        foreach ($allReleases as $r) {
+            $releaseCollection->put($r['tag_name'], $r);
         }
 
         $sorted = $releaseCollection
@@ -44,12 +38,17 @@ class SystemUpdateController extends Controller
             })
             ->values();
 
-        // Use the real-time release if available, otherwise fallback to the highest sorted locally
         $release = $latestGithubRelease ?: $sorted->first();
         $latestVersion = $release['tag_name'] ?? $currentVersion;
 
         $hasUpdate = version_compare(ltrim($latestVersion, 'vV'), ltrim($currentVersion, 'vV'), '>');
-        $rollbackAvailable = !empty($tenant->previous_version);
+        
+        $rollbackAvailable = false;
+        if (!empty($tenant->previous_version) && !empty($tenant->latest_backup_path)) {
+            if (\Illuminate\Support\Facades\File::exists($tenant->latest_backup_path)) {
+                $rollbackAvailable = true;
+            }
+        }
 
         return view('tenant_ui.admin.system-update', compact(
             'tenant',

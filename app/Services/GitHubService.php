@@ -8,23 +8,32 @@ use BadMethodCallException;
 
 class GitHubService
 {
+    protected static function initCurl($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
+        
+        // Disable SSL verification only in local environment
+        $isLocal = app()->environment('local') || in_array(request()->getHost(), ['localhost', '127.0.0.1']);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$isLocal);
+        
+        return $ch;
+    }
+
     protected static function fetchLatestReleaseFromApi(): ?array
     {
         try {
             $repo = config('services.github.repo', 'cezkmy/eduboard');
             $url = "https://api.github.com/repos/{$repo}/releases/latest";
 
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App"); // REQUIRED
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // for localhost only
-
+            $ch = self::initCurl($url);
             $response = curl_exec($ch);
 
             if (curl_errno($ch)) {
                 Log::error("Curl Error: " . curl_error($ch));
+                curl_close($ch);
                 return null;
             }
 
@@ -105,13 +114,7 @@ class GitHubService
             $repo = config('services.github.repo', 'cezkmy/eduboard');
             $url = "https://api.github.com/repos/{$repo}/releases/tags/{$tag}";
 
-            $ch = curl_init();
-
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
+            $ch = self::initCurl($url);
             $response = curl_exec($ch);
 
             if (curl_errno($ch)) {
@@ -151,5 +154,72 @@ class GitHubService
     {
         $release = self::getLatestRelease();
         return $release['tag_name'] ?? config('app.version', 'v1.0.0');
+    }
+
+    protected static function fetchAllReleasesFromApi(): array
+    {
+        try {
+            $repo = config('services.github.repo', 'cezkmy/eduboard');
+            $url = "https://api.github.com/repos/{$repo}/releases";
+
+            $ch = self::initCurl($url);
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            $releases = json_decode($response, true);
+
+            if (!is_array($releases)) {
+                return [];
+            }
+
+            return collect($releases)->map(function ($release) use ($repo) {
+                return [
+                    'tag_name' => $release['tag_name'] ?? null,
+                    'name' => $release['name'] ?? 'Release',
+                    'body' => $release['body'] ?? 'No release notes available.',
+                    'published_at' => $release['published_at'] ?? now()->toDateTimeString(),
+                    'html_url' => $release['html_url'] ?? "https://github.com/{$repo}",
+                    'zipball_url' => $release['zipball_url'] ?? null,
+                    'is_prerelease' => $release['prerelease'] ?? false,
+                ];
+            })->filter(fn($r) => !empty($r['tag_name']))->values()->all();
+        } catch (\Exception $e) {
+            Log::error('GitHubService Error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get a list of all releases from the GitHub repository.
+     *
+     * @param bool $force
+     * @return array
+     */
+    public static function getAllReleases($force = false)
+    {
+        $cacheKey = 'github_all_releases';
+
+        // Bypass cache in tenant context to avoid tagging issues
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            return self::fetchAllReleasesFromApi();
+        }
+
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
+
+        try {
+            return Cache::remember($cacheKey, now()->addMinutes(60), function () {
+                return self::fetchAllReleasesFromApi();
+            });
+        } catch (BadMethodCallException $e) {
+            if (str_contains($e->getMessage(), 'does not support tagging')) {
+                return self::fetchAllReleasesFromApi();
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('GitHubService Error: ' . $e->getMessage());
+            return self::fetchAllReleasesFromApi();
+        }
     }
 }

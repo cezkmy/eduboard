@@ -44,9 +44,9 @@
     </div>
 
     {{-- Manual Controls --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <button @click="checkUpdates()" :disabled="isChecking"
-                class="flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all group">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <button @click="checkUpdates()" :disabled="isChecking || isUpdating"
+                class="flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all group disabled:opacity-50">
             <div class="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-lg group-hover:scale-110 transition-transform">
                 <svg :class="isChecking ? 'animate-spin' : ''" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </div>
@@ -56,20 +56,29 @@
             </div>
         </button>
 
-        <button @click="triggerUpdate()" :disabled="isUpdating"
-                class="flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-emerald-500 transition-all group">
-            <div class="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 rounded-lg group-hover:scale-110 transition-transform">
+        <div class="md:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4">
+            <div class="flex-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Target Version</label>
+                <select x-model="selectedVersion" :disabled="isUpdating" 
+                        class="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-lg text-sm font-bold focus:ring-2 focus:ring-emerald-500">
+                    @foreach($allReleases as $r)
+                        <option value="{{ $r['tag_name'] }}">
+                            {{ $r['tag_name'] }} {{ $r['is_prerelease'] ? '(Pre-release)' : '' }} - {{ \Carbon\Carbon::parse($r['published_at'])->format('M d, Y') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button @click="triggerUpdate()" :disabled="isUpdating || !selectedVersion"
+                    class="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2 disabled:opacity-50">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>
-            </div>
-            <div class="text-left">
-                <div class="text-xs font-black text-gray-400 uppercase tracking-widest">Manual Action</div>
-                <div class="text-sm font-bold text-gray-900 dark:text-white">Run Manual Update</div>
-            </div>
-        </button>
+                <span x-show="!isUpdating">Update Now</span>
+                <span x-show="isUpdating">Updating...</span>
+            </button>
+        </div>
 
         @if($rollbackAvailable)
         <button @click="triggerRollback()" :disabled="isUpdating"
-                class="flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-amber-500 transition-all group">
+                class="flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-amber-500 transition-all group disabled:opacity-50">
             <div class="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-500 rounded-lg group-hover:scale-110 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
             </div>
@@ -85,6 +94,19 @@
             </div>
         </div>
         @endif
+    </div>
+
+    {{-- Progress Bar (Only during update) --}}
+    <div x-show="isUpdating" x-transition class="mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="text-sm font-bold text-gray-700 dark:text-gray-200" x-text="currentStep"></div>
+                <div class="text-sm font-black text-emerald-500" x-text="progress + '%'"></div>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-gray-900 rounded-full h-3 overflow-hidden">
+                <div class="bg-emerald-500 h-full transition-all duration-500" :style="'width: ' + progress + '%'"></div>
+            </div>
+        </div>
     </div>
 
     {{-- Main Update Board --}}
@@ -144,7 +166,10 @@
                         <span class="text-gray-300 ml-2" x-text="log"></span>
                     </div>
                 </template>
-                <div x-show="isUpdating" class="mt-2 text-gray-500 animate-pulse">_</div>
+                <div x-show="isUpdating" class="mt-4 flex items-center gap-3 text-blue-400 font-bold">
+                    <span class="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                    <span class="animate-pulse">System is processing changes... Please do not close this window.</span>
+                </div>
             </div>
         </div>
     </div>
@@ -167,7 +192,10 @@ function systemUpdater() {
         isUpdating: false,
         isChecking: false,
         logs: [],
+        progress: 0,
+        currentStep: 'Initializing...',
         pollInterval: null,
+        selectedVersion: '{{ $latestVersion }}',
         autoUpdate: {{ $autoUpdate ? 'true' : 'false' }},
 
         async checkUpdates() {
@@ -204,8 +232,8 @@ function systemUpdater() {
 
         async triggerUpdate() {
             Swal.fire({
-                title: 'Confirm Update',
-                text: "Are you sure you want to begin the update? This will extract new files and could cause momentary downtime. A rollback zip will be created automatically.",
+                title: 'Confirm System Update',
+                html: `Are you sure you want to update to <b>${this.selectedVersion}</b>?<br><br>This will:<br>1. Put system in maintenance mode<br>2. Backup files & database<br>3. Install new files and dependencies`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, update now',
@@ -214,7 +242,9 @@ function systemUpdater() {
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     this.isUpdating = true;
-                    this.logs = ['Initializing update protocol...'];
+                    this.progress = 5;
+                    this.currentStep = 'Initializing update protocol...';
+                    this.logs = ['[INFO] Initializing update protocol...'];
 
                     try {
                         const response = await fetch("{{ route('central.admin.system.update.trigger') }}", {
@@ -223,21 +253,26 @@ function systemUpdater() {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
-                            }
+                            },
+                            body: JSON.stringify({ version: this.selectedVersion })
                         });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                        }
                         
                         const data = await response.json();
                         
                         if (data.success) {
                             this.updateId = data.update_id;
-                            this.logs.push(data.message);
+                            this.logs.push(`[INFO] ${data.message}`);
                             this.startPolling();
                         } else {
-                            this.logs.push(`ERROR: ${data.message}`);
+                            this.logs.push(`[ERROR] ${data.message}`);
                             this.isUpdating = false;
                         }
                     } catch (error) {
-                        this.logs.push(`FATAL ERROR: Could not dispatch update job.`);
+                        this.logs.push(`[FATAL] ${error.message}`);
                         this.isUpdating = false;
                     }
                 }
@@ -247,7 +282,7 @@ function systemUpdater() {
         async triggerRollback() {
             Swal.fire({
                 title: 'Confirm Rollback',
-                text: "Are you sure you want to rollback? This will restore files from the backup created before the last update. Database changes will not be undone automatically.",
+                text: "Are you sure you want to rollback? This will restore files and database from the backup created before the last update.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, rollback now',
@@ -256,7 +291,9 @@ function systemUpdater() {
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     this.isUpdating = true;
-                    this.logs = ['Initializing rollback protocol...'];
+                    this.progress = 5;
+                    this.currentStep = 'Initializing rollback protocol...';
+                    this.logs = ['[INFO] Initializing rollback protocol...'];
 
                     try {
                         const response = await fetch("{{ route('central.admin.system.update.rollback') }}", {
@@ -272,14 +309,14 @@ function systemUpdater() {
                         
                         if (data.success) {
                             this.updateId = data.update_id;
-                            this.logs.push(data.message);
+                            this.logs.push(`[INFO] ${data.message}`);
                             this.startPolling();
                         } else {
-                            this.logs.push(`ERROR: ${data.message}`);
+                            this.logs.push(`[ERROR] ${data.message}`);
                             this.isUpdating = false;
                         }
                     } catch (error) {
-                        this.logs.push(`FATAL ERROR: Could not dispatch rollback job.`);
+                        this.logs.push(`[FATAL] Could not dispatch rollback job.`);
                         this.isUpdating = false;
                     }
                 }
@@ -294,23 +331,51 @@ function systemUpdater() {
                     
                     if (data.logs && data.logs.length > 0) {
                         this.logs = data.logs;
+                        this.calculateProgress(data.logs);
                         this.scrollToBottom();
                     }
 
                     if (data.finished) {
                         clearInterval(this.pollInterval);
+                        this.progress = 100;
                         this.isUpdating = false;
-                        if (data.logs[data.logs.length - 1].includes('successfully')) {
+                        if (data.logs[data.logs.length - 1].toLowerCase().includes('successfully')) {
                             setTimeout(() => {
-                                alert("Update complete! The page will now reload.");
-                                window.location.reload();
-                            }, 2000);
+                                Swal.fire('Success!', 'System updated successfully. The page will now reload.', 'success').then(() => {
+                                    window.location.reload();
+                                });
+                            }, 1000);
+                        } else {
+                            Swal.fire('Update Failed', 'Please check the logs for details.', 'error');
                         }
                     }
                 } catch (error) {
                     console.error("Polling error", error);
                 }
             }, 2000);
+        },
+
+        calculateProgress(logs) {
+            const steps = [
+                { pattern: 'maintenance mode', progress: 10, label: 'Entering maintenance mode...' },
+                { pattern: 'database backup', progress: 20, label: 'Backing up database...' },
+                { pattern: 'files backup', progress: 30, label: 'Backing up files...' },
+                { pattern: 'Downloading', progress: 40, label: 'Downloading release...' },
+                { pattern: 'Extracting', progress: 50, label: 'Extracting files...' },
+                { pattern: 'Applying new files', progress: 60, label: 'Applying updates...' },
+                { pattern: 'Composer', progress: 70, label: 'Installing dependencies...' },
+                { pattern: 'NPM', progress: 80, label: 'Building assets...' },
+                { pattern: 'migrations', progress: 90, label: 'Migrating database...' },
+                { pattern: 'successfully', progress: 100, label: 'Update complete!' }
+            ];
+
+            for (let i = steps.length - 1; i >= 0; i--) {
+                if (logs.some(log => log.includes(steps[i].pattern))) {
+                    this.progress = steps[i].progress;
+                    this.currentStep = steps[i].label;
+                    break;
+                }
+            }
         },
         
         scrollToBottom() {
