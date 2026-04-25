@@ -179,8 +179,7 @@ class VersionController extends Controller
 
         $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-        \App
-\Jobs\TenantUpdateJob::dispatch(
+        \App\Jobs\TenantUpdateJob::dispatch(
             $updateId,
             $tenant->id,
             $latestVersion,
@@ -208,8 +207,7 @@ class VersionController extends Controller
 
         $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-        \App
-\Jobs\TenantRollbackJob::dispatch(
+        \App\Jobs\TenantRollbackJob::dispatch(
             $updateId,
             $tenant->id
         );
@@ -228,8 +226,7 @@ class VersionController extends Controller
     {
         $this->ensurePermission();
         
-        $logs = \App
-\Models\UpdateLog::where('update_id', $updateId)
+        $logs = \App\Models\UpdateLog::where('update_id', $updateId)
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
             ->get();
