@@ -1,0 +1,124 @@
+/* Auth Pages Custom CSS */
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    padding: 20px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Header */
+.auth-header {
+    background: #2c7a6e;
+    color: white;
+    padding: 30px 30px 25px 30px;
+    text-align: left;
+}
+
+.auth-header i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.auth-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    color: white;
+}
+
+.auth-header p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+    color: white;
+}
+
+/* Body */
+.auth-body {
+    padding: 30px;
+    background: white;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2c7a6e;
+}
+
+/* Button */
+.btn-auth {
+    width: 100%;
+    background: #2c7a6e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 10px 0 20px 0;
+}
+
+.btn-auth:hover {
+    background: #1e5a50;
+}
+
+/* Back link */
+.back-link {
+    text-align: center;
+}
+
+.back-link a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.back-link a:hover {
+    color: #2c7a6e;
+}
+
+.back-link i {
+    font-size: 14px;
+}

@@ -49,20 +49,17 @@ class TenantUpdateJob implements ShouldQueue
         try {
             $this->log("Starting update for tenant: {$tenant->id} to version {$this->targetVersion}", 'info');
 
-            $this->log('Putting system into maintenance mode...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'down'], $base);
-
             // 1. Backup Database and Files
             $this->log('Creating database backup...', 'info');
             $dbBackupSql = $storagePath . "/db_before_{$this->targetVersion}_" . time() . ".sql";
             $this->backupDatabase($dbBackupSql);
-            $tenant->setAttribute('latest_db_backup_path', $dbBackupSql);
+            $tenant->latest_db_backup_path = $dbBackupSql;
             $this->log('Database backup created successfully.', 'success');
 
             $this->log('Creating backup of current system files...', 'info');
             $backupZip = $storagePath . "/backup_before_{$this->targetVersion}_" . time() . ".zip";
             $this->createBackup($base, $backupZip);
-            $tenant->setAttribute('latest_backup_path', $backupZip);
+            $tenant->latest_backup_path = $backupZip;
             $tenant->save();
             $this->log('Files backup created successfully.', 'success');
 
@@ -99,13 +96,11 @@ class TenantUpdateJob implements ShouldQueue
                 '--seed' => true,
             ]);
 
-            $this->log('Clearing and rebuilding caches...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'config:cache'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'route:cache'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'view:cache'], $base);
-
-            $this->log('Bringing system back online...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'up'], $base);
+            $this->log('Clearing caches...', 'info');
+            $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $base);
 
             $tenant->update([
                 'previous_version' => $currentVersion,
@@ -115,14 +110,7 @@ class TenantUpdateJob implements ShouldQueue
             $this->log("Tenant update to {$this->targetVersion} completed successfully!", 'success');
         } catch (Exception $e) {
             $this->log("FATAL UPDATE ERROR: " . $e->getMessage(), 'error');
-            $this->log('Attempting automatic rollback...', 'warning');
-            
-            try {
-                // Simplified rollback for now: just bring system up if it was down
-                $this->runProcess([PHP_BINARY, 'artisan', 'up'], $base);
-            } catch (Exception $rollbackEx) {
-                $this->log("Rollback failed: " . $rollbackEx->getMessage(), 'error');
-            }
+            $this->log('Update failed. The system remains online but this tenant might be in an inconsistent state.', 'warning');
         } finally {
             $tenant->setAttribute('is_updating', false);
             $tenant->setAttribute('updating_message', null);

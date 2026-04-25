@@ -1,0 +1,649 @@
+/* Sidebar Styles */
+.sidebar {
+    background-color: var(--color-sidebar-bg);
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 50;
+}
+
+.sidebar-brand {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.sidebar-brand-icon {
+    background-color: var(--color-primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.sidebar-brand-name-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand-name {
+    font-family: var(--font-sora);
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: white;
+    line-height: 1;
+}
+
+.sidebar-brand-sub {
+    font-size: 0.65rem;
+    color: var(--color-primary);
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0 16px;
+}
+
+.sidebar-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #475569;
+    margin: 12px 12px 8px;
+    letter-spacing: 0.1em;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    color: var(--color-sidebar-text);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.sidebar-item.active {
+    background-color: var(--color-sidebar-item-active);
+    color: white;
+}
+
+.sidebar-item svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* User profile at bottom of sidebar */
+.sidebar-footer {
+    margin-top: auto;
+    padding: 16px;
+}
+
+.sidebar-user {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background-color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.user-info .name {
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: block;
+}
+
+.user-info .role {
+    color: var(--color-sidebar-text);
+    font-size: 0.75rem;
+    display: block;
+}
+
+/* Main Layout */
+.admin-layout {
+    display: flex;
+}
+
+.admin-main {
+    flex: 1;
+    margin-left: 0 !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-topbar {
+    height: 56px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    width: 100%;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.admin-dropdown {
+    position: relative;
+}
+
+.admin-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 280px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e2e8f0;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.admin-dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdown-header .name {
+    font-weight: 700;
+    color: #0f172a;
+    display: block;
+}
+
+.dropdown-header .email {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #475569;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+    color: var(--color-primary);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #f1f5f9;
+}
+
+/* Notification specific */
+.dropdown-header.notif-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdown-header.notif-header .name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1px;
+}
+
+.dropdown-header.notif-header .notif-count {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.notif-menu {
+    width: 320px;
+}
+
+.notif-item {
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+    align-items: flex-start;
+}
+
+.notif-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: rgba(var(--accent-rgb), 0.10);
+    color: var(--color-primary);
+}
+
+.notif-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.notif-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #0f172a;
+    margin-bottom: 1px;
+}
+
+.notif-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.3;
+}
+
+.notif-time {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 2px;
+    display: block;
+}
+
+.notif-footer {
+    padding: 12px 16px;
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+}
+
+.notif-footer a:first-child {
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.notif-footer a:last-child {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.admin-content {
+    padding: 24px;
+    flex: 1;
+    max-width: 100%;
+    margin: 0;
+    width: 100%;
+}
+
+/* Comment System Styles */
+.comment-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-t: 1px solid #f1f5f9;
+}
+
+.comment-input-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.comment-input {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.comment-input:focus {
+    background: white;
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.10);
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.comment-bubble {
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 0 16px 16px 16px;
+    flex: 1;
+}
+
+.comment-user {
+    font-weight: 700;
+    font-size: 0.8125rem;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.comment-text {
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.comment-action-btn {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.comment-action-btn:hover {
+    color: var(--color-primary);
+}
+
+.reply-item {
+    margin-left: 44px;
+    margin-top: 16px;
+}
+
+.content-header {
+    margin-bottom: 32px;
+}
+
+.content-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+    font-family: var(--font-sora);
+}
+
+.content-subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.topbar-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: #f8fafc;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.topbar-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.topbar-notif-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+
+.topbar-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.topbar-btn.user {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+[x-cloak] { display: none !important; }
+
+/* Keep date picker calendar icon visible in dark mode */
+html[data-theme="dark"] .date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.2);
+    opacity: 0.95;
+}
+
+/* ─── Dark Mode Overrides ─────────────────────────────────────── */
+
+/* Topbar */
+[data-theme="dark"] .admin-topbar {
+    background: #111827;
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Topbar buttons */
+[data-theme="dark"] .topbar-btn {
+    background: #1f2937;
+    color: #9ca3af;
+}
+[data-theme="dark"] .topbar-btn:hover {
+    background: #374151;
+    color: #f9fafb;
+}
+[data-theme="dark"] .topbar-btn.user {
+    background: #1f2937;
+    color: #f9fafb;
+}
+
+/* Dropdown menus (notifications, account) */
+[data-theme="dark"] .admin-dropdown-menu {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .dropdown-header {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+[data-theme="dark"] .dropdown-header .name {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .dropdown-header .email {
+    color: #9ca3af;
+}
+
+/* Dropdown items */
+[data-theme="dark"] .dropdown-item {
+    color: #d1d5db;
+}
+[data-theme="dark"] .dropdown-item:hover {
+    background: #374151;
+    color: #f9fafb;
+}
+[data-theme="dark"] .dropdown-divider {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* Notification items */
+[data-theme="dark"] .notif-item {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .notif-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+[data-theme="dark"] .notif-title {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .notif-desc {
+    color: #9ca3af;
+}
+[data-theme="dark"] .notif-time {
+    color: #6b7280;
+}
+
+/* Notification header */
+[data-theme="dark"] .dropdown-header.notif-header .name {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .dropdown-header.notif-header .notif-count {
+    color: #9ca3af;
+}
+
+/* Notification footer */
+[data-theme="dark"] .notif-footer {
+    background: #1f2937;
+    border-top-color: rgba(255, 255, 255, 0.07);
+}
+[data-theme="dark"] .notif-footer a:last-child {
+    color: #9ca3af;
+}
+
+/* Comment bubbles */
+[data-theme="dark"] .comment-bubble {
+    background: #1f2937;
+}
+[data-theme="dark"] .comment-user {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .comment-text {
+    color: #d1d5db;
+}
+[data-theme="dark"] .comment-avatar {
+    background: #374151;
+    color: #9ca3af;
+}
+
+/* Comment input */
+[data-theme="dark"] .comment-input {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+}
+[data-theme="dark"] .comment-input:focus {
+    background: #374151;
+}
+[data-theme="dark"] .comment-input::placeholder {
+    color: #6b7280;
+}
+
+/* Date filter bar */
+[data-theme="dark"] .date-filter {
+    background: #1f2937;
+    border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Page title */
+[data-theme="dark"] .content-title {
+    color: #f1f5f9;
+}
+[data-theme="dark"] .content-subtitle {
+    color: #9ca3af;
+}
+
+/* Admin content area */
+[data-theme="dark"] .admin-content {
+    background: var(--bg-main);
+}

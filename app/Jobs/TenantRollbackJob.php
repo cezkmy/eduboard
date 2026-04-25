@@ -47,9 +47,6 @@ class TenantRollbackJob implements ShouldQueue
         try {
             $this->log("Initiating rollback for tenant: {$tenant->id} to {$previousVersion}", 'info');
 
-            $this->log('Putting system into maintenance mode...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'down'], $base);
-
             // 1. Restore Database
             $dbBackupPath = $tenant->latest_db_backup_path;
             if ($dbBackupPath && File::exists($dbBackupPath)) {
@@ -83,9 +80,8 @@ class TenantRollbackJob implements ShouldQueue
             $this->log('Clearing caches...', 'info');
             $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
             $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $base);
-
-            $this->log('Bringing system back online...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'up'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
+            $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $base);
 
             $tenant->update([
                 'system_version' => $previousVersion,
@@ -95,7 +91,6 @@ class TenantRollbackJob implements ShouldQueue
             $this->log("Rollback to {$previousVersion} completed successfully!", 'success');
         } catch (Exception $e) {
             $this->log("ROLLBACK ERROR: " . $e->getMessage(), 'error');
-            $this->runProcess([PHP_BINARY, 'artisan', 'up'], $base);
         } finally {
             $tenant->setAttribute('is_updating', false);
             $tenant->setAttribute('updating_message', null);
