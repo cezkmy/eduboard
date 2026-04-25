@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         $middleware->append(\App\Http\Middleware\PreventCRLFInjection::class);
         $middleware->append(\App\Http\Middleware\XssSanitization::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserIsNotLocked::class);
 
         $middleware->priority([
             \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,

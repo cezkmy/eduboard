@@ -199,6 +199,113 @@
                         }
                     });
                 }
+
+                // AJAX Form Submission for Profile/Password
+                const profileForms = document.querySelectorAll('form');
+                profileForms.forEach(form => {
+                    // Only apply to the profile-related forms
+                    const action = form.getAttribute('action');
+                    if (!action || (!action.includes('profile') && !action.includes('password'))) return;
+
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+
+                        // 1. Client-side Name Validation (No numbers)
+                        const nameInput = form.querySelector('input[name="name"]');
+                        if (nameInput && /\d/.test(nameInput.value)) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: 'Numbers are not allowed in your name.',
+                                    showConfirmButton: false,
+                                    timer: 3000
+                                });
+                            }
+                            nameInput.focus();
+                            nameInput.style.borderColor = '#ef4444';
+                            return;
+                        }
+
+                        // 2. AJAX Submission
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+                        
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin me-2"></i> Saving...';
+                        }
+
+                        try {
+                            const formData = new FormData(form);
+                            const response = await fetch(action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json',
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (response.ok && data.success) {
+                                // Success Toast
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'success',
+                                        title: data.message || 'Updated successfully!',
+                                        showConfirmButton: false,
+                                        timer: 3000
+                                    });
+                                }
+
+                                // Clear password fields if it was a password update
+                                if (action.includes('password')) {
+                                    form.reset();
+                                }
+                            } else {
+                                // Error handling
+                                let errorMsg = data.message || 'An error occurred while saving.';
+                                if (data.errors) {
+                                    // Take the first validation error if available
+                                    errorMsg = Object.values(data.errors)[0][0];
+                                }
+
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire({
+                                        toast: true,
+                                        position: 'top-end',
+                                        icon: 'error',
+                                        title: errorMsg,
+                                        showConfirmButton: false,
+                                        timer: 4000
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Submission error:', error);
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: 'Connection error. Please try again.',
+                                    showConfirmButton: false,
+                                    timer: 3000
+                                });
+                            }
+                        } finally {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = originalBtnText;
+                            }
+                        }
+                    });
+                });
             });
         </script>
     @endpush

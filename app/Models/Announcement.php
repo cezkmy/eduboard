@@ -20,6 +20,7 @@ class Announcement extends Model
         'category_color',
         'border_color',
         'category',
+        'status',
         'posted_by',
         'is_pinned',
         'pinned_at',
@@ -103,6 +104,17 @@ class Announcement extends Model
                 });
             });
         });
+    }
+
+    public function isTargeted()
+    {
+        return !empty($this->target_roles) || 
+               !empty($this->target_college) || 
+               !empty($this->target_program) || 
+               !empty($this->target_year) || 
+               !empty($this->target_grade_level) || 
+               !empty($this->target_section) || 
+               !empty($this->target_strand);
     }
 
     public function postedBy()

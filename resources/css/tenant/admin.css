@@ -14,7 +14,7 @@
 }
 
 .sidebar-brand {
-    height: 64px;
+    height: 70px;
     display: flex;
     align-items: center;
     padding: 0 24px;
@@ -154,13 +154,14 @@
 .admin-main {
     flex: 1;
     margin-left: 260px;
+    width: calc(100% - 260px);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .admin-topbar {
-    height: 64px;
+    height: 70px;
     background: var(--bg-card);
     display: flex;
     align-items: center;
@@ -549,7 +550,7 @@
 .topbar-btn {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -571,7 +572,7 @@
     height: 8px;
     background: #ef4444;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--bg-card);
 }
 
 
@@ -1051,3 +1052,15 @@
     100% { stroke-dashoffset: 0; }
 }
 
+
+/* Dark Mode Overrides */
+html[data-theme='dark'] .stat-icon.blue { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+html[data-theme='dark'] .stat-icon.amber { background: rgba(245, 158, 11, 0.15) !important; color: #fbbf24 !important; }
+html[data-theme='dark'] .stat-icon.teal { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+html[data-theme='dark'] .stat-icon.red { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; }
+html[data-theme='dark'] .notif-icon { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+html[data-theme='dark'] .empty-state-icon { background: rgba(16, 185, 129, 0.15) !important; color: #34d399 !important; }
+
+html[data-theme="dark"] .role-admin { background: rgba(239, 68, 68, 0.15) !important; color: #f87171 !important; }
+html[data-theme="dark"] .role-teacher { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }
+html[data-theme="dark"] .ann-pin { background: rgba(59, 130, 246, 0.15) !important; color: #60a5fa !important; }

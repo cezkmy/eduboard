@@ -2,11 +2,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Filter Logic ---
     const filterPills = document.querySelectorAll('.ann-filter-pill');
     const intFilterPills = document.querySelectorAll('.int-filter-pill');
-    const annCards = document.querySelectorAll('.ann-card');
+    const annCards = document.querySelectorAll('.ann-wrapper');
 
     let currentTab = 'general';
     let currentCategory = 'all';
-    let currentIntFilter = 'all';
 
     function applyAllFilters() {
         annCards.forEach(card => {
@@ -14,8 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 1. Tab Filter (General vs For You)
             if (currentTab === 'foryou') {
-                const userInteracted = card.dataset.userInteracted === 'true';
-                if (!userInteracted) show = false;
+                if (card.dataset.isTargeted !== 'true') show = false;
+            } else if (currentTab === 'general') {
+                if (card.dataset.isTargeted === 'true') show = false;
             }
 
             // 2. Category Filter
@@ -24,17 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 show = false;
             }
 
-            // 3. Interaction Filter
-            if (currentIntFilter === 'reacted') {
-                const reactions = parseInt(card.dataset.reactions || '0');
-                if (reactions === 0) show = false;
-            } else if (currentIntFilter === 'commented') {
-                const comments = parseInt(card.dataset.comments || '0');
-                if (comments === 0) show = false;
-            } else if (currentIntFilter === 'popular') {
-                const engagement = parseInt(card.dataset.reactions || '0') + parseInt(card.dataset.comments || '0');
-                if (engagement < 5) show = false; // Threshold for "popular"
-            }
+
 
             // 4. Date Filter (Check if values exist)
             const dateFrom = document.getElementById('dateFrom').value;
@@ -91,21 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    intFilterPills.forEach(pill => {
-        pill.addEventListener('click', function() {
-            currentIntFilter = this.dataset.filter;
 
-            // Update active pill UI
-            intFilterPills.forEach(p => {
-                p.classList.remove('active', 'bg-gray-900', 'dark:bg-gray-100', 'text-white', 'dark:text-gray-900');
-                p.classList.add('bg-white', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400', 'border', 'border-gray-100', 'dark:border-gray-700');
-            });
-            this.classList.add('active', 'bg-gray-900', 'dark:bg-gray-100', 'text-white', 'dark:text-gray-900');
-            this.classList.remove('bg-white', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400', 'border-gray-100', 'dark:border-gray-700');
-
-            applyAllFilters();
-        });
-    });
 
     // --- Date Filter Logic ---
     const applyBtn = document.getElementById('applyDateFilter');

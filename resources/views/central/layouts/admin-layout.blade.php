@@ -199,11 +199,15 @@
         }
 
         .top-bar {
-            background: var(--card-bg); height: 70px; padding: 0 2rem;
+            background: var(--card-bg); 
+            height: 70px !important; 
+            min-height: 70px !important;
+            padding: 0 2rem;
             border-bottom: 1px solid var(--border-color); display: flex;
             justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 999;
             transition: background-color 0.2s ease, border-color 0.2s ease;
+            flex-shrink: 0 !important;
         }
 
         .page-title { font-size: 1.25rem; font-weight: 600; color: var(--bs-heading-color); margin: 0; letter-spacing: -0.01em; }

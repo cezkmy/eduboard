@@ -21,7 +21,7 @@ class UserController extends Controller
         $searchQuery = $request->query('search');
         $deptFilter = $request->query('dept');
 
-        $query = User::withTrashed()->latest();
+        $query = User::query();
 
         // Apply filters if present
         if ($searchQuery) {
@@ -38,7 +38,6 @@ class UserController extends Controller
             });
         }
 
-        // Get counts for each role efficiently
         // Get counts for each role efficiently, excluding deleted and pending for accurate tabs
         $roleCounts = User::whereNull('deleted_at')
             ->where('status', '!=', 'pending')
@@ -50,17 +49,16 @@ class UserController extends Controller
         $lockedCount   = User::whereNull('deleted_at')->whereNotNull('locked_until')->where('locked_until', '>', now())->count();
         $archivedCount = User::onlyTrashed()->count();
 
-        // Fetch users for the active tab with pagination
+        // Fetch users for the active tab with pagination using the FILTERED query
         if ($activeTab === 'pending') {
-            $users = User::whereNull('deleted_at')->where('status', 'pending')->latest()->paginate(20)->withQueryString();
+            $users = (clone $query)->whereNull('deleted_at')->where('status', 'pending')->latest()->paginate(20)->withQueryString();
         } elseif ($activeTab === 'locked') {
-            $users = User::whereNull('deleted_at')->whereNotNull('locked_until')->where('locked_until', '>', now())->latest()->paginate(20)->withQueryString();
+            $users = (clone $query)->whereNull('deleted_at')->whereNotNull('locked_until')->where('locked_until', '>', now())->latest()->paginate(20)->withQueryString();
         } elseif ($activeTab === 'archived') {
-            $users = User::onlyTrashed()->latest()->paginate(20)->withQueryString();
+            $users = (clone $query)->onlyTrashed()->latest()->paginate(20)->withQueryString();
         } else {
             $role  = rtrim($activeTab, 's');
-            $users = User::withTrashed()
-                ->where('role', $role)
+            $users = (clone $query)->where('role', $role)
                 ->whereNull('deleted_at')
                 ->where('status', '!=', 'pending')
                 ->latest()

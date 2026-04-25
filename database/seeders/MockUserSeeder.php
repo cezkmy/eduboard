@@ -15,16 +15,11 @@ class MockUserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['name' => 'John Doe', 'email' => 'john@example.com'],
-            ['name' => 'Jane Smith', 'email' => 'jane@example.com'],
-            ['name' => 'Michael Brown', 'email' => 'michael@example.com'],
-            ['name' => 'Emily Davis', 'email' => 'emily@example.com'],
-            ['name' => 'Chris Wilson', 'email' => 'chris@example.com'],
-            ['name' => 'Sarah Johnson', 'email' => 'sarah@example.com'],
-            ['name' => 'David Martinez', 'email' => 'david@example.com'],
-            ['name' => 'Jessica Taylor', 'email' => 'jessica@example.com'],
-            ['name' => 'Daniel Anderson', 'email' => 'daniel@example.com'],
             ['name' => 'Ashley Thomas', 'email' => 'ashley@example.com'],
+            ['name' => 'Chris Wilson', 'email' => 'chris@example.com'],
+            ['name' => 'Emily Davis', 'email' => 'emily@example.com'],
+            ['name' => 'Michael Brown', 'email' => 'michael@example.com'],
+            ['name' => 'John Doe', 'email' => 'john@example.com'],
         ];
 
         foreach ($users as $userData) {

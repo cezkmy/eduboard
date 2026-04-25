@@ -143,6 +143,11 @@
     }"
     class="{{ $wrapperClasses }}"
     id="announcement-wrapper-{{ $announcement->id }}"
+    data-category="{{ strtolower($announcement->category ?? 'general') }}"
+    data-reactions="{{ ($announcement->heart_count ?? 0) + ($announcement->like_count ?? 0) + ($announcement->fire_count ?? 0) + ($announcement->sad_count ?? 0) }}"
+    data-comments="{{ $announcement->comments->count() }}"
+    data-user-interacted="{{ (!empty($userReactions) || $announcement->comments->where('user_id', auth()->id())->count() > 0) ? 'true' : 'false' }}"
+    data-is-targeted="{{ $announcement->isTargeted() ? 'true' : 'false' }}"
 >
     {{-- INNER BORDERED ANNOUNCEMENT CARD --}}
     <div 

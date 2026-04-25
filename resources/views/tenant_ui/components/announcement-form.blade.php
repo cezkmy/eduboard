@@ -334,7 +334,23 @@
                     name="media[]"
                     multiple
                     @change="
-                        mediaPreview = Array.from($event.target.files).map(file => ({
+                        let hasOversized = false;
+                        const validFiles = Array.from($event.target.files).filter(file => {
+                            if (file.type.startsWith('video') && file.size > 104857600) { // 100MB
+                                hasOversized = true;
+                                return false;
+                            }
+                            return true;
+                        });
+                        
+                        if (hasOversized) {
+                            alert('Video uploads are limited to 100MB per file.');
+                            $event.target.value = '';
+                            mediaPreview = [];
+                            return;
+                        }
+
+                        mediaPreview = validFiles.map(file => ({
                             url: URL.createObjectURL(file),
                             type: file.type.startsWith('video') ? 'video' : 'image'
                         }))

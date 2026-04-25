@@ -33,6 +33,10 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         return view('tenant_ui.pages.dashboard');
     })->middleware(['auth'])->name('tenant.dashboard');
 
+    Route::get('/ping', function () {
+        return response()->json(['status' => 'ok']);
+    })->middleware(['auth'])->name('tenant.ping');
+
     // ── Admin Register ──
     Route::get('/admin/register', function () {
         return view('tenant_ui.auth.register-admin');
@@ -629,8 +633,8 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
 
         Route::post('/announcements', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'store'])->name('announcements.store');
 
-        Route::get('/announcements/{id}/edit', function ($id) {
-            return view('tenant_ui.teacher.edit-announcement');
+        Route::get('/announcements/{announcement}/edit', function (\App\Models\Announcement $announcement) {
+            return view('tenant_ui.teacher.edit-announcement', compact('announcement'));
         })->name('announcements.edit');
 
         Route::put('/announcements/{announcement}', [\App\Http\Controllers\Tenant\AnnouncementController::class, 'update'])->name('announcements.update');

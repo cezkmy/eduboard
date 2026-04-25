@@ -104,8 +104,8 @@
                     @forelse($announcements->where('status', '!=', 'draft') as $announcement)
                         <div class="relative group">
                             <x-announcement-card :announcement="$announcement" />
-                            <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <button @click="openEditModal({{ $announcement->toJson() }})" class="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all">
+                            <div class="absolute top-16 right-8 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                                <button @click="openEditModal(JSON.parse($el.dataset.announcement))" data-announcement="{{ $announcement->toJson() }}" class="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
@@ -143,8 +143,8 @@
                             <div class="absolute top-4 right-16">
                                 <span class="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold uppercase rounded-md shadow-sm border border-amber-200">Draft</span>
                             </div>
-                            <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <button @click="openEditModal({{ $announcement->toJson() }})" class="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all">
+                            <div class="absolute top-16 right-8 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                                <button @click="openEditModal(JSON.parse($el.dataset.announcement))" data-announcement="{{ $announcement->toJson() }}" class="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>

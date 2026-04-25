@@ -104,6 +104,13 @@ class UserController extends Controller
             });
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully!'
+            ]);
+        }
+
         return back()->with('success', 'Password updated successfully!');
     }
 

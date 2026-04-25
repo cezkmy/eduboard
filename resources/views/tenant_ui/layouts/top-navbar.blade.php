@@ -1,9 +1,9 @@
 <header class="admin-topbar">
-    <div class="admin-topbar-left" style="display: flex; align-items: center; gap: 12px;">
-        @if(tenant('logo') && auth()->check() && auth()->user()->role === 'student')
-            <img src="{{ tenant_asset(tenant('logo')) }}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 6px;" onerror="this.style.display='none';">
+    <div class="admin-topbar-left" style="display: flex; align-items: center; gap: 14px;">
+        @if(tenant('logo') && auth()->check())
+            <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(tenant('logo')) : asset('storage/' . tenant('logo')) }}" style="height: 38px; width: auto; object-fit: contain; border-radius: 8px;" onerror="this.style.display='none';">
         @endif
-        <h2 class="admin-topbar-title" style="margin: 0;">
+        <h2 class="admin-topbar-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text-main);">
             {{ $title ?? (tenant('school_short_name') ?? tenant('school_name') ?? 'EduBoard') }}
         </h2>
     </div>
@@ -26,7 +26,7 @@
                     <span class="topbar-notif-dot"></span>
                 @endif
             </button>
-            <div id="notif-dropdown" class="admin-dropdown-menu notif-menu" :class="{ 'show': open }">
+            <div id="notif-dropdown" class="admin-dropdown-menu notif-menu" :class="{ 'show': open }" x-show="open" x-transition x-cloak>
                 <div class="dropdown-header notif-header">
                     <span class="name">Notifications</span>
                     <span class="notif-count">{{ auth()->user()->unreadNotifications->count() }} new</span>
@@ -84,7 +84,7 @@
                     @endif
                 </div>
             </button>
-            <div id="account-dropdown" class="admin-dropdown-menu" :class="{ 'show': open }">
+            <div id="account-dropdown" class="admin-dropdown-menu" :class="{ 'show': open }" x-show="open" x-transition x-cloak>
                 <div class="dropdown-header">
                     <div class="name">{{ auth()->user()->name }}</div>
                     <div class="email">{{ auth()->user()->email }}</div>

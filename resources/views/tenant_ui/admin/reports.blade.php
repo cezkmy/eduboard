@@ -3,14 +3,48 @@
 
     <div class="admin-content" x-data="{ 
         exporting: false,
-        showExportSuccess: false,
-        exportData() {
+
+        async exportData(url) {
+            if (this.exporting) return;
             this.exporting = true;
-            setTimeout(() => {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Export failed');
+                
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+                
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'report.pdf';
+                if (contentDisposition && contentDisposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['\x22]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['\x22]/g, '');
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Report exported successfully!', 'success');
+                } else {
+                    alert('Report exported successfully!');
+                }
+            } catch (error) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Failed to generate report. Please try again.', 'error');
+                } else {
+                    alert('Failed to generate report.');
+                }
+            } finally {
                 this.exporting = false;
-                this.showExportSuccess = true;
-                setTimeout(() => { this.showExportSuccess = false }, 3000);
-            }, 1500);
+            }
         }
     }">
         {{-- Page Header --}}
@@ -19,10 +53,11 @@
                 <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">System Reports</h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Generate and analyze activity reports for {{ tenant('school_name') ?? 'Buksu' }}</p>
             </div>
-            <a href="{{ route('tenant.admin.reports.export', request()->all()) }}" class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95 flex items-center gap-2" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                <span>Export PDF</span>
-            </a>
+            <button @click="exportData('{{ route('tenant.admin.reports.export', request()->all()) }}')" :disabled="exporting" :class="exporting ? 'opacity-70 cursor-not-allowed' : ''" class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95 flex items-center gap-2" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
+                <svg x-show="!exporting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <svg x-cloak x-show="exporting" class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span x-text="exporting ? 'Generating...' : 'Export PDF'"></span>
+            </button>
         </div>
 
         {{-- Filters Card --}}
@@ -226,16 +261,6 @@
             </div>
         </div>
 
-        {{-- Export Success Toast --}}
-        <template x-teleport="body">
-            <div x-show="showExportSuccess" x-transition:enter="translate-y-10 opacity-0" x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="translate-y-10 opacity-0" class="fixed bottom-8 right-8 z-[200]" x-cloak>
-                <div class="bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white" style="background: var(--accent);">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <span class="text-sm font-bold">Report exported successfully!</span>
-                </div>
-            </div>
-        </template>
+
     </div>
 </x-app-layout>

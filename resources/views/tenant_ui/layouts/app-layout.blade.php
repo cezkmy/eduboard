@@ -83,9 +83,17 @@
 
         /* Light mode sidebar hover: white text/line */
         html:not([data-theme="dark"]) .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.15) !important;
             color: #ffffff !important;
             border-left: 2px solid #ffffff;
             padding-left: 10px;
+        }
+
+        /* Light mode sidebar active item: white translucent bg */
+        html:not([data-theme="dark"]) .sidebar-item.active {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+            font-weight: 700;
         }
 
         /* Global dark-mode surface + text fixes for tenant pages */
@@ -120,9 +128,14 @@
         }
 
         /* Topbar + dropdown global dark-mode corrections */
-        [data-theme="dark"] .admin-topbar {
+        .admin-topbar, [data-theme="dark"] .admin-topbar {
+            height: 70px !important;
+            min-height: 70px !important;
             background: var(--bg-card) !important;
-            border-bottom-color: var(--border-color) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            display: flex !important;
+            align-items: center !important;
+            flex-shrink: 0 !important;
         }
         [data-theme="dark"] .admin-topbar-title,
         [data-theme="dark"] .topbar-title {
@@ -192,12 +205,8 @@
             @include('tenant_ui.layouts.sidebar')
         @endif
 
-        <div class="admin-main" style="{{ auth()->user()->role === 'student' ? 'margin-left: 0;' : '' }}">
-            @if(auth()->user()->role === 'student')
-                <x-student-topbar :title="$title ?? 'Announcements'" />
-            @else
-                @include('tenant_ui.layouts.top-navbar')
-            @endif
+        <div class="admin-main" style="max-height: 100vh; overflow-y: auto; overflow-x: hidden; {{ auth()->user()->role === 'student' ? 'margin-left: 0; width: 100%;' : 'width: calc(100% - 260px);' }}">
+            @include('tenant_ui.layouts.top-navbar', ['title' => $title ?? null])
 
             <main class="admin-content">
                 {{ $slot }}
@@ -349,6 +358,126 @@
             font-size: 0.75rem !important;
         }
     </style>
+
+    {{-- Global Toast Notifications for Session & Validation --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            @if (session('success') || session('status'))
+                @php
+                    $rawMsg = session('success') ?? session('status');
+                    $displayMsg = $rawMsg;
+                    if ($rawMsg === 'profile-updated') $displayMsg = 'Profile updated successfully.';
+                    if ($rawMsg === 'password-updated') $displayMsg = 'Password updated successfully.';
+                    if ($rawMsg === 'verification-link-sent') $displayMsg = 'A new verification link has been sent to your email address.';
+                @endphp
+                Toast.fire({
+                    icon: 'success',
+                    title: "{!! addslashes($displayMsg) !!}"
+                });
+            @endif
+
+            @if (session('error'))
+                Toast.fire({
+                    icon: 'error',
+                    title: "{!! addslashes(session('error')) !!}"
+                });
+            @endif
+
+            @if ($errors->any())
+                Toast.fire({
+                    icon: 'error',
+                    title: "{!! addslashes($errors->first()) !!}"
+                });
+            @endif
+            
+            // Allow triggering toasts from anywhere
+            window.showToast = function(title, icon = 'success') {
+                Toast.fire({
+                    icon: icon,
+                    title: title
+                });
+            };
+
+            // Global Form Submit Disabler (Prevents Double Submission)
+            document.addEventListener('submit', function (e) {
+                if (e.target.classList.contains('no-auto-disable')) return;
+
+                let btn = e.submitter || e.target.querySelector('button[type="submit"], input[type="submit"]');
+
+                if (btn && !btn.disabled) {
+                    // Delay slightly so the form can actually submit before disabling the button
+                    setTimeout(() => {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                        
+                        // Change text to loading if it's a simple text button
+                        if (btn.tagName === 'BUTTON' && !btn.innerHTML.includes('<svg') && !btn.innerHTML.includes('<i')) {
+                            if (!btn.dataset.originalText) {
+                                btn.dataset.originalText = btn.innerHTML;
+                            }
+                            btn.innerHTML = 'Please wait...';
+                        }
+                    }, 10);
+                }
+            });
+
+            // Account Lock Poller
+            @auth
+            const lockPoller = setInterval(() => {
+                fetch('{{ route('tenant.ping') }}', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store'
+                }).then(async res => {
+                    if (res.status === 403 || res.status === 401) {
+                        try {
+                            const text = await res.text();
+                            const isLocked = text.toLowerCase().includes('locked');
+                            
+                            if (isLocked) {
+                                clearInterval(lockPoller); // Stop polling
+                                
+                                let errorMsg = 'Your account has been locked. If you navigate to another page or refresh, you will be logged out.';
+                                try {
+                                    const data = JSON.parse(text);
+                                    if (data.error) errorMsg = data.error + " Any further action will log you out.";
+                                } catch(e) {}
+                                
+                                Swal.fire({
+                                    title: 'Account Locked',
+                                    text: errorMsg,
+                                    icon: 'warning',
+                                    showCloseButton: true,
+                                    showConfirmButton: true,
+                                    confirmButtonText: 'Understood',
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false
+                                });
+                            } else if (res.status === 401) {
+                                // Just a standard timeout/logout, we should redirect
+                                clearInterval(lockPoller);
+                                window.location.href = '{{ route('tenant.login') }}';
+                            }
+                        } catch (e) {
+                            // Ignore errors
+                        }
+                    }
+                }).catch(() => {});
+            }, 10000); // Check every 10 seconds
+            @endauth
+        });
+    </script>
     @stack('scripts')
 
     {{-- Floating Support Chat (all authenticated users) --}}

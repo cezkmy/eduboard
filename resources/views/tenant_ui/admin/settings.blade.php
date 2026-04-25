@@ -3,7 +3,6 @@
 
     <div class="admin-content" x-data="{ 
         activeSection: '{{ request()->query('tab') ?? ((tenant('plan') ?? 'Basic') === 'Basic' ? 'branding' : 'appearance') }}',
-        successModal: {{ session('success') ? 'true' : 'false' }},
         basicWarningModal: false,
         plan: '{{ tenant('plan') ?? 'Basic' }}',
         hasUpdatedSettings: {{ tenant('has_updated_settings') ? 'true' : 'false' }},
@@ -18,21 +17,10 @@
                 reader.readAsDataURL(file);
             }
         },
-        showSuccess() {
-            this.successModal = true;
-            setTimeout(() => { this.successModal = false }, 3000);
-        },
-        pendingAction: null,
         handleSave(section) {
-            if (this.plan === 'Basic' && (section === 'branding' || section === 'general')) {
-                this.pendingAction = section;
-                this.basicWarningModal = true;
-            } else {
-                if (section === 'general') document.getElementById('general-form').submit();
-                else if (section === 'branding') document.getElementById('branding-form').submit();
-                else if (section === 'appearance') document.getElementById('appearance-form').submit();
-                else this.showSuccess();
-            }
+            if (section === 'general') document.getElementById('general-form').submit();
+            else if (section === 'branding') document.getElementById('branding-form').submit();
+            else if (section === 'appearance') document.getElementById('appearance-form').submit();
         },
         confirmSave() {
             this.basicWarningModal = false;
@@ -119,36 +107,36 @@
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="theme_color" value="blue" class="peer sr-only" {{ $currentTheme === 'blue' ? 'checked' : '' }}>
-                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center">
-                                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 mx-auto mb-2 flex items-center justify-center font-black">Bb</div>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 mx-auto mb-2 flex items-center justify-center font-black">Bb</div>
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Blue</span>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="theme_color" value="green" class="peer sr-only" {{ $currentTheme === 'green' ? 'checked' : '' }}>
-                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all text-center">
-                                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 mx-auto mb-2 flex items-center justify-center font-black">Gg</div>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-900/30 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 mx-auto mb-2 flex items-center justify-center font-black">Gg</div>
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Green</span>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="theme_color" value="pink" class="peer sr-only" {{ $currentTheme === 'pink' ? 'checked' : '' }}>
-                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-fuchsia-500 peer-checked:bg-fuchsia-50 transition-all text-center">
-                                        <div class="w-10 h-10 rounded-full bg-fuchsia-100 text-fuchsia-600 mx-auto mb-2 flex items-center justify-center font-black">Pp</div>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-fuchsia-500 peer-checked:bg-fuchsia-50 dark:peer-checked:bg-fuchsia-900/30 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-400 mx-auto mb-2 flex items-center justify-center font-black">Pp</div>
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Pink</span>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="theme_color" value="yellow" class="peer sr-only" {{ $currentTheme === 'yellow' ? 'checked' : '' }}>
-                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 transition-all text-center">
-                                        <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 mx-auto mb-2 flex items-center justify-center font-black">Yy</div>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/30 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 mx-auto mb-2 flex items-center justify-center font-black">Yy</div>
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Yellow</span>
                                     </div>
                                 </label>
                                 <label class="relative cursor-pointer group">
                                     <input type="radio" name="theme_color" value="orange" class="peer sr-only" {{ $currentTheme === 'orange' ? 'checked' : '' }}>
-                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all text-center">
-                                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 mx-auto mb-2 flex items-center justify-center font-black">Oo</div>
+                                    <div class="p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 peer-checked:border-orange-500 peer-checked:bg-orange-50 dark:peer-checked:bg-orange-900/30 transition-all text-center">
+                                        <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 mx-auto mb-2 flex items-center justify-center font-black">Oo</div>
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Orange</span>
                                     </div>
                                 </label>
@@ -164,13 +152,9 @@
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">Branding</h2>
                             <p class="text-sm text-gray-500 mt-1">Manage your school's identity and logos.</p>
                         </div>
-                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('branding')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
+                        <button @click="handleSave('branding')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save Branding
                         </button>
-                        <span x-cloak x-show="plan === 'Basic' && hasUpdatedSettings" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                            Locked (Upgrade to Pro)
-                        </span>
                     </div>
 
                     <form id="branding-form" method="POST" action="{{ route('tenant.admin.settings.update') }}" enctype="multipart/form-data" class="flex flex-col md:flex-row gap-8 items-start">
@@ -192,7 +176,7 @@
                                 </label>
                                 <label class="block">
                                     <span class="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">School Short Name</span>
-                                    <input type="text" name="school_short_name" value="{{ tenant('school_short_name') ?? 'Buksu' }}" class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
+                                    <input type="text" name="school_short_name" value="{{ tenant('school_short_name') ?? '' }}" class="mt-2 w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl text-sm font-bold">
                                 </label>
                             </div>
                         </div>
@@ -206,13 +190,9 @@
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">General Settings</h2>
                             <p class="text-sm text-gray-500 mt-1">Basic system configurations and behavior.</p>
                         </div>
-                        <button x-show="!(plan === 'Basic' && hasUpdatedSettings)" @click="handleSave('general')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
+                        <button @click="handleSave('general')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
                             Save General Settings
                         </button>
-                        <span x-cloak x-show="plan === 'Basic' && hasUpdatedSettings" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                            Locked (Upgrade to Pro)
-                        </span>
                     </div>
 
                     <form id="general-form" method="POST" action="{{ route('tenant.admin.settings.update') }}" class="space-y-6">
@@ -390,22 +370,6 @@
             </div>
         </template>
 
-        {{-- Success Modal --}}
-        <template x-teleport="body">
-            <div x-show="successModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4" x-cloak>
-                <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" @click="successModal = false"></div>
-                <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center space-y-6 transform transition-all"
-                     x-show="successModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                    <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto text-[var(--accent)]" style="background: rgba(var(--accent-rgb), 0.12);">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-black text-gray-900 dark:text-white">Settings Updated!</h3>
-                        <p class="text-sm text-gray-500 mt-2">All changes have been successfully applied to your instance.</p>
-                    </div>
-                    <button @click="successModal = false" class="w-full py-3 bg-[var(--accent)] text-white rounded-2xl font-bold hover:bg-[var(--accent-dark)] transition-all shadow-lg" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">Great!</button>
-                </div>
-            </div>
-        </template>
+
     </div>
 </x-app-layout>

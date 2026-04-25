@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -50,37 +52,6 @@ html:not([data-theme="dark"]) {
     --text-main: #1a202c;
     --text-muted: #718096;
     --border-color: #cbd5e1;
-}
-
-html:not([data-theme="dark"]) .dark\:bg-gray-800,
-html:not([data-theme="dark"]) .dark\:bg-gray-900,
-html:not([data-theme="dark"]) .dark\:bg-gray-900\/50,
-html:not([data-theme="dark"]) .dark\:bg-gray-800\/50,
-html:not([data-theme="dark"]) .dark\:bg-gray-900\/20,
-html:not([data-theme="dark"]) .dark\:bg-gray-700,
-html:not([data-theme="dark"]) .dark\:bg-gray-700\/50,
-html:not([data-theme="dark"]) .dark\:bg-gray-700\/80,
-html:not([data-theme="dark"]) .dark\:border-gray-700,
-html:not([data-theme="dark"]) .dark\:border-gray-800,
-html:not([data-theme="dark"]) .dark\:text-gray-400,
-html:not([data-theme="dark"]) .dark\:text-gray-300,
-html:not([data-theme="dark"]) .dark\:text-white,
-html:not([data-theme="dark"]) .dark\:text-gray-200 {
-    background-color: #ffffff !important;
-    color: #1a202c !important;
-    border-color: #cbd5e1 !important;
-}
-
-html:not([data-theme="dark"]) .dark\:hover\:bg-gray-700,
-html:not([data-theme="dark"]) .dark\:hover\:bg-gray-700\/50,
-html:not([data-theme="dark"]) .dark\:hover\:bg-gray-700\/80 {
-    background-color: #f7fafc !important;
-}
-
-html:not([data-theme="dark"]) .bg-gray-900,
-html:not([data-theme="dark"]) .bg-gray-800 {
-    background-color: #ffffff !important;
-    border-color: #cbd5e1 !important;
 }
 
 html:not([data-theme="dark"]) .stat-card {

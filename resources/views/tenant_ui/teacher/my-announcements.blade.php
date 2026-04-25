@@ -8,8 +8,41 @@
         successMessage: '',
         deleteUrl: '',
         activeTab: 'published',
-        confirmDeletion(url) {
+        modalTitle: 'New Announcement',
+        openCreateModal() {
+            this.modalTitle = 'New Announcement';
+            window.dispatchEvent(new CustomEvent('reset-announcement-form'));
+            this.showingCreateModal = true;
+        },
+        openEditModal(announcement) {
+            this.modalTitle = 'Edit Announcement';
+            window.dispatchEvent(new CustomEvent('edit-announcement', { detail: announcement }));
+            this.showingCreateModal = true;
+        },
+        confirmDeletion(id) {
+            this.deleteUrl = `{{ url('announcements') }}/${id}`;
             this.confirmingDeletion = true;
+        },
+        async performDeletion() {
+            if (!this.deleteUrl) return;
+            try {
+                const response = await fetch(this.deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.confirmingDeletion = false;
+                    this.showSuccess('Announcement deleted successfully');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+            }
         },
         showSuccess(msg) {
             this.successMessage = msg;
@@ -42,7 +75,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </form>
-                    <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);" @click="showingCreateModal = true">
+                    <button class="px-5 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-bold hover:bg-[var(--accent-dark)] transition-all flex items-center gap-2 shadow-lg active:scale-95" style="box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);" @click="openCreateModal()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
@@ -70,15 +103,15 @@
                             <x-announcement-card :announcement="$announcement" :show-reactions="true" />
                             
                             {{-- Edit/Delete Actions --}}
-                            <div class="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                                <a href="{{ route('tenant.announcements.edit', $announcement) }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
+                            <div class="absolute top-16 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 z-50">
+                                <button type="button" @click="openEditModal(JSON.parse($el.dataset.announcement))" data-announcement="{{ $announcement->toJson() }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                     </svg>
-                                </a>
+                                </button>
                                 <button 
                                     type="button" 
-                                    @click="confirmDeletion()"
+                                    @click="confirmDeletion('{{ $announcement->id }}')"
                                     class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
@@ -96,7 +129,7 @@
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">No published announcements</h3>
                             <p class="text-gray-500 dark:text-gray-400 mb-6">You haven't published any announcements yet.</p>
-                            <button class="btn-primary px-6 py-2" @click="showingCreateModal = true">Post Now</button>
+                            <button class="btn-primary px-6 py-2" @click="openCreateModal()">Post Now</button>
                         </div>
                     @endforelse
 
@@ -114,12 +147,12 @@
                                 <span class="px-2 py-1 bg-amber-100 text-amber-600 text-[10px] font-bold uppercase rounded-md shadow-sm border border-amber-200">Draft</span>
                             </div>
                             {{-- Edit/Delete Actions --}}
-                            <div class="absolute top-8 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                                <a href="{{ route('tenant.announcements.edit', $announcement) }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
+                            <div class="absolute top-16 right-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 z-50">
+                                <button type="button" @click="openEditModal(JSON.parse($el.dataset.announcement))" data-announcement="{{ $announcement->toJson() }}" class="p-3.5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                     </svg>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -153,8 +186,8 @@
                     
                     <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
                         <div>
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Post New Announcement</h2>
-                            <p class="text-xs text-gray-500 mt-1">Create a new announcement for students and staff</p>
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100" x-text="modalTitle"></h2>
+                            <p class="text-xs text-gray-500 mt-1">Manage your announcement content and targeting</p>
                         </div>
                         <button @click="closeModal()" class="p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5">
@@ -286,7 +319,7 @@
                         <button @click="confirmingDeletion = false" class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700">
                             Cancel
                         </button>
-                        <button @click="confirmingDeletion = false; $dispatch('announcement-deleted')" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all">
+                        <button @click="performDeletion()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all">
                             Delete
                         </button>
                     </div>

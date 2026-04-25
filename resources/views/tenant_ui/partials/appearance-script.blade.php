@@ -60,17 +60,20 @@
             if (shouldApplyBranding) {
                 // Priority: Local Storage (for immediate toggle feedback) > Saved Database Theme
                 let themeToApply = localTheme || savedTheme;
+                let resolved = themeToApply;
 
                 if (themeToApply === 'system') {
                     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                    resolved = isDark ? 'dark' : 'light';
                 } else if (themeToApply === 'custom') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                } else {
-                    document.documentElement.setAttribute('data-theme', themeToApply);
+                    resolved = 'light';
                 }
+
+                document.documentElement.setAttribute('data-theme', resolved);
+                document.documentElement.classList.toggle('dark', resolved === 'dark');
             } else if (localTheme) {
                 document.documentElement.setAttribute('data-theme', localTheme);
+                document.documentElement.classList.toggle('dark', localTheme === 'dark');
             }
         })();
     </script>

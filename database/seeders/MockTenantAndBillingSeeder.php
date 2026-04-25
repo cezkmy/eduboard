@@ -17,18 +17,15 @@ class MockTenantAndBillingSeeder extends Seeder
      */
     public function run(): void
     {
-        $mockEmails = [
-            'john@example.com',
-            'jane@example.com',
-            'michael@example.com',
-            'emily@example.com',
-            'chris@example.com',
-            'sarah@example.com',
-            'david@example.com',
-            'jessica@example.com',
-            'daniel@example.com',
-            'ashley@example.com',
+        $mockUserMapping = [
+            'ashley@example.com' => 'buksu',
+            'chris@example.com' => 'cmu',
+            'emily@example.com' => 'ustp',
+            'michael@example.com' => 'bnhs',
+            'john@example.com' => 'sti',
         ];
+        
+        $mockEmails = array_keys($mockUserMapping);
 
         // 1. DEEP CLEANUP: Find and delete all previous mock data
         $mockUsers = User::whereIn('email', $mockEmails)->get();
@@ -79,12 +76,19 @@ class MockTenantAndBillingSeeder extends Seeder
         $port = parse_url(config('app.url'), PHP_URL_PORT);
 
         foreach ($mockUsers as $index => $user) {
-            // Distribute plans evenly
-            $planNames = ['Pro', 'Ultimate', 'Pro', 'Ultimate', 'Basic', 'Pro', 'Ultimate', 'Pro', 'Ultimate', 'Basic'];
-            $selectedPlan = $planNames[$index] ?? 'Pro';
+            // Distribute plans explicitly
+            $planMapping = [
+                'ashley@example.com' => 'Pro',
+                'chris@example.com' => 'Ultimate',
+                'emily@example.com' => 'Pro',
+                'michael@example.com' => 'Basic',
+                'john@example.com' => 'Basic',
+            ];
+            $selectedPlan = $planMapping[$user->email] ?? 'Pro';
             
             // Create EXACTLY ONE tenant for each mock user with the new pattern
-            $subdomain = Str::slug($user->name, '_') . '_eduboard';
+            $prefix = $mockUserMapping[$user->email] ?? Str::slug($user->name, '_');
+            $subdomain = $prefix . '_eduboard';
             $safeSubdomain = $baseHost === 'localhost' ? str_replace('_', '-', $subdomain) : $subdomain;
             $domainName = $safeSubdomain . '.' . $baseHost;
 
@@ -92,7 +96,7 @@ class MockTenantAndBillingSeeder extends Seeder
             $tenant = Tenant::create([
                 'id' => $subdomain,
                 'owner_id' => $user->id,
-                'school_name' => $user->name . ' School',
+                'school_name' => strtoupper($prefix) . ' EduBoard',
                 'status' => 'Active',
                 'plan' => $selectedPlan,
                 'expires_at' => now()->addMonth(),
@@ -120,7 +124,7 @@ class MockTenantAndBillingSeeder extends Seeder
             ]);
 
             // Create admin user inside the tenant database
-            $tenant->run(function () use ($user, $selectedPlan) {
+            $tenant->run(function () use ($user, $selectedPlan, $prefix) {
                 // Set storage limit
                 $storageLimit = match($selectedPlan) {
                     'Pro' => 15.00,
@@ -136,7 +140,7 @@ class MockTenantAndBillingSeeder extends Seeder
                     'email' => $user->email,
                     'password' => $user->password,
                     'role' => 'admin',
-                    'school_name' => $user->name . ' School',
+                    'school_name' => strtoupper($prefix) . ' EduBoard',
                     'status' => 'active',
                 ]);
             });

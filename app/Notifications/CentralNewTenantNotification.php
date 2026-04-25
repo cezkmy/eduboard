@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class CentralNewTenantNotification extends Notification
+class CentralNewTenantNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

@@ -20,9 +20,7 @@ class SettingsController extends Controller
 
             // Validate logo if uploaded
             if ($request->hasFile('logo')) {
-                if (!tenant()->hasFeature('custom_logo')) {
-                    return back()->with('error', 'Custom logo is not available on your current plan. Please upgrade to Pro.');
-                }
+
                 $request->validate([
                     'logo' => 'file|mimes:png,jpg,jpeg|max:102400', // 100MB max
                 ]);

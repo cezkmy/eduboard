@@ -37,30 +37,7 @@
         $isTrial = $subscriptionStatus === 'trial';
     @endphp
 
-    <!-- Trial Banner (with null check) -->
-    @if($isTrial)
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="alert alert-info" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="bi bi-star-fill text-warning fs-4 me-3"></i>
-                    <div>
-                        <strong>Trial Period:</strong> 
-                        @if(auth()->user()->trial_ends_at)
-                            Your trial ends on {{ \Carbon\Carbon::parse(auth()->user()->trial_ends_at)->format('F d, Y') }}. 
-                            <span class="fw-bold">{{ \Carbon\Carbon::parse(auth()->user()->trial_ends_at)->diffForHumans() }} remaining.</span>
-                        @else
-                            You are on a free trial.
-                        @endif
-                    </div>
-                    <a href="{{ route('central.user.subscription') }}" class="btn btn-sm btn-outline-light ms-auto">
-                        Upgrade Now
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+
 
     <!-- Plan Banner -->
     <div class="row mb-4">
@@ -69,23 +46,15 @@
                 <div class="card-body p-4">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h4 class="fw-bold mb-2">Current Plan: <span class="badge bg-white text-success">{{ $currentPlan }} @if($isTrial)(Trial)@endif</span></h4>
+                            <h4 class="fw-bold mb-2">Current Plan: <span class="badge bg-white text-success">{{ $currentPlan }}</span></h4>
                             <p class="mb-0 opacity-75">
-                                @if($isTrial)
-                                    Free for 1 month • Select 1 free template • Domain Management after template selection
-                                @else
-                                    Active Subscription
-                                @endif
+                                Select 1 free template • Full platform access • Domain Management after template selection
                             </p>
                         </div>
                         <div class="col-md-4 text-end">
                             <a href="{{ route('central.user.subscription') }}" class="btn btn-light">
                                 <i class="bi bi-arrow-up-circle me-2"></i>
-                                @if(auth()->user()->status === 'trial')
-                                    Upgrade Plan
-                                @else
-                                    Manage Plan
-                                @endif
+                                Upgrade Plan
                             </a>
                         </div>
                     </div>
@@ -96,7 +65,7 @@
 
     <!-- Status Cards -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -117,7 +86,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -138,27 +107,6 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="text-secondary small fw-medium">Trial Days</span>
-                        <i class="bi bi-calendar text-secondary"></i>
-                    </div>
-                    @if(auth()->user()->trial_ends_at)
-                        <div class="h3 fw-bold mb-1">{{ max(0, \Carbon\Carbon::parse(auth()->user()->trial_ends_at)->diffInDays(now())) }} days</div>
-                        <div class="small text-secondary">
-                            <i class="bi bi-clock me-1"></i> Remaining
-                        </div>
-                    @else
-                        <div class="h3 fw-bold mb-1">30 days</div>
-                        <div class="small text-secondary">
-                            <i class="bi bi-clock me-1"></i> Trial period
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Quick Actions -->
@@ -172,7 +120,7 @@
                     <h5 class="fw-semibold mb-2">Template</h5>
                     <p class="text-secondary small mb-3">
                         @if(auth()->user()->has_selected_template)
-                            You have selected your trial template
+                            You have selected your free template
                         @else
                             Choose your free template to get started
                         @endif

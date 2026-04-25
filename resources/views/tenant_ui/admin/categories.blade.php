@@ -121,7 +121,7 @@
                             </svg>
                         </button>
                     </div>
-                    <form class="px-8 pb-10 space-y-6" action="{{ route('tenant.admin.categories.store') }}" method="POST" @submit.prevent="submitCategoryForm">
+                    <form class="px-8 pb-10 space-y-6" action="{{ route('tenant.admin.categories.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="type" :value="activeTab">
 
@@ -192,8 +192,9 @@
             <div x-show="deleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" x-cloak>
                 <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="deleteModal = false"></div>
                 <div class="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden animate-modal-enter">
-                    <form @submit.prevent="deleteCategory" class="p-8 text-center">
+                    <form :action="`{{ url('admin/categories') }}/${deleteTargetId}`" method="POST" class="p-8 text-center">
                         @csrf
+                        @method('DELETE')
                         <div class="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] flex items-center justify-center text-red-500 mx-auto mb-6">
                             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -212,21 +213,7 @@
             </div>
         </template>
 
-        {{-- Success Modal handled by Controller redirects --}}
-        @if(session('success'))
-            <template x-teleport="body">
-                <div x-init="showSuccess('{{ session('success') }}')" x-show="successModal" class="fixed bottom-8 right-8 z-[110] animate-modal-enter" x-cloak>
-                    <div class="bg-gray-900 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 border-l-4 border-emerald-500">
-                        <div class="w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-lg flex items-center justify-center">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <span class="text-sm font-bold">{{ session('success') }}</span>
-                    </div>
-                </div>
-            </template>
-        @endif
+
 
     </div>
 
@@ -244,74 +231,6 @@
                 selectedColor: 'blue',
                 deleteTargetName: '',
                 deleteTargetId: null,
-                successMessage: 'Action completed successfully.',
-                showSuccess(msg) {
-                    this.successMessage = msg;
-                    this.successModal = true;
-                    setTimeout(() => {
-                        if (this.successModal) this.successModal = false;
-                    }, 3000);
-                },
-                showError(msg) {
-                    showAlert('Error', msg, 'error');
-                },
-                async submitCategoryForm(event) {
-                    const form = event.target;
-                    const url = form.action;
-                    const formData = new FormData(form);
-                    formData.set('type', this.activeTab);
-
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            },
-                            body: formData
-                        });
-
-                        const data = await response.json().catch(() => null);
-
-                        if (!response.ok) {
-                            this.showError(data?.error || 'You do not have permission to perform this action.');
-                            return;
-                        }
-
-                        this.categoryModal = false;
-                        this.showSuccess(data?.message || 'Category added successfully.');
-                        setTimeout(() => window.location.reload(), 800);
-                    } catch (error) {
-                        this.showError('A connection error occurred.');
-                    }
-                },
-                async deleteCategory(event) {
-                    event.preventDefault();
-                    const url = `{{ url('admin/categories') }}/${this.deleteTargetId}`;
-
-                    try {
-                        const response = await fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            }
-                        });
-
-                        const data = await response.json().catch(() => null);
-
-                        if (!response.ok) {
-                            this.showError(data?.error || 'You do not have permission to perform this action.');
-                            return;
-                        }
-
-                        this.deleteModal = false;
-                        this.showSuccess(data?.message || 'Category deleted successfully.');
-                        setTimeout(() => window.location.reload(), 800);
-                    } catch (error) {
-                        this.showError('A connection error occurred.');
-                    }
-                }
             };
         }
     </script>

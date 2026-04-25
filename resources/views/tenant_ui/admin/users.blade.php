@@ -31,7 +31,6 @@
                 userModal: false,
                 deleteModal: false,
                 forceDeleteModal: false,
-                successModal: false,
                 limitModal: false,
                 limitMessage: '',
                 generatedPasswordAlert: null,
@@ -287,19 +286,19 @@
                 submitLock() {
                     fetch('/admin/users/' + this.currentUser.id + '/lock-account', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
                         body: JSON.stringify({ days: parseInt(this.lockDays) })
                     }).then(r => r.json()).then(data => { if (data.success) { this.lockModal = false; this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); } });
                 },
 
                 confirmDelete() {
                     if (!this.currentUser.id) return;
-                    fetch('/admin/users/' + this.currentUser.id, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': window.__csrfToken } })
+                    fetch('/admin/users/' + this.currentUser.id, { method: 'DELETE', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken } })
                         .then(r => r.json())
                         .then(data => { if (data.success) { this.deleteModal = false; this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); } });
                 },
 
-                showSuccess(msg) { this.successMessage = msg; this.successModal = true; setTimeout(() => this.successModal = false, 3000); },
+                showSuccess(msg) { if (typeof window.showToast === 'function') { window.showToast(msg, 'success'); } else { alert(msg); } },
 
                 checkLimit(role) {
                     const limits = { admin: window.__adminLimit, teacher: window.__teacherLimit };
@@ -338,7 +337,7 @@
                     this.isSaving = true;
                     fetch(url, {
                         method: isEdit ? 'PUT' : 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
                         body: JSON.stringify(this.currentUser)
                     }).then(r => r.json()).then(data => {
                         this.isSaving = false;
@@ -354,7 +353,14 @@
                                 setTimeout(() => window.location.reload(), 1000); 
                             }
                         }
-                        else { this.showError(data.message || 'An error occurred'); }
+                        else { 
+                            let errorMsg = data.message || 'An error occurred';
+                            if (data.errors) {
+                                const firstKey = Object.keys(data.errors)[0];
+                                errorMsg = data.errors[firstKey][0];
+                            }
+                            this.showError(errorMsg); 
+                        }
                     }).catch(error => {
                         this.isSaving = false;
                         this.showError('A network error occurred. Please try again.');
@@ -377,10 +383,20 @@
                     if (!this.selectedUsers.length || !this.bulkValue) return;
                     fetch(window.__usersBulk, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': window.__csrfToken },
                         body: JSON.stringify({ user_ids: this.selectedUsers, field: this.bulkField, value: this.bulkValue })
                     }).then(r => r.json()).then(data => {
                         if (data.success) { this.bulkModal = false; this.selectedUsers = []; this.selectAll = false; this.showSuccess(data.message); setTimeout(() => window.location.reload(), 1000); }
+                        else { 
+                            let errorMsg = data.message || 'An error occurred';
+                            if (data.errors) {
+                                const firstKey = Object.keys(data.errors)[0];
+                                errorMsg = data.errors[firstKey][0];
+                            }
+                            this.showError(errorMsg); 
+                        }
+                    }).catch(error => {
+                        this.showError('A network error occurred. Please try again.');
                     });
                 },
 
@@ -433,7 +449,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-2 mb-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {{-- Tabs --}}
-                <div class="flex items-center p-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl w-fit overflow-x-auto custom-scrollbar whitespace-nowrap">
+                <div class="flex items-center p-1 bg-gray-50 dark:bg-gray-900/50 rounded-xl flex-1 min-w-0 overflow-x-auto custom-scrollbar whitespace-nowrap">
                     <button class="px-4 py-2 rounded-lg text-sm font-bold transition-all"
                             :class="activeTab === 'teachers' ? 'bg-white dark:bg-gray-800 text-[var(--accent)] shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                             @click="switchTab('teachers')">
@@ -498,10 +514,10 @@
         </div>
 
         {{-- Table Container --}}
-        <div x-show="activeTab !== 'roles'" class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-x-auto custom-scrollbar" style="background: var(--bg-card); border-color: var(--border-color);">
+        <div x-show="activeTab !== 'roles'" class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-auto custom-scrollbar max-h-[calc(100vh-320px)]" style="background: var(--bg-card); border-color: var(--border-color);">
             <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
-                    <tr class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700" style="background: var(--bg-card); border-color: var(--border-color);">
+                    <tr class="bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700 sticky top-0 z-10 shadow-sm" style="background: var(--bg-card); border-color: var(--border-color);">
                         <th class="w-12 px-6 py-4">
                             <div class="flex items-center justify-center">
                                 <input type="checkbox" x-model="selectAll" @change="toggleAll()" class="rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]">
@@ -1290,28 +1306,7 @@
             </div>
         </template>
 
-        {{-- Success Modal --}}
-        <template x-teleport="body">
-            <div x-show="successModal"  
-                 class="fixed inset-0 z-[110] flex items-center justify-center p-4 overflow-y-auto" 
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 x-cloak>
-                <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" @click="successModal = false"></div>
-                <div class="relative bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-2xl flex items-center gap-4 animate-modal-enter w-full max-w-sm">
-                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-1">Success!</h4>
-                        <p class="text-xs text-gray-500 font-medium" x-text="successMessage"></p>
-                    </div>
-                </div>
-            </div>
-        </template>    </div>
+    </div>
 
     <style>
     /* remove extra bottom divider under the last users row */

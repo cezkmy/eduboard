@@ -224,8 +224,8 @@ class AuthController extends Controller
                 'school_name' => $request->school_name,
                 'password' => Hash::make($request->password),
                 'role' => 'user',
-                'status' => 'trial',
-                'trial_ends_at' => now()->addDays(30),
+                'status' => 'active',
+                'trial_ends_at' => null,
                 'plan' => 'Basic',
             ]);
 
@@ -449,6 +449,13 @@ class AuthController extends Controller
                     }
                 });
             }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Password updated successfully.',
+            ]);
         }
 
         return back()->with('status', 'password-updated');

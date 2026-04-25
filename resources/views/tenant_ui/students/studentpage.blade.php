@@ -40,15 +40,7 @@
                 </div>
             @endif
 
-            <div class="interaction-filters">
-                <p class="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2 ml-1">Interaction Filter</p>
-                <div class="flex flex-wrap gap-2">
-                    <button class="int-filter-pill all active px-4 py-1.5 rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-bold transition-all shadow-sm" data-filter="all">Any Interaction</button>
-                    <button class="int-filter-pill reacted px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-rose-500 transition-all shadow-sm" data-filter="reacted">❤️ Reacted Only</button>
-                    <button class="int-filter-pill commented px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-amber-500 transition-all shadow-sm" data-filter="commented">💬 Commented Only</button>
-                    <button class="int-filter-pill popular px-4 py-1.5 rounded-xl bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-bold border border-gray-100 dark:border-gray-700 hover:border-blue-500 transition-all shadow-sm" data-filter="popular">🔥 Highly Engaged</button>
-                </div>
-            </div>
+
         </div>
 
         {{-- Date Filter --}}
