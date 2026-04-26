@@ -86,6 +86,13 @@ class MockTenantAndBillingSeeder extends Seeder
             ];
             $selectedPlan = $planMapping[$user->email] ?? 'Pro';
             
+            // Calculate storage limit based on plan
+            $storageLimit = match($selectedPlan) {
+                'Pro' => 15.00,
+                'Ultimate' => 30.00,
+                default => 5.00,
+            };
+            
             // Create EXACTLY ONE tenant for each mock user with the new pattern
             $prefix = $mockUserMapping[$user->email] ?? Str::slug($user->name, '_');
             $subdomain = $prefix . '_eduboard';
@@ -99,6 +106,7 @@ class MockTenantAndBillingSeeder extends Seeder
                 'school_name' => strtoupper($prefix) . ' EduBoard',
                 'status' => 'Active',
                 'plan' => $selectedPlan,
+                'storage_limit_gb' => $storageLimit,
                 'expires_at' => now()->addMonth(),
             ]);
 
@@ -115,7 +123,7 @@ class MockTenantAndBillingSeeder extends Seeder
             ]);
 
             // SYNC CENTRAL USER: Update the user's plan and domain
-            $user->update([
+            User::where('id', $user->id)->update([
                 'plan' => $selectedPlan,
                 'school_domain' => $domainName . ($port ? ':' . $port : ''),
                 'has_selected_template' => true,
@@ -125,16 +133,6 @@ class MockTenantAndBillingSeeder extends Seeder
 
             // Create admin user inside the tenant database
             $tenant->run(function () use ($user, $selectedPlan, $prefix) {
-                // Set storage limit
-                $storageLimit = match($selectedPlan) {
-                    'Pro' => 15.00,
-                    'Ultimate' => 30.00,
-                    default => 5.00,
-                };
-                \App\Models\Tenant::find(tenant('id'))->update([
-                    'storage_limit_gb' => $storageLimit
-                ]);
-
                 \App\Models\User::create([
                     'name' => $user->name,
                     'email' => $user->email,
