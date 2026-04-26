@@ -37,7 +37,14 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 space-y-4">
                 <div class="text-xs font-black text-gray-400 uppercase tracking-widest">Manual Action</div>
 
-                <div class="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 rounded-xl mb-4">
+                    <p class="text-[10px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Updating will apply database migrations and unlock features for the selected version. System files are managed centrally.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700 rounded-xl px-3 py-2 mb-4">
                     <div>
                         <div class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Auto-Apply</div>
                         <div class="text-xs font-bold text-gray-700 dark:text-gray-200">Apply releases automatically</div>
@@ -67,14 +74,14 @@
 
                     <button @click="triggerUpdate()" :disabled="isUpdating"
                             class="w-full px-4 py-3 bg-[var(--accent)] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-accent disabled:opacity-50">
-                        <span x-show="!isUpdating">Apply Release Now</span>
+                        <span x-show="!isUpdating">Update Database Now</span>
                         <span x-show="isUpdating">Processing...</span>
                     </button>
 
                     @if($rollbackAvailable)
                         <button @click="triggerRollback()" :disabled="isUpdating"
                                 class="w-full px-4 py-3 bg-orange-50 text-orange-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-100 transition-all border border-orange-100 dark:border-orange-900/30 disabled:opacity-50">
-                            Revert to {{ tenant('previous_version') }}
+                            Revert Database to {{ tenant('previous_version') }}
                         </button>
                     @endif
                 </div>
@@ -137,7 +144,7 @@
                 pollInterval: null,
 
                 async triggerUpdate() {
-                    if (!confirm(`Apply release ${this.selectedVersion} to your school? This will finalize the update and migrate your database.`)) return;
+                    if (!confirm(`Apply version ${this.selectedVersion} to your school? This will migrate your database and unlock new features.`)) return;
                     
                     this.isUpdating = true;
                     this.progress = 5;
@@ -169,7 +176,7 @@
                 },
 
                 async triggerRollback() {
-                    if (!confirm('Revert your school instance back to the previous version? This will restore files from the last backup.')) return;
+                    if (!confirm('Revert your school database back to the previous version? This will restore your data from the last backup.')) return;
 
                     this.isUpdating = true;
                     this.progress = 5;
@@ -219,11 +226,11 @@
                                 const lastLog = data.logs[data.logs.length - 1].toLowerCase();
                                 if (lastLog.includes('successfully')) {
                                     setTimeout(() => {
-                                        alert('Operation completed successfully! Reloading...');
+                                        alert('Update completed successfully! Reloading...');
                                         window.location.reload();
                                     }, 1000);
                                 } else {
-                                    alert('Operation failed. Check logs for details.');
+                                    alert('Update failed. Check terminal logs for details.');
                                 }
                             }
                         } catch (e) {
@@ -234,14 +241,10 @@
 
                 calculateProgress(logs) {
                     const steps = [
-                        { pattern: 'maintenance mode', progress: 10, label: 'Entering maintenance mode...' },
-                        { pattern: 'Creating backup', progress: 25, label: 'Backing up system...' },
-                        { pattern: 'Downloading', progress: 40, label: 'Downloading release...' },
-                        { pattern: 'Extracting', progress: 50, label: 'Extracting files...' },
-                        { pattern: 'Applying new files', progress: 60, label: 'Applying updates...' },
-                        { pattern: 'Composer', progress: 75, label: 'Installing dependencies...' },
-                        { pattern: 'NPM', progress: 85, label: 'Building assets...' },
-                        { pattern: 'migrations', progress: 95, label: 'Migrating database...' },
+                        { pattern: 'Initializing', progress: 10, label: 'Initializing...' },
+                        { pattern: 'Creating database backup', progress: 30, label: 'Backing up database...' },
+                        { pattern: 'Running tenant migrations', progress: 70, label: 'Migrating database...' },
+                        { pattern: 'Clearing tenant-specific caches', progress: 90, label: 'Clearing caches...' },
                         { pattern: 'successfully', progress: 100, label: 'Complete!' }
                     ];
 

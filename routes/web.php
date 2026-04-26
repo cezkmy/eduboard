@@ -222,12 +222,6 @@ foreach (config('tenancy.central_domains') as $domain) {
                 Route::post('settings/release', [\App\Http\Controllers\Central\SystemSettingsController::class, 'updateRelease'])->name('settings.release');
                 Route::post('settings/release/rollback', [\App\Http\Controllers\Central\SystemSettingsController::class, 'rollbackRelease'])->name('settings.release.rollback');
 
-                // System Update (OTA) Routes
-                Route::get('system/update', [\App\Http\Controllers\Central\SystemUpdateController::class, 'index'])->name('system.update');
-                Route::post('system/update/trigger', [\App\Http\Controllers\Central\SystemUpdateController::class, 'trigger'])->name('system.update.trigger');
-                Route::post('system/update/auto-toggle', [\App\Http\Controllers\Central\SystemUpdateController::class, 'toggleAutoUpdate'])->name('system.update.auto_toggle');
-                Route::post('system/update/rollback', [\App\Http\Controllers\Central\SystemUpdateController::class, 'rollback'])->name('system.update.rollback');
-                Route::get('system/update/logs/{updateId}', [\App\Http\Controllers\Central\SystemUpdateController::class, 'logs'])->name('system.update.logs');
             });
 
             // Central User Routes

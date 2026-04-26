@@ -32,65 +32,49 @@ class TenantRollbackJob implements ShouldQueue
         if (!$tenant) return;
 
         $base = base_path();
-        $backupPath = $tenant->latest_backup_path;
         $previousVersion = $tenant->previous_version;
 
-        if (!$backupPath || !File::exists($backupPath)) {
-            $this->log('Critical Error: No backup file found for rollback.', 'error');
+        if (empty($previousVersion)) {
+            $this->log('Critical Error: No previous version record found for rollback.', 'error');
             return;
         }
 
         $tenant->setAttribute('is_updating', true);
-        $tenant->setAttribute('updating_message', "Rolling back to {$previousVersion}...");
+        $tenant->setAttribute('updating_message', "Rolling back database to version {$previousVersion}...");
         $tenant->save();
 
         try {
-            $this->log("Initiating rollback for tenant: {$tenant->id} to {$previousVersion}", 'info');
+            $this->log("Initiating database-only rollback for tenant: {$tenant->id} to version {$previousVersion}", 'info');
 
             // 1. Restore Database
             $dbBackupPath = $tenant->latest_db_backup_path;
             if ($dbBackupPath && File::exists($dbBackupPath)) {
-                $this->log('Restoring database from backup...', 'info');
+                $this->log('Restoring database from stable backup...', 'info');
                 $this->restoreDatabase($dbBackupPath);
                 $this->log('Database restored successfully.', 'success');
-            }
-
-            // 2. Restore Files
-            $this->log('Restoring files from backup archive...', 'info');
-            $zip = new ZipArchive;
-            if ($zip->open($backupPath) === true) {
-                $zip->extractTo($base);
-                $zip->close();
-                $this->log('Files restored successfully.', 'success');
             } else {
-                throw new Exception('Failed to open backup zip.');
+                $this->log('Warning: Database backup not found. Only version record will be updated.', 'warning');
             }
 
-            $this->log('Reinstalling dependencies...', 'info');
-            $this->runProcess(['composer', 'install'], $base);
-            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $base);
-            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $base);
-
-            $this->log('Rolling back database changes...', 'info');
-            Artisan::call('tenants:migrate', [
-                '--tenants' => $tenant->id,
-                '--force' => true,
-            ]);
-
-            $this->log('Clearing caches...', 'info');
+            // 2. Clear Caches
+            $this->log('Clearing tenant caches after rollback...', 'info');
             $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $base);
             $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $base);
 
+            // 3. Update Version Record
             $tenant->update([
                 'system_version' => $previousVersion,
-                'previous_version' => null,
+                'previous_version' => null, // Reset previous version after successful rollback
             ]);
 
-            $this->log("Rollback to {$previousVersion} completed successfully!", 'success');
+            // Sync with central DB
+            \Illuminate\Support\Facades\DB::connection('mysql')->table('tenants')
+                ->where('id', $tenant->getTenantKey())
+                ->update(['system_version' => $previousVersion]);
+
+            $this->log("Rollback to {$previousVersion} has been completed successfully!", 'success');
         } catch (Exception $e) {
-            $this->log("ROLLBACK ERROR: " . $e->getMessage(), 'error');
+            $this->log("ROLLBACK FATAL ERROR: " . $e->getMessage(), 'error');
         } finally {
             $tenant->setAttribute('is_updating', false);
             $tenant->setAttribute('updating_message', null);
@@ -105,6 +89,7 @@ class TenantRollbackJob implements ShouldQueue
         $process->run(function ($type, $buffer) {
             $logs = collect(explode("\n", rtrim($buffer)))->filter()->map(fn($l) => trim($l))->filter();
             foreach($logs as $msg) {
+                if (empty($msg) || $msg === '.' || $msg === '...') continue;
                 $this->log($msg, $type === Process::ERR ? 'warning' : 'info');
             }
         });
@@ -130,7 +115,7 @@ class TenantRollbackJob implements ShouldQueue
             $process->run();
             
             if (!$process->isSuccessful()) {
-                $this->log('Warning: Database restoration failed.', 'warning');
+                $this->log('Warning: Database restoration failed. Manual check required.', 'warning');
             }
         } elseif ($connection === 'sqlite') {
             File::copy($source, $config['database']);

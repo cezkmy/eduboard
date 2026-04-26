@@ -385,7 +385,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(25,135,84,0.12); color: #198754; display:flex; align-items:center; justify-content:center;">
-                        <i class="bi bi-leaf-fill"></i>
+                        <i class="bi bi-tree-fill"></i>
                     </div>
                     <h6 class="fw-bold mb-1">Green Landing Layout</h6>
                     <div class="text-secondary small">Eco-friendly theme</div>
@@ -396,7 +396,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="mb-3" style="width: 44px; height: 44px; border-radius: 999px; background: rgba(107,33,168,0.12); color: #6b21a8; display:flex; align-items:center; justify-content:center;">
-                        <i class="bi bi-heart-fill"></i>
+                        <i class="bi bi-stars"></i>
                     </div>
                     <h6 class="fw-bold mb-1">Pink Landing Layout</h6>
                     <div class="text-secondary small">Royal/pink theme</div>

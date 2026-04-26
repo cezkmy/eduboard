@@ -165,4 +165,14 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             
         $this->storage_used_gb += $gb;
     }
+
+    /**
+     * Check if the tenant is running a specific version or higher.
+     * Useful for version-gating features in a shared codebase.
+     */
+    public function hasVersion(string $requiredVersion): bool
+    {
+        $current = $this->system_version ?? config('app.version', 'v1.0.0');
+        return version_compare(ltrim($current, 'vV'), ltrim($requiredVersion, 'vV'), '>=');
+    }
 }

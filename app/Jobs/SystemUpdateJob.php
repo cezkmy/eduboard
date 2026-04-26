@@ -121,7 +121,7 @@ class SystemUpdateJob implements ShouldQueue
 
             $this->log("Update to {$this->version} has been completed successfully!", 'success');
         } catch (Exception $e) {
-            $this->log("FATAL UPDATE ERROR: " . $e->getMessage(), 'error');
+            $this->log("FATAL UPDATE ERROR: " . $e->getMessage() . " in " . basename($e->getFile()) . ":" . $e->getLine(), 'error');
             $this->log('Initiating rollback to previous stable version...', 'warning');
 
             try {
@@ -297,43 +297,90 @@ class SystemUpdateJob implements ShouldQueue
         if (!File::exists($extractDir)) {
             File::makeDirectory($extractDir, 0755, true);
         }
-
+        
         $zip = new ZipArchive;
-        if ($zip->open($zipPath) === true) {
+        $res = $zip->open($zipPath);
+        
+        if ($res === true) {
             $zip->extractTo($extractDir);
             $zip->close();
         } else {
-            throw new Exception("Failed to extract the downloaded release zip.");
+            // FALLBACK: Use PowerShell on Windows if ZipArchive fails
+            if (str_starts_with(PHP_OS, 'WIN')) {
+                $this->log("[WARNING] ZipArchive failed (Code {$res}). Trying PowerShell Expand-Archive...", 'warning');
+                $psCommand = "powershell -Command \"Expand-Archive -Force -Path '{$zipPath}' -DestinationPath '{$extractDir}'\"";
+                exec($psCommand, $output, $returnVar);
+                
+                if ($returnVar !== 0) {
+                    throw new Exception("Failed to extract release zip via PHP and PowerShell. (Zip Path: {$zipPath})");
+                }
+            } else {
+                throw new Exception("Failed to extract release zip. Error code: " . $res . " (Path: " . $zipPath . ")");
+            }
         }
     }
 
     protected function overwriteFiles($extractDir, $basePath)
     {
         $directories = File::directories($extractDir);
-        // GitHub release zips wrap contents in a root folder (e.g. cezkmy-eduboard-ab12cd)
         $wrapper = count($directories) == 1 ? $directories[0] : $extractDir;
-
-        // Ensure we don't overwrite certain critical files if they exist
-        $preserve = ['.env', 'storage', 'public/storage'];
+        $preserve = [
+            '.env', 
+            'storage', 
+            'public/storage', 
+            'app/Jobs/SystemUpdateJob.php',
+            'app/Jobs/TenantUpdateJob.php'
+        ];
         
         $files = File::allFiles($wrapper, true);
-        foreach ($files as $file) {
-            $relativePath = str_replace($wrapper . DIRECTORY_SEPARATOR, '', $file->getRealPath());
-            
-            // Skip preserved files
-            $isPreserved = false;
-            foreach ($preserve as $p) {
-                if ($relativePath === $p || str_starts_with($relativePath, $p . DIRECTORY_SEPARATOR)) {
-                    $isPreserved = true;
-                    break;
+        try {
+            foreach ($files as $file) {
+                // Get real path and ensure it is normalized
+                $realFilePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file->getRealPath());
+                
+                // Calculate relative path more safely
+                $wrapperNormalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $wrapper);
+                $relativePath = str_replace($wrapperNormalized, '', $realFilePath);
+                $relativePath = ltrim($relativePath, DIRECTORY_SEPARATOR);
+
+                $isPreserved = false;
+                foreach ($preserve as $p) {
+                    if ($relativePath === $p || str_starts_with($relativePath, $p . DIRECTORY_SEPARATOR)) {
+                        $isPreserved = true;
+                        break;
+                    }
+                }
+                
+                if (!$isPreserved) {
+                    // Build destination path
+                    $normalizedBase = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $basePath);
+                    $destPath = rtrim($normalizedBase, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+                    
+                    $destDir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, dirname($destPath));
+                    $destDir = rtrim($destDir, DIRECTORY_SEPARATOR);
+
+                    if (!file_exists($destDir)) {
+                        // Try PHP first
+                        if (!@mkdir($destDir, 0755, true)) {
+                            // FALLBACK: On Windows, use PowerShell if PHP fails
+                            if (str_starts_with(PHP_OS, 'WIN')) {
+                                $psCommand = "powershell -Command \"New-Item -ItemType Directory -Force -Path '{$destDir}'\"";
+                                exec($psCommand, $output, $returnVar);
+                                
+                                if ($returnVar !== 0) {
+                                    throw new Exception("Failed to create directory [{$destDir}] via PHP and PowerShell.");
+                                }
+                            } else {
+                                throw new Exception("Failed to create directory [{$destDir}]");
+                            }
+                        }
+                    }
+
+                    File::copy($file->getRealPath(), $destPath);
                 }
             }
-
-            if (!$isPreserved) {
-                $destPath = $basePath . DIRECTORY_SEPARATOR . $relativePath;
-                File::ensureDirectoryExists(dirname($destPath));
-                File::copy($file->getRealPath(), $destPath);
-            }
+        } catch (\Exception $e) {
+            throw new Exception("File Update Error at [{$relativePath}]: " . $e->getMessage() . " (Line " . $e->getLine() . ")");
         }
     }
 

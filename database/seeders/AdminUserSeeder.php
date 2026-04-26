@@ -13,6 +13,11 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Safety check: Skip if running in tenant context
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            return;
+        }
+
         $admins = [
             ['name' => 'Jeru', 'email' => 'jeru@gmail.com'],
             ['name' => 'Julius', 'email' => 'julius@gmail.com'],

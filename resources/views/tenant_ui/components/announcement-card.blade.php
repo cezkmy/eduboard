@@ -121,6 +121,12 @@
                 console.error('Error toggling reaction:', error);
             }
         },
+        attachments: {{ json_encode(array_map(fn($att) => [
+            'name' => $att['name'],
+            'url' => (function_exists('tenant_asset') && tenant()) ? tenant_asset($att['path']) : asset('storage/'.$att['path']),
+            'size' => round($att['size'] / 1024, 1) . ' KB',
+            'type' => $att['type']
+        ], $announcement->attachments ?? [])) }},
         openGallery() { 
             this.galleryOpen = true; 
             document.body.style.overflow = 'hidden';
@@ -238,6 +244,41 @@
             </div>
         @endif
         </div>
+
+        {{-- Document Attachments Section --}}
+        @if($announcement->attachments && count($announcement->attachments) > 0)
+            <div class="mt-4 space-y-2 relative z-10">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2">Attached Documents</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @foreach($announcement->attachments as $attachment)
+                        @php
+                            $attUrl = (function_exists('tenant_asset') && tenant()) ? tenant_asset($attachment['path']) : asset('storage/'.$attachment['path']);
+                            $attSize = round(($attachment['size'] ?? 0) / 1024, 1) . ' KB';
+                            $attType = strtoupper($attachment['type'] ?? 'FILE');
+                        @endphp
+                        <a href="{{ $attUrl }}" target="_blank" class="group/att flex items-center justify-between p-3 bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 rounded-2xl border border-black/5 hover:border-blue-500/30 transition-all duration-300">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500 text-white flex flex-col items-center justify-center shadow-lg shadow-blue-500/20 group-hover/att:scale-110 transition-transform">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-2.414-2.414A1 1 0 0015.586 6H7a2 2 0 00-2 2v11a2 2 0 002 2z" />
+                                    </svg>
+                                    <span class="text-[7px] font-black mt-0.5">{{ $attType }}</span>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[150px] group-hover/att:text-blue-500 transition-colors">{{ $attachment['name'] }}</p>
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">{{ $attSize }}</p>
+                                </div>
+                            </div>
+                            <div class="p-2 text-gray-400 group-hover/att:text-blue-500 group-hover/att:translate-x-1 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     </div>
 
     {{-- OUTER REACTIONS & COMMENTS (OUTSIDE THE BORDER) --}}

@@ -14,6 +14,11 @@ class MockUserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Safety check: Skip if running in tenant context
+        if (function_exists('tenancy') && tenancy()->initialized) {
+            return;
+        }
+
         $users = [
             ['name' => 'Ashley Thomas', 'email' => 'ashley@example.com'],
             ['name' => 'Chris Wilson', 'email' => 'chris@example.com'],

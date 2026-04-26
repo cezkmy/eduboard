@@ -19,6 +19,7 @@
 
 <div class="space-y-6" x-data="{ 
     isEdit: false,
+    isPinned: false,
     announcementId: null,
     title: '',
     category: '',
@@ -47,6 +48,7 @@
     categoryColor: '#4b5563',
     borderColor: 'transparent',
     isPublishing: false,
+    attachmentsPreview: [],
     presetColors: [
         { name: 'Emerald', color: '#10b981' },
         { name: 'Blue', color: '#3b82f6' },
@@ -75,6 +77,7 @@
         this.isEdit = false;
         this.announcementId = null;
         this.title = '';
+        this.isPinned = false;
         this.category = '';
         this.content = '';
         this.targetAll = true;
@@ -89,6 +92,7 @@
         this.selectedTemplateImage = '';
         this.bgColor = '#ffffff';
         this.mediaPreview = [];
+        this.attachmentsPreview = [];
         this.isPublishing = false;
     },
     selectTemplate(id, image) {
@@ -133,6 +137,7 @@
         this.contentColor = announcement.content_color || '#4b5563';
         this.categoryColor = announcement.category_color || '#4b5563';
         this.borderColor = announcement.border_color || 'transparent';
+        this.isPinned = !!announcement.is_pinned;
     },
     saveToLocalStorage() {
         if (this.isEdit) return;
@@ -231,7 +236,7 @@
         }
     }
 }">
-    <form x-ref="annForm" @submit.prevent="submitForm('published')" class="space-y-6">
+    <form x-ref="annForm" @submit.prevent="submitForm('published')" class="space-y-6" enctype="multipart/form-data">
         @csrf
 
         {{-- Loading Overlay --}}
@@ -374,6 +379,62 @@
             </div>
         </div>
 
+        <div x-show="!isEdit">
+            <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4 text-blue-500">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                Document Attachments
+            </label>
+            <div class="relative group border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-center hover:border-blue-500 hover:bg-blue-50/10 transition-all cursor-pointer">
+                <input
+                    type="file"
+                    id="annAttachments"
+                    name="attachments[]"
+                    multiple
+                    @change="
+                        attachmentsPreview = Array.from($event.target.files).map(file => ({
+                            name: file.name,
+                            size: (file.size / 1024).toFixed(1) + ' KB',
+                            type: file.name.split('.').pop().toUpperCase()
+                        }))
+                    "
+                    accept=".pdf,.docx"
+                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                <div class="flex items-center justify-center gap-4">
+                    <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-bold text-gray-700 dark:text-gray-300">Click to attach documents</p>
+                        <p class="text-[10px] text-gray-500">PDF or DOCX files only (max 20MB)</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Attachments Preview List --}}
+            <div x-show="attachmentsPreview.length > 0" class="mt-3 space-y-2">
+                <template x-for="(file, index) in attachmentsPreview" :key="index">
+                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+                                <span class="text-[10px] font-black" x-text="file.type"></span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate max-w-[200px]" x-text="file.name"></p>
+                                <p class="text-[10px] text-gray-400" x-text="file.size"></p>
+                            </div>
+                        </div>
+                        <button type="button" @click="attachmentsPreview = attachmentsPreview.filter((_, i) => i !== index)" class="text-gray-400 hover:text-red-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
         @if(count($templates) > 0)
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
@@ -751,7 +812,8 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
                     <input
                         type="checkbox"
-                        x-ref="annPinned"
+                        name="is_pinned"
+                        x-model="isPinned"
                         class="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
                     />
                     <div class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">

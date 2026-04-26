@@ -43,74 +43,50 @@ class TenantUpdateJob implements ShouldQueue
         }
 
         $tenant->setAttribute('is_updating', true);
-        $tenant->setAttribute('updating_message', "Updating to {$this->targetVersion}...");
+        $tenant->setAttribute('updating_message', "Applying database updates for version {$this->targetVersion}...");
         $tenant->save();
 
         try {
-            $this->log("Starting update for tenant: {$tenant->id} to version {$this->targetVersion}", 'info');
+            $this->log("Starting database-only update for tenant: {$tenant->id} to version {$this->targetVersion}", 'info');
 
-            // 1. Backup Database and Files
+            // 1. Backup Database
             $this->log('Creating database backup...', 'info');
             $dbBackupSql = $storagePath . "/db_before_{$this->targetVersion}_" . time() . ".sql";
             $this->backupDatabase($dbBackupSql);
             $tenant->latest_db_backup_path = $dbBackupSql;
             $this->log('Database backup created successfully.', 'success');
 
-            $this->log('Creating backup of current system files...', 'info');
-            $backupZip = $storagePath . "/backup_before_{$this->targetVersion}_" . time() . ".zip";
-            $this->createBackup($base, $backupZip);
-            $tenant->latest_backup_path = $backupZip;
-            $tenant->save();
-            $this->log('Files backup created successfully.', 'success');
-
-            // 2. Download and Extract
-            $this->log('Downloading release archive from GitHub...', 'info');
-            $zipPath = $storagePath . '/release.zip';
-            $this->downloadRelease($this->zipUrl, $zipPath);
-
-            $this->log('Extracting release archive...', 'info');
-            $extractDir = $storagePath . '/extract';
-            if (File::exists($extractDir)) File::deleteDirectory($extractDir);
-            $this->extractRelease($zipPath, $extractDir);
-
-            $this->log('Applying new files to core application...', 'info');
-            $this->overwriteFiles($extractDir, $base);
-            
-            File::delete($zipPath);
-            File::deleteDirectory($extractDir);
-
-            // 3. Run Commands
-            $this->log('Installing Composer dependencies...', 'info');
-            $this->runProcess(['composer', 'install', '--no-dev', '--optimize-autoloader'], $base);
-
-            $this->log('Installing NPM packages...', 'info');
-            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'install'] : ['npm', 'install'], $base);
-            
-            $this->log('Building frontend assets...', 'info');
-            $this->runProcess(DIRECTORY_SEPARATOR === '\\' ? ['cmd', '/c', 'npm', 'run', 'build'] : ['npm', 'run', 'build'], $base);
-
-            $this->log('Running tenant migrations...', 'info');
+            // 2. Run Tenant Migrations
+            // Note: In a shared codebase, the migration files are already on the disk from the Master System Update.
+            // We just need to run them for this specific tenant.
+            $this->log('Running tenant migrations and seeders...', 'info');
             $this->runTenantCommand('tenants:migrate', [
                 '--tenants' => $tenant->id,
                 '--force' => true,
                 '--seed' => true,
             ]);
 
-            $this->log('Clearing caches...', 'info');
-            $this->runProcess([PHP_BINARY, 'artisan', 'config:clear'], $base);
+            // 3. Clear Caches for this tenant context
+            $this->log('Clearing tenant-specific caches...', 'info');
+            // We run these via the process to ensure clean environment
             $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
             $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'route:clear'], $base);
 
+            // 4. Finalize Version Update
             $tenant->update([
                 'previous_version' => $currentVersion,
                 'system_version' => $this->targetVersion,
             ]);
+            
+            // Also update central database record to stay in sync
+            \Illuminate\Support\Facades\DB::connection('mysql')->table('tenants')
+                ->where('id', $tenant->getTenantKey())
+                ->update(['system_version' => $this->targetVersion]);
 
-            $this->log("Tenant update to {$this->targetVersion} completed successfully!", 'success');
+            $this->log("Tenant database successfully updated to {$this->targetVersion}!", 'success');
         } catch (Exception $e) {
-            $this->log("FATAL UPDATE ERROR: " . $e->getMessage(), 'error');
-            $this->log('Update failed. The system remains online but this tenant might be in an inconsistent state.', 'warning');
+            $this->log("FATAL UPDATE ERROR: " . $e->getMessage() . " in " . basename($e->getFile()) . ":" . $e->getLine(), 'error');
+            $this->log('Database update failed. The system remains online but this tenant might need manual intervention.', 'warning');
         } finally {
             $tenant->setAttribute('is_updating', false);
             $tenant->setAttribute('updating_message', null);
@@ -152,92 +128,6 @@ class TenantUpdateJob implements ShouldQueue
             }
         } elseif ($connection === 'sqlite') {
             File::copy($config['database'], $destination);
-        }
-    }
-
-    protected function createBackup($basePath, $destination)
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($destination, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            $files = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($basePath),
-                \RecursiveIteratorIterator::LEAVES_ONLY
-            );
-
-            foreach ($files as $name => $file) {
-                if (!$file->isDir()) {
-                    $filePath = $file->getRealPath();
-                    $relativePath = substr($filePath, strlen($basePath) + 1);
-
-                    // Skip large/unnecessary directories
-                    if (str_starts_with($relativePath, 'vendor' . DIRECTORY_SEPARATOR) ||
-                        str_starts_with($relativePath, 'node_modules' . DIRECTORY_SEPARATOR) ||
-                        str_starts_with($relativePath, 'storage' . DIRECTORY_SEPARATOR) ||
-                        str_starts_with($relativePath, '.git' . DIRECTORY_SEPARATOR)) {
-                        continue;
-                    }
-
-                    $zip->addFile($filePath, $relativePath);
-                }
-            }
-            $zip->close();
-        } else {
-            throw new Exception("Failed to create backup zip file.");
-        }
-    }
-
-    protected function downloadRelease($url, $destination)
-    {
-        $ch = curl_init($url);
-        $file = fopen($destination, 'wb');
-        curl_setopt($ch, CURLOPT_FILE, $file);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Laravel-App');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
-        curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        fclose($file);
-        curl_close($ch);
-
-        if ($status >= 400) {
-            throw new Exception("Download failed with HTTP status: {$status}");
-        }
-    }
-
-    protected function extractRelease($zipPath, $extractDir)
-    {
-        if (!File::exists($extractDir)) File::makeDirectory($extractDir, 0755, true);
-        $zip = new ZipArchive;
-        if ($zip->open($zipPath) === true) {
-            $zip->extractTo($extractDir);
-            $zip->close();
-        } else {
-            throw new Exception("Failed to extract release zip.");
-        }
-    }
-
-    protected function overwriteFiles($extractDir, $basePath)
-    {
-        $directories = File::directories($extractDir);
-        $wrapper = count($directories) == 1 ? $directories[0] : $extractDir;
-        $preserve = ['.env', 'storage', 'public/storage'];
-        
-        $files = File::allFiles($wrapper, true);
-        foreach ($files as $file) {
-            $relativePath = str_replace($wrapper . DIRECTORY_SEPARATOR, '', $file->getRealPath());
-            $isPreserved = false;
-            foreach ($preserve as $p) {
-                if ($relativePath === $p || str_starts_with($relativePath, $p . DIRECTORY_SEPARATOR)) {
-                    $isPreserved = true;
-                    break;
-                }
-            }
-            if (!$isPreserved) {
-                $destPath = $basePath . DIRECTORY_SEPARATOR . $relativePath;
-                File::ensureDirectoryExists(dirname($destPath));
-                File::copy($file->getRealPath(), $destPath);
-            }
         }
     }
 

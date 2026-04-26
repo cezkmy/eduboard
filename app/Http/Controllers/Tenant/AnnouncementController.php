@@ -33,7 +33,6 @@ class AnnouncementController extends Controller
             'content_color' => 'nullable|string',
             'category_color' => 'nullable|string',
             'border_color' => 'nullable|string',
-            'is_pinned' => 'nullable|boolean',
             'target_college' => 'nullable|array',
             'target_program' => 'nullable|array',
             'target_year' => 'nullable|array',
@@ -69,6 +68,19 @@ class AnnouncementController extends Controller
             }
         }
 
+        $attachments = [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('announcements/attachments', 'public');
+                $attachments[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'type' => $file->getClientOriginalExtension()
+                ];
+            }
+        }
+
         $announcement = Announcement::create([
             'title' => $validated['title'],
             'content' => $validated['content'],
@@ -95,14 +107,23 @@ class AnnouncementController extends Controller
             'target_section' => $request->target_section ?: null,
             'target_roles' => $request->target_roles ?: null,
             'media_paths' => $mediaPaths,
+            'attachments' => $attachments,
         ]);
 
+        $totalBytes = 0;
         if (count($mediaPaths) > 0) {
-            $totalBytes = 0;
             foreach ($request->file('media') as $file) {
                 $totalBytes += $file->getSize();
             }
+        }
 
+        if (count($attachments) > 0) {
+            foreach ($request->file('attachments') as $file) {
+                $totalBytes += $file->getSize();
+            }
+        }
+
+        if ($totalBytes > 0) {
             // Efficiently update storage and bandwidth usage
             tenant()->incrementStorageUsage($totalBytes);
             
@@ -153,7 +174,6 @@ class AnnouncementController extends Controller
             'content_color' => 'nullable|string',
             'category_color' => 'nullable|string',
             'border_color' => 'nullable|string',
-            'is_pinned' => 'nullable|boolean',
             'target_college' => 'nullable|array',
             'target_program' => 'nullable|array',
             'target_year' => 'nullable|array',
@@ -189,6 +209,19 @@ class AnnouncementController extends Controller
             }
         }
 
+        $attachments = $announcement->attachments ?? [];
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('announcements/attachments', 'public');
+                $attachments[] = [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'type' => $file->getClientOriginalExtension()
+                ];
+            }
+        }
+
         $announcement->update([
             'title' => $validated['title'],
             'content' => $validated['content'],
@@ -214,14 +247,23 @@ class AnnouncementController extends Controller
             'target_section' => $request->target_section ?: null,
             'target_roles' => $request->target_roles ?: null,
             'media_paths' => $mediaPaths,
+            'attachments' => $attachments,
         ]);
 
+        $totalBytes = 0;
         if ($request->hasFile('media')) {
-            $totalBytes = 0;
             foreach ($request->file('media') as $file) {
                 $totalBytes += $file->getSize();
             }
+        }
 
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $totalBytes += $file->getSize();
+            }
+        }
+
+        if ($totalBytes > 0) {
             tenant()->incrementStorageUsage($totalBytes);
             
             $uploadSizeGB = round($totalBytes / 1073741824, 6);

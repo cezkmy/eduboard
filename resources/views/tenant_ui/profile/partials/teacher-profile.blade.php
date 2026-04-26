@@ -4,10 +4,10 @@
         <div class="profile-card h-auto p-5 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center text-center self-start">
             <div class="relative group">
                 <div class="w-20 h-20 rounded-2xl text-white flex items-center justify-center font-bold text-2xl shadow-lg mb-3 overflow-hidden" id="profile-photo-preview" style="background: var(--accent); box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.20);">
-                    @if(auth()->user()->profile_photo)
-                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset(auth()->user()->profile_photo) : asset('storage/' . auth()->user()->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}'">
+                    @if($user->profile_photo)
+                        <img src="{{ (function_exists('tenant_asset') && tenant()) ? tenant_asset($user->profile_photo) : asset('storage/' . $user->profile_photo) }}" alt="Profile" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML = '{{ strtoupper(substr($user->name, 0, 1)) }}'">
                     @else
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
                     @endif
                 </div>
                 {{-- Camera Icon --}}
@@ -28,8 +28,8 @@
                 <button type="button" id="cancel-photo-btn" class="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 text-[10px] font-bold rounded-lg hover:bg-gray-200 transition-all">CANCEL</button>
             </div>
 
-            <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mt-2">{{ auth()->user()->name }}</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ auth()->user()->email }}</p>
+            <h1 class="text-lg font-bold text-gray-900 dark:text-gray-100 mt-2">{{ $user->name }}</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ $user->email }}</p>
             
             <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style="background: rgba(var(--accent-rgb), 0.10); color: var(--accent);">Teacher</span>
         </div>

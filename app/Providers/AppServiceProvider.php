@@ -52,5 +52,13 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
         });
+
+        // Version Gating Directive: @version('1.2.3') ... @else ... @endversion
+        \Illuminate\Support\Facades\Blade::if('version', function ($version) {
+            if (function_exists('tenant') && tenant()) {
+                return tenant()->hasVersion($version);
+            }
+            return true; // Central always has the latest code/features
+        });
     }
 }
