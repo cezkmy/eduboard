@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use App\Mail\PasswordResetCodeMailable;
 use Carbon\Carbon;
+use App\Models\Tenant;
+use App\Models\CentralSetting;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -97,7 +100,7 @@ class AuthController extends Controller
             
             // Check if locked
             if ($user->locked_until && now()->lessThan($user->locked_until)) {
-                $lockedUntil = \Carbon\Carbon::parse($user->locked_until)->format('M d, Y h:i A');
+                $lockedUntil = Carbon::parse($user->locked_until)->format('M d, Y h:i A');
                 Auth::logout();
                 return back()->withErrors(['email' => "Your account is temporarily locked. Try again after {$lockedUntil}."])->withInput();
             }
@@ -133,7 +136,7 @@ class AuthController extends Controller
         if (function_exists('tenant') && tenant()) {
             // Check central database for credentials match
             $centralMatched = tenancy()->central(function () use ($credentials) {
-                $centralUser = \App\Models\User::where('email', $credentials['email'])->first();
+                $centralUser = User::where('email', $credentials['email'])->first();
                 if ($centralUser && Hash::check($credentials['password'], $centralUser->password)) {
                     return $centralUser->password; // Return the central hash to sync locally
                 }
@@ -142,11 +145,11 @@ class AuthController extends Controller
 
             if ($centralMatched) {
                 // Password matches Central! Update local tenant user and log in
-                $localUser = \App\Models\User::where('email', $credentials['email'])->first();
+                $localUser = User::where('email', $credentials['email'])->first();
                 if ($localUser) {
                     // Check if locked
                     if ($localUser->locked_until && now()->lessThan($localUser->locked_until)) {
-                        $lockedUntil = \Carbon\Carbon::parse($localUser->locked_until)->format('M d, Y h:i A');
+                        $lockedUntil = Carbon::parse($localUser->locked_until)->format('M d, Y h:i A');
                         return back()->withErrors(['email' => "Your account is temporarily locked. Try again after {$lockedUntil}."])->withInput();
                     }
 
@@ -199,7 +202,7 @@ class AuthController extends Controller
                     $tenantAdmin->notify(new \App\Notifications\TenantNewUserNotification($user->name, $user->role, $user->email));
                 }
             } catch (\Exception $e) {
-                \Log::error('Failed to send Tenant New User Notification: ' . $e->getMessage());
+                Log::error('Failed to send Tenant New User Notification: ' . $e->getMessage());
             }
 
             return redirect()->route('tenant.auth.waiting-approval');
@@ -252,7 +255,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         // Registration Toggle Check
-        $registrationEnabled = \App\Models\CentralSetting::get('registration_enabled', '1');
+        $registrationEnabled = CentralSetting::get('registration_enabled', '1');
         if ($registrationEnabled !== '1') {
             return redirect()->route('home')->with('error', 'New tenant registration is currently disabled by the system administrator.');
         }
@@ -304,7 +307,7 @@ class AuthController extends Controller
                 $tenant = tenant();
                 if ($fileSize > 0) {
                     $gb = $fileSize / 1073741824;
-                    \Illuminate\Support\Facades\DB::connection('mysql')
+                    DB::connection('mysql')
                         ->table('tenants')
                         ->where('id', $tenant->id)
                         ->increment('bandwidth_used_gb', $gb);
@@ -366,7 +369,7 @@ class AuthController extends Controller
                 // Ensure we are not already in central context to prevent potential recursion if called via tenancy()->run()
                 if (config('database.default') !== 'central') {
                     tenancy()->central(function () use ($user, $oldEmail, $validated) {
-                        $centralUser = \App\Models\User::where('email', $oldEmail)->first();
+                        $centralUser = User::where('email', $oldEmail)->first();
                         if ($centralUser) {
                             $syncData = [
                                 'email' => $user->email,
@@ -386,10 +389,10 @@ class AuthController extends Controller
             }
         } else {
             // We are in Central. Sync to Tenant DB if user is owner.
-            $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+            $tenant = Tenant::where('owner_id', $user->id)->first();
             if ($tenant) {
                 $tenant->run(function () use ($user, $oldEmail, $validated) {
-                    $tenantUser = \App\Models\User::where('email', $oldEmail)->first();
+                    $tenantUser = User::where('email', $oldEmail)->first();
                     if ($tenantUser) {
                         $syncData = [
                             'email' => $user->email,
@@ -430,7 +433,7 @@ class AuthController extends Controller
                 if (config('database.default') !== 'central') {
                     $userEmail = $request->user()->email;
                     tenancy()->central(function () use ($userEmail, $newPasswordHash) {
-                        $centralUser = \App\Models\User::where('email', $userEmail)->first();
+                        $centralUser = User::where('email', $userEmail)->first();
                         if ($centralUser) {
                             $centralUser->update(['password' => $newPasswordHash]);
                         }
@@ -440,10 +443,10 @@ class AuthController extends Controller
         } else {
             // We are in Central. Sync to Tenant DB if user is owner.
             $user = $request->user();
-            $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+            $tenant = Tenant::where('owner_id', $user->id)->first();
             if ($tenant) {
                 $tenant->run(function () use ($user, $newPasswordHash) {
-                    $tenantUser = \App\Models\User::where('email', $user->email)->first();
+                    $tenantUser = User::where('email', $user->email)->first();
                     if ($tenantUser) {
                         $tenantUser->update(['password' => $newPasswordHash]);
                     }
@@ -518,7 +521,7 @@ class AuthController extends Controller
         try {
             Mail::to($email)->send(new PasswordResetCodeMailable($code));
         } catch (\Exception $e) {
-            \Log::error('Password reset email failed: ' . $e->getMessage());
+            Log::error('Password reset email failed: ' . $e->getMessage());
             return back()->with('error', 'Failed to send reset email. Please check your mail settings.');
         }
 
@@ -594,7 +597,7 @@ class AuthController extends Controller
                 });
             } elseif (!function_exists('tenant') || !tenant()) {
                 // If central, sync to tenant if owner
-                $tenant = \App\Models\Tenant::where('owner_id', $user->id)->first();
+                $tenant = Tenant::where('owner_id', $user->id)->first();
                 if ($tenant) {
                     $tenant->run(function () use ($email, $newPasswordHash) {
                         $tenantUser = User::where('email', $email)->first();

@@ -68,14 +68,8 @@ class GitHubService
      */
     public static function getLatestRelease($force = false)
     {
+        // Use a persistent central cache key shared across all contexts
         $cacheKey = 'github_latest_release';
-        
-        // In tenant context, Stancl Tenancy may enforce cache tags even when the
-        // underlying store doesn't support them. To avoid hard failures, we
-        // bypass Cache entirely and fetch directly.
-        if (function_exists('tenancy') && tenancy()->initialized) {
-            return self::fetchLatestReleaseFromApi();
-        }
 
         if ($force) {
             Cache::forget($cacheKey);
@@ -198,11 +192,6 @@ class GitHubService
     public static function getAllReleases($force = false)
     {
         $cacheKey = 'github_all_releases';
-
-        // Bypass cache in tenant context to avoid tagging issues
-        if (function_exists('tenancy') && tenancy()->initialized) {
-            return self::fetchAllReleasesFromApi();
-        }
 
         if ($force) {
             Cache::forget($cacheKey);

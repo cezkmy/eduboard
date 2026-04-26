@@ -396,12 +396,6 @@
                         Templates
                     </a>
                 </div>
-                <div class="nav-item">
-                    <a href="{{ route('central.admin.system.update') }}" class="nav-link {{ request()->routeIs('central.admin.system.update') ? 'active' : '' }}">
-                        <i class="bi bi-cloud-arrow-down"></i>
-                        System Update
-                    </a>
-                </div>
             </nav>
 
             <div class="sidebar-footer">

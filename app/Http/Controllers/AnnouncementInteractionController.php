@@ -48,8 +48,8 @@ class AnnouncementInteractionController extends Controller
 
         $comment = $announcement->comments()->create([
             'user_id' => Auth::id(),
-            'content' => $request->content,
-            'parent_id' => $request->parent_id
+            'content' => $request->input('content'),
+            'parent_id' => $request->input('parent_id')
         ]);
 
         return response()->json([
@@ -68,7 +68,7 @@ class AnnouncementInteractionController extends Controller
             'type' => 'required|string|in:heart,like,fire,sad'
         ]);
 
-        $type = $request->type;
+        $type = $request->input('type');
         $userId = Auth::id();
 
         // Check if the user already has this specific reaction

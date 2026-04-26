@@ -19,7 +19,7 @@ class SystemUpdateController extends Controller
         $currentVersion = $tenant->system_version ?? config('app.version', 'v1.0.0');
 
         // Fetch real-time releases from GitHub API
-        $allReleases = GitHubService::getAllReleases(true);
+        $allReleases = GitHubService::getAllReleases(false);
         $latestGithubRelease = !empty($allReleases) ? $allReleases[0] : null;
 
         // Get locally stored releases for historical browsing if API fails
