@@ -66,15 +66,18 @@
                                 class="mt-2 w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold">
                             @foreach(($sorted ?? collect()) as $r)
                                 <option value="{{ $r['tag_name'] }}">
-                                    {{ $r['tag_name'] }}{{ !empty($r['is_prerelease']) ? ' (pre-release)' : '' }}
+                                    {{ $r['tag_name'] }}
+                                    @if($r['tag_name'] === $currentVersion) (Current) @endif
+                                    {{ !empty($r['is_prerelease']) ? ' (pre-release)' : '' }}
                                 </option>
                             @endforeach
                         </select>
                     </label>
 
-                    <button @click="triggerUpdate()" :disabled="isUpdating"
-                            class="w-full px-4 py-3 bg-[var(--accent)] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-accent disabled:opacity-50">
-                        <span x-show="!isUpdating">Update Database Now</span>
+                    <button @click="triggerUpdate()" :disabled="isUpdating || selectedVersion === '{{ $currentVersion }}'"
+                            class="w-full px-4 py-3 bg-[var(--accent)] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-accent disabled:opacity-50 disabled:grayscale">
+                        <span x-show="!isUpdating && selectedVersion !== '{{ $currentVersion }}'">Update Database Now</span>
+                        <span x-show="!isUpdating && selectedVersion === '{{ $currentVersion }}'">Already on this version</span>
                         <span x-show="isUpdating">Processing...</span>
                     </button>
 

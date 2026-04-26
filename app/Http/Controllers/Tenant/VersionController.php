@@ -233,7 +233,7 @@ class VersionController extends Controller
 
         $isFinished = $logs->contains(function ($log) {
             $msg = strtolower($log->message);
-            return str_contains($msg, 'completed successfully') || 
+            return str_contains($msg, 'successfully') || 
                    str_contains($msg, 'fatal update error') ||
                    str_contains($msg, 'rollback error');
         });
