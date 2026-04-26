@@ -12,6 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'login',
+            'logout',
+            'register',
+            '*/login',
+            '*/logout',
+            '*/register',
+        ]);
+
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
             if (function_exists('tenant') && tenant()) {
                 return route('tenant.login');

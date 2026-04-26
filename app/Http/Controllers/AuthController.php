@@ -70,26 +70,35 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $isApi = $request->wantsJson();
+        
+        $rules = [
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'g-recaptcha-response' => ['required'],
-        ], [
+        ];
+
+        if (!$isApi) {
+            $rules['g-recaptcha-response'] = ['required'];
+        }
+
+        $credentials = $request->validate($rules, [
             'g-recaptcha-response.required' => 'Please complete the ReCaptcha verification.',
         ]);
 
-        // Verify ReCaptcha
-        $response = Http::asForm()->withoutVerifying()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => '6Lf02KQsAAAAAEOsDhCTHw5KWGA1r2C_Dm1TiuDd',
-            'response' => $request->input('g-recaptcha-response'),
-            'remoteip' => $request->ip(),
-        ]);
+        if (!$isApi) {
+            // Verify ReCaptcha
+            $response = Http::asForm()->withoutVerifying()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => '6Lf02KQsAAAAAEOsDhCTHw5KWGA1r2C_Dm1TiuDd',
+                'response' => $request->input('g-recaptcha-response'),
+                'remoteip' => $request->ip(),
+            ]);
 
-        if (!$response->json('success')) {
-            return back()->withErrors(['g-recaptcha-response' => 'ReCaptcha verification failed. Please try again.'])->withInput();
+            if (!$response->json('success')) {
+                return back()->withErrors(['g-recaptcha-response' => 'ReCaptcha verification failed. Please try again.'])->withInput();
+            }
         }
 
-        // Remove ReCaptcha from credentials before login attempt to avoid DB column error
+        // Remove ReCaptcha from credentials if it exists before login attempt
         unset($credentials['g-recaptcha-response']);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
