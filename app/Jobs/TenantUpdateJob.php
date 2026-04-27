@@ -27,17 +27,19 @@ class TenantUpdateJob implements ShouldQueue
         public string $tenantId,
         public string $targetVersion,
         public string $zipUrl
-    ) {}
+    ) {
+    }
 
     public function handle(): void
     {
         $tenant = Tenant::find($this->tenantId);
-        if (!$tenant) return;
+        if (!$tenant)
+            return;
 
         $base = base_path();
         $storagePath = storage_path("app/updates/tenant_{$this->tenantId}");
         $currentVersion = $tenant->system_version ?? config('app.version', 'v1.0.0');
-        
+
         if (!File::exists($storagePath)) {
             File::makeDirectory($storagePath, 0755, true);
         }
@@ -68,16 +70,16 @@ class TenantUpdateJob implements ShouldQueue
 
             // 3. Clear Caches for this tenant context
             $this->log('Clearing tenant-specific caches...', 'info');
-            // We run these via the process to ensure clean environment
-            $this->runProcess([PHP_BINARY, 'artisan', 'cache:clear'], $base);
-            $this->runProcess([PHP_BINARY, 'artisan', 'view:clear'], $base);
+            // Use Artisan::call instead of runProcess to avoid connection issues on some environments
+            $this->runTenantCommand('cache:clear');
+            $this->runTenantCommand('view:clear');
 
             // 4. Finalize Version Update
             $tenant->update([
                 'previous_version' => $currentVersion,
                 'system_version' => $this->targetVersion,
             ]);
-            
+
             // Also update central database record to stay in sync
             \Illuminate\Support\Facades\DB::connection('mysql')->table('tenants')
                 ->where('id', $tenant->getTenantKey())
@@ -117,10 +119,10 @@ class TenantUpdateJob implements ShouldQueue
                 '--port=' . $config['port'],
                 $config['database'],
             ];
-            
+
             $process = new Process($command);
             $process->run();
-            
+
             if ($process->isSuccessful()) {
                 File::put($destination, $process->getOutput());
             } else {
@@ -137,8 +139,9 @@ class TenantUpdateJob implements ShouldQueue
         $process->setTimeout(600);
         $process->run(function ($type, $buffer) {
             $logs = collect(explode("\n", rtrim($buffer)))->filter()->map(fn($l) => trim($l))->filter();
-            foreach($logs as $msg) {
-                if (empty($msg) || $msg === '.' || $msg === '...') continue;
+            foreach ($logs as $msg) {
+                if (empty($msg) || $msg === '.' || $msg === '...')
+                    continue;
                 $this->log($msg, $type === Process::ERR ? 'warning' : 'info');
             }
         });

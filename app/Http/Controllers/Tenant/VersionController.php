@@ -179,7 +179,10 @@ class VersionController extends Controller
 
         $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-        \App\Jobs\TenantUpdateJob::dispatch(
+        // Increase time limit for the update process (especially for sync queue)
+        set_time_limit(0);
+
+        \App\Jobs\TenantUpdateJob::dispatchSync(
             $updateId,
             $tenant->id,
             $latestVersion,
@@ -207,7 +210,10 @@ class VersionController extends Controller
 
         $updateId = \Illuminate\Support\Str::uuid()->toString();
 
-        \App\Jobs\TenantRollbackJob::dispatch(
+        // Increase time limit for the rollback process
+        set_time_limit(0);
+
+        \App\Jobs\TenantRollbackJob::dispatchSync(
             $updateId,
             $tenant->id
         );
@@ -225,7 +231,7 @@ class VersionController extends Controller
     public function logs($updateId)
     {
         $this->ensurePermission();
-        
+
         $logs = \App\Models\UpdateLog::where('update_id', $updateId)
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
@@ -233,9 +239,9 @@ class VersionController extends Controller
 
         $isFinished = $logs->contains(function ($log) {
             $msg = strtolower($log->message);
-            return str_contains($msg, 'successfully') || 
-                   str_contains($msg, 'fatal update error') ||
-                   str_contains($msg, 'rollback error');
+            return str_contains($msg, 'successfully') ||
+                str_contains($msg, 'fatal update error') ||
+                str_contains($msg, 'rollback error');
         });
 
         return response()->json([
