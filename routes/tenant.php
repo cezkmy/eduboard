@@ -499,10 +499,6 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             auth()->user()->unreadNotifications->markAsRead();
             return back();
         })->name('notifications.read');
-
-        // Practical Checklist Routes
-        Route::resource('books', \App\Http\Controllers\Tenant\BookController::class)->names('admin.books');
-        Route::get('authors', [\App\Http\Controllers\Tenant\AuthorController::class, 'index'])->name('admin.authors.index');
     });
 
     // Teacher Routes
