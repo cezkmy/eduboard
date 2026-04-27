@@ -139,7 +139,7 @@ class ReportController extends Controller
 
             $filename = 'invoice_' . $payment->invoice_number . '.pdf';
 
-            $pdf = Pdf::loadView('central.admin.reports.pdf.report', $data);
+            $pdf = Pdf::loadView('central.admin.invoice-pdf', $data);
             
             return $pdf->setPaper('a4', 'portrait')->download($filename);
 

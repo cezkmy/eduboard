@@ -15,6 +15,14 @@ class GitHubService
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
         
+        $token = config('services.github.token');
+        if ($token) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: token {$token}",
+                "Accept: application/vnd.github.v3+json"
+            ]);
+        }
+        
         // Disable SSL verification only in local environment
         $isLocal = app()->environment('local') || in_array(request()->getHost(), ['localhost', '127.0.0.1']);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$isLocal);
@@ -164,7 +172,20 @@ class GitHubService
 
             $ch = self::initCurl($url);
             $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
+
+            if ($httpCode === 401) {
+                Log::warning("GitHub API returned 401 (Unauthorized). Your GITHUB_TOKEN might be invalid. Retrying without token...");
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
+                $isLocal = app()->environment('local') || in_array(request()->getHost(), ['localhost', '127.0.0.1']);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$isLocal);
+                $response = curl_exec($ch);
+                curl_close($ch);
+            }
 
             $releases = json_decode($response, true);
 

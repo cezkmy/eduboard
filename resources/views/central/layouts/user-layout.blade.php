@@ -267,7 +267,9 @@
             <a href="{{ route('home') }}" class="sidebar-brand" style="text-decoration: none;">
                 <i class="bi bi-mortarboard"></i>
                 <span>EduBoard</span>
-                <small>School</small>
+                <small class="badge bg-primary bg-opacity-10 text-primary border-0" style="font-size: 0.65rem; padding: 0.2rem 0.5rem;">
+                    {{ auth()->user()->tenant->plan ?? auth()->user()->plan ?? 'Basic' }}
+                </small>
             </a>
             
             <nav class="sidebar-nav">
@@ -295,11 +297,35 @@
                         Subscription
                     </a>
                 </div>
+                @if((auth()->user()->tenant->plan ?? auth()->user()->plan ?? 'Basic') === 'Basic')
+                <div class="nav-item">
+                    <a href="{{ route('central.user.profile') }}" class="nav-link {{ request()->routeIs('central.user.profile') ? 'active' : '' }}">
+                        <i class="bi bi-gear"></i>
+                        Settings
+                    </a>
+                </div>
+                @endif
             </nav>
 
             <div class="school-info">
-                <div class="school-name">{{ auth()->user()->school_name ?? 'Your School' }}</div>
-                <div class="school-plan">{{ auth()->user()->plan ?? 'Basic' }} Plan</div>
+                @php
+                    $tenant = auth()->user()->tenant;
+                    $schoolName = $tenant->school_name ?? auth()->user()->school_name ?? 'Your School';
+                    $planName = $tenant->plan ?? auth()->user()->plan ?? 'Basic';
+                    
+                    $planBadgeClass = match($planName) {
+                        'Ultimate' => 'bg-warning text-warning',
+                        'Pro' => 'bg-primary text-primary',
+                        default => 'bg-success text-success',
+                    };
+                @endphp
+                <div class="school-name text-truncate" title="{{ $schoolName }}">
+                    <i class="bi bi-building-fill-check me-1 text-primary" style="font-size: 0.8rem;"></i>
+                    {{ $schoolName }}
+                </div>
+                <div class="school-plan {{ $planBadgeClass }} bg-opacity-10 border-0" style="font-size: 0.65rem; font-weight: 600;">
+                    <i class="bi bi-patch-check-fill me-1"></i> {{ $planName }} Plan
+                </div>
             </div>
         </aside>
 

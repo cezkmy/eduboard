@@ -128,6 +128,7 @@ class TenantController extends Controller
                 default => 'blue',
             };
 
+            $latestVersion = \App\Models\CentralSetting::get('system_version', config('app.version', 'v1.0.0'));
             $tenant = Tenant::create([
                 'id' => $subdomain,
                 'school_name' => $user->school_name,
@@ -137,6 +138,7 @@ class TenantController extends Controller
                 'owner_id' => $user->id,
                 'plan' => $user->plan,
                 'status' => 'Active',
+                'system_version' => $latestVersion,
                 'admin_password' => $adminPassword,
             ]);
             \Log::info('Step 1 Success. Tenant ID: ' . ($tenant->id ?? 'EMPTY'));

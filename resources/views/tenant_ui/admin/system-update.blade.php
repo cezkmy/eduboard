@@ -40,7 +40,7 @@
                 <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-3 rounded-xl mb-4">
                     <p class="text-[10px] text-blue-700 dark:text-blue-300 font-bold leading-relaxed">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Updating will apply database migrations and unlock features for the selected version. System files are managed centrally.
+                        Updating will apply database migrations and unlock features. System files are managed centrally.
                     </p>
                 </div>
 
@@ -55,7 +55,7 @@
                             class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
                             :class="enabled ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'">
                         <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                              :class="enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                               :class="enabled ? 'translate-x-5' : 'translate-x-0'"></span>
                     </button>
                 </div>
 
@@ -123,11 +123,77 @@
                     </div>
                 </div>
             </div>
+        {{-- Versions Table --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/20">
+                <div>
+                    <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Release History</h3>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-tight mt-1">Full version history from GitHub repository</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/30 dark:bg-gray-900/10">
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Version</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Release Name</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Date</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                        @forelse(($sorted ?? collect()) as $r)
+                            @php
+                                $isCurrent = $r['tag_name'] === $currentVersion;
+                                $isLatest = $r['tag_name'] === $latestVersion;
+                                $isNewer = version_compare(ltrim($r['tag_name'], 'vV'), ltrim($currentVersion, 'vV'), '>');
+                            @endphp
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-black text-gray-900 dark:text-white">{{ $r['tag_name'] }}</span>
+                                    @if(!empty($r['is_prerelease']))
+                                        <span class="ml-1.5 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase rounded border border-amber-100 dark:border-amber-900/30">Pre-release</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ $r['name'] ?? 'Version ' . $r['tag_name'] }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-[11px] font-bold text-gray-500 dark:text-gray-400">
+                                        {{ \Carbon\Carbon::parse($r['published_at'])->format('M d, Y') }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if($isCurrent)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase rounded-lg tracking-tight">
+                                            <i class="fas fa-check-circle"></i> Current
+                                        </span>
+                                    @elseif($isNewer)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-black uppercase rounded-lg tracking-tight">
+                                            Update Available
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 text-[10px] font-black uppercase rounded-lg tracking-tight">
+                                            Previous Version
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-sm font-bold text-gray-500">No releases found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         @if(!empty($release['body']))
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
-                <div class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Release Notes</div>
+                <div class="flex items-center justify-between mb-4">
+                    <div class="text-xs font-black text-gray-400 uppercase tracking-widest">Latest Release Notes</div>
+                </div>
                 <div class="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-gray-300">
                     {!! nl2br(e($release['body'])) !!}
                 </div>
