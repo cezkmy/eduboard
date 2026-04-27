@@ -168,32 +168,28 @@ class GitHubService
     {
         try {
             $repo = config('services.github.repo', 'cezkmy/eduboard');
-            $url = "https://api.github.com/repos/{$repo}/releases";
-
-            $ch = self::initCurl($url);
-            $response = curl_exec($ch);
+            
+            // 1. Fetch formal Releases
+            $releasesUrl = "https://api.github.com/repos/{$repo}/releases";
+            $ch = self::initCurl($releasesUrl);
+            $releasesResponse = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
             if ($httpCode === 401) {
-                Log::warning("GitHub API returned 401 (Unauthorized). Your GITHUB_TOKEN might be invalid. Retrying without token...");
+                Log::warning("GitHub API returned 401 (Unauthorized). Retrying without token...");
                 $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_URL, $releasesUrl);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_USERAGENT, "Laravel-App");
                 $isLocal = app()->environment('local') || in_array(request()->getHost(), ['localhost', '127.0.0.1']);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, !$isLocal);
-                $response = curl_exec($ch);
+                $releasesResponse = curl_exec($ch);
                 curl_close($ch);
             }
 
-            $releases = json_decode($response, true);
-
-            if (!is_array($releases)) {
-                return [];
-            }
-
-            return collect($releases)->map(function ($release) use ($repo) {
+            $releases = json_decode($releasesResponse, true);
+            $formattedReleases = collect(is_array($releases) ? $releases : [])->map(function ($release) use ($repo) {
                 return [
                     'tag_name' => $release['tag_name'] ?? null,
                     'name' => $release['name'] ?? 'Release',
@@ -203,7 +199,34 @@ class GitHubService
                     'zipball_url' => $release['zipball_url'] ?? null,
                     'is_prerelease' => $release['prerelease'] ?? false,
                 ];
-            })->filter(fn($r) => !empty($r['tag_name']))->values()->all();
+            })->filter(fn($r) => !empty($r['tag_name']));
+
+            // 2. Fetch Tags (as backup for missing releases)
+            $tagsUrl = "https://api.github.com/repos/{$repo}/tags";
+            $ch = self::initCurl($tagsUrl);
+            $tagsResponse = curl_exec($ch);
+            curl_close($ch);
+            $tags = json_decode($tagsResponse, true);
+
+            $existingTags = $formattedReleases->pluck('tag_name')->toArray();
+            
+            if (is_array($tags)) {
+                foreach ($tags as $tag) {
+                    if (!in_array($tag['name'], $existingTags)) {
+                        $formattedReleases->push([
+                            'tag_name' => $tag['name'],
+                            'name' => $tag['name'],
+                            'body' => 'Tag available (no release notes yet).',
+                            'published_at' => now()->toDateTimeString(),
+                            'html_url' => "https://github.com/{$repo}/releases/tag/{$tag['name']}",
+                            'zipball_url' => $tag['zipball_url'] ?? null,
+                            'is_prerelease' => false,
+                        ]);
+                    }
+                }
+            }
+
+            return $formattedReleases->filter(fn($r) => !empty($r['tag_name']))->values()->all();
         } catch (\Exception $e) {
             Log::error('GitHubService Error: ' . $e->getMessage());
             return [];
