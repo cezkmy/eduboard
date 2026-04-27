@@ -46,8 +46,13 @@ class AnnouncementController extends Controller
             ? 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400' 
             : 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240';
 
+        $attachmentRule = tenant()->hasFeature('document_upload')
+            ? 'nullable|file|mimes:pdf,docx,doc|max:20480'
+            : 'nullable|prohibited';
+
         $request->validate([
             'media.*' => $mediaRule,
+            'attachments.*' => $attachmentRule,
         ]);
 
         if ($request->hasFile('media')) {
@@ -187,8 +192,13 @@ class AnnouncementController extends Controller
             ? 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:102400' 
             : 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240';
 
+        $attachmentRule = tenant()->hasFeature('document_upload')
+            ? 'nullable|file|mimes:pdf,docx,doc|max:20480'
+            : 'nullable|prohibited';
+
         $request->validate([
             'media.*' => $mediaRule,
+            'attachments.*' => $attachmentRule,
         ]);
 
         if ($request->hasFile('media')) {

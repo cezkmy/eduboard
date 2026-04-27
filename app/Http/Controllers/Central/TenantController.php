@@ -189,7 +189,7 @@ class TenantController extends Controller
                 ]);
 
                 \App\Models\User::create([
-                    'name' => 'School Admin',
+                    'name' => $user->name,
                     'email' => $user->email,
                     'password' => $centralPasswordHash, // Sync hashed password directly
                     'role' => 'admin',
@@ -249,7 +249,7 @@ class TenantController extends Controller
             $tenantUser = \App\Models\User::where('email', $user->email)->first();
             if (!$tenantUser) {
                 $tenantUser = \App\Models\User::create([
-                    'name' => 'School Admin',
+                    'name' => $user->name,
                     'email' => $user->email,
                     'password' => $user->password,
                     'role' => 'admin',

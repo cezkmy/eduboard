@@ -59,6 +59,8 @@
         { name: 'Indigo', color: '#6366f1' },
         { name: 'Slate', color: '#64748b' }
     ],
+    canUploadVideo: {{ tenant() && tenant()->hasFeature('video_upload') ? 'true' : 'false' }},
+    canUploadDocs: {{ tenant() && tenant()->hasFeature('document_upload') ? 'true' : 'false' }},
     init() {
         this.$watch('title', value => this.saveToLocalStorage());
         this.$watch('category', value => this.saveToLocalStorage());
@@ -340,14 +342,28 @@
                     multiple
                     @change="
                         let hasOversized = false;
+                        let hasUnauthorizedVideo = false;
                         const validFiles = Array.from($event.target.files).filter(file => {
-                            if (file.type.startsWith('video') && file.size > 104857600) { // 100MB
-                                hasOversized = true;
-                                return false;
+                            if (file.type.startsWith('video')) {
+                                if (!canUploadVideo) {
+                                    hasUnauthorizedVideo = true;
+                                    return false;
+                                }
+                                if (file.size > 104857600) { // 100MB
+                                    hasOversized = true;
+                                    return false;
+                                }
                             }
                             return true;
                         });
                         
+                        if (hasUnauthorizedVideo) {
+                            alert('Your current plan does not support video uploads. Please upgrade to Pro or Ultimate.');
+                            $event.target.value = '';
+                            mediaPreview = [];
+                            return;
+                        }
+
                         if (hasOversized) {
                             alert('Video uploads are limited to 100MB per file.');
                             $event.target.value = '';
@@ -379,6 +395,7 @@
             </div>
         </div>
 
+        @if(tenant() && tenant()->hasFeature('document_upload'))
         <div x-show="!isEdit">
             <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4 text-blue-500">
@@ -435,6 +452,7 @@
                 </template>
             </div>
         </div>
+        @endif
         @if(count($templates) > 0)
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>

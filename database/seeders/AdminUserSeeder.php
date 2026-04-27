@@ -14,7 +14,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         // Safety check: Skip if running in tenant context
-        if (function_exists('tenancy') && tenancy()->initialized) {
+        if (function_exists('tenant') && tenant()) {
             return;
         }
 

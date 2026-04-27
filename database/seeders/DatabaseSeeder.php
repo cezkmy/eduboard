@@ -15,6 +15,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Safety check: If we are in a tenant context, only run tenant-specific seeds
+        if (function_exists('tenant') && tenant()) {
+            $this->call([
+                TenantDatabaseSeeder::class,
+            ]);
+            return;
+        }
+
         $this->call([
             AdminUserSeeder::class,
             PlanSeeder::class,

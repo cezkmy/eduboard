@@ -88,7 +88,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         $features = [
             'Basic' => ['image_upload', 'pin_announcements', 'timeline_view', 'light_dark_mode'],
             'Pro' => ['image_upload', 'video_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'custom_logo', 'light_dark_mode', 'reports'],
-            'Ultimate' => ['image_upload', 'video_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'pre_built_templates', 'custom_logo', 'light_dark_mode', 'reports'],
+            'Ultimate' => ['image_upload', 'video_upload', 'document_upload', 'pin_announcements', 'timeline_view', 'categories', 'theme_customization', 'pre_built_templates', 'custom_logo', 'light_dark_mode', 'reports'],
         ];
 
         $plan = $this->getActivePlan();
