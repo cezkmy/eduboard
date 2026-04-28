@@ -17,6 +17,7 @@ class TenantDatabaseSeeder extends Seeder
             BookModelSeeder::class,
             AuthorModelSeeder::class,
             AnnouncementSeeder::class,
+            ModuleSeeder::class,
         ]);
     }
 }

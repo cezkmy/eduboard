@@ -504,6 +504,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
         Route::middleware('version.gated:v4.6.2')->group(function () {
             Route::resource('books', \App\Http\Controllers\Tenant\BookController::class)->names('admin.books');
             Route::get('authors', [\App\Http\Controllers\Tenant\AuthorController::class, 'index'])->name('admin.authors.index');
+            Route::resource('modules', \App\Http\Controllers\ModuleController::class);
         });
     });
 
