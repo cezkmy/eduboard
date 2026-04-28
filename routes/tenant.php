@@ -48,7 +48,7 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
     })->name('tenant.teacher.register');
 
     // Tenant specific admin routes
-    Route::prefix('admin')->middleware(['auth'])->name('tenant.')->group(function () {
+    Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\StrictVerifyCsrf::class])->name('tenant.')->group(function () {
         Route::get('/dashboard', function () {
             if (!auth()->user()->hasPermission('page_admin_dashboard')) {
                 abort(403, 'Unauthorized. Standard users cannot access the admin dashboard.');
