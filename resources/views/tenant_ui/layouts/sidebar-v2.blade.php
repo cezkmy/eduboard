@@ -128,13 +128,6 @@
             </a>
             @endif
 
-            {{-- Gated Features (Version Gating Example) --}}
-            @if(tenant_has_version('v4.6.2'))
-            <a href="{{ route('admin.books.index') }}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all {{ request()->routeIs('admin.books.index') ? 'text-white shadow-lg' : 'hover:bg-gray-800 hover:text-white' }}" style="{{ request()->routeIs('admin.books.index') ? 'background: var(--accent); box-shadow: 0 16px 28px rgba(var(--accent-rgb), 0.22);' : '' }}">
-                <svg class="w-5 h-5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>
-                <span class="font-bold text-sm">Books Management</span>
-            </a>
-            @endif
         </div>
         @if($user->role !== 'teacher')
         <div class="space-y-2">

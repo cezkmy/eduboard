@@ -142,7 +142,7 @@
                             return false;
                         }
                     }
-                    if ((this.schoolLevel === 'college' || this.currentUser.role !== 'student') && !this.currentUser.department) {
+                    if ((this.schoolLevel === 'college' || this.currentUser.role !== 'student') && this.currentUser.role !== 'admin' && !this.currentUser.department) {
                         this.showError(this.schoolLevel === 'college' ? 'College / Faculty is required.' : 'Department / Office is required.');
                         return false;
                     }
@@ -325,7 +325,7 @@
                             return;
                         }
                     }
-                    if ((this.schoolLevel === 'college' || this.currentUser.role !== 'student') && !this.currentUser.department) {
+                    if (this.currentUser.role !== 'student' && this.currentUser.role !== 'admin' && !this.currentUser.department) {
                         this.showError(this.schoolLevel === 'college' ? 'College / Faculty is required.' : 'Department / Office is required.');
                         return;
                     }
@@ -774,7 +774,7 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1.5" x-show="schoolLevel === 'college' || currentUser.role !== 'student'">
+                            <div class="space-y-1.5" x-show="(schoolLevel === 'college' || currentUser.role !== 'student') && currentUser.role !== 'admin'">
                                 <label class="text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest ml-1">
                                     <span x-text="schoolLevel === 'college' ? 'College / Faculty' : (schoolLevel === 'shs' ? 'Department / Office' : 'Grade / Level Group')"></span>
                                     <span class="text-red-500">*</span>

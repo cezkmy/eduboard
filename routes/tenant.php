@@ -500,11 +500,10 @@ Route::middleware([\App\Http\Middleware\CheckTenantStatus::class])->group(functi
             return back();
         })->name('notifications.read');
 
-        // Practical Checklist Routes (Gated by Version v4.6.2)
-        Route::middleware('version.gated:v4.6.2')->group(function () {
-            Route::resource('books', \App\Http\Controllers\Tenant\BookController::class)->names('admin.books');
-            Route::get('authors', [\App\Http\Controllers\Tenant\AuthorController::class, 'index'])->name('admin.authors.index');
-        });
+        Route::get('/notifications/read', function () {
+            auth()->user()->unreadNotifications->markAsRead();
+            return back();
+        })->name('notifications.read');
     });
 
     // Teacher Routes
