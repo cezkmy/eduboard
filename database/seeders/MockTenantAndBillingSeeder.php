@@ -104,6 +104,8 @@ class MockTenantAndBillingSeeder extends Seeder
             $safeSubdomain = $baseHost === 'localhost' ? str_replace('_', '-', $subdomain) : $subdomain;
             $domainName = $safeSubdomain . '.' . $baseHost;
 
+            $this->command->info("Creating tenant: {$subdomain}");
+            
             // Use Tenant::create so it handles DB creation
             $tenant = Tenant::create([
                 'id' => $subdomain,
@@ -136,16 +138,29 @@ class MockTenantAndBillingSeeder extends Seeder
                 'trial_ends_at' => null,
             ]);
 
-            // Create admin user inside the tenant database
-            $tenant->run(function () use ($user, $selectedPlan, $prefix) {
-                \App\Models\User::create([
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'password' => $user->password,
-                    'role' => 'admin',
-                    'school_name' => strtoupper($prefix) . ' EduBoard',
-                    'status' => 'active',
+            // Ensure migrations are completed before seeding
+            // Sometimes the event listener might have a slight delay in some environments
+            $tenant->run(function () use ($user, $selectedPlan, $prefix, $subdomain) {
+                \Illuminate\Support\Facades\Artisan::call('tenants:migrate', [
+                    '--tenants' => [tenant('id')],
+                    '--force' => true,
                 ]);
+
+                // Create admin user inside the tenant database
+                \App\Models\User::updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'name' => $user->name,
+                        'password' => $user->password,
+                        'role' => 'admin',
+                        'school_name' => strtoupper($prefix) . ' EduBoard',
+                        'status' => 'active',
+                    ]
+                );
+
+                // Seed tenant-specific data (Categories, Books, etc.)
+                $this->command->info("  - Running tenant seeders for {$subdomain}...");
+                $this->call(TenantDatabaseSeeder::class);
             });
 
             // Create mock billing history records ONLY for paid plans

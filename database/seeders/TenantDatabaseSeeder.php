@@ -14,6 +14,9 @@ class TenantDatabaseSeeder extends Seeder
     {
         $this->call([
             CategorySeeder::class,
+            BookModelSeeder::class,
+            AuthorModelSeeder::class,
+            AnnouncementSeeder::class,
         ]);
     }
 }
