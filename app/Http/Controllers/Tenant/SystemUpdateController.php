@@ -22,13 +22,17 @@ class SystemUpdateController extends Controller
         $allReleases = GitHubService::getAllReleases(true);
         $latestGithubRelease = !empty($allReleases) ? $allReleases[0] : null;
 
-        // Get locally stored releases for historical browsing if API fails
-        $releaseList = CentralSetting::getJson('github_releases', []);
-        $releaseCollection = collect($releaseList)->keyBy('tag_name');
-
-        // Sync real-time releases to the collection
-        foreach ($allReleases as $r) {
-            $releaseCollection->put($r['tag_name'], $r);
+        // Sync and prune: If we got a fresh list from GitHub, use it to update the central storage.
+        // This ensures deleted releases on GitHub are also removed locally.
+        if (!empty($allReleases)) {
+            $releaseCollection = collect($allReleases)->keyBy('tag_name');
+            
+            // Proactively update central setting to match current GitHub state
+            CentralSetting::set('github_releases', $releaseCollection->values()->all());
+        } else {
+            // Fallback to local history only if API fails
+            $releaseList = CentralSetting::getJson('github_releases', []);
+            $releaseCollection = collect($releaseList)->keyBy('tag_name');
         }
 
         $sorted = $releaseCollection

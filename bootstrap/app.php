@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'student' => \App\Http\Middleware\StudentMiddleware::class,
+            'version.gated' => \App\Http\Middleware\VersionGated::class,
         ]);
         
         $middleware->preventRequestsDuringMaintenance(except: [
